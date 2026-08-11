@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <!-- 白フチ → 状態色の地。種類は図柄(波)で、状態は色で伝える -->
+  <rect x="1.5" y="1.5" width="45" height="45" rx="12" fill="#ffffff"/>
+  <rect x="4" y="4" width="40" height="40" rx="10" fill="{{color}}"/>
+  <g stroke="#ffffff" stroke-width="3.5" fill="none" stroke-linecap="round">
+    <path d="M10 17 Q14.5 13 19 17 T28 17 T37 17"/>
+    <path d="M10 25 Q14.5 21 19 25 T28 25 T37 25"/>
+    <path d="M10 33 Q14.5 29 19 33 T28 33 T37 33"/>
+  </g>
+</svg>

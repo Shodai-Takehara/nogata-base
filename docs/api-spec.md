@@ -1,0 +1,369 @@
+# 直方市 災害時情報共有PF データAPI仕様書
+
+直方市の ArcGIS Online ダッシュボード「災害時情報共有PF（公開用）」が参照するデータソースの仕様をまとめたもの。モバイルアプリのデータ取得層の実装を目的とする。
+
+- 調査日: 2026-07-13
+- 元ダッシュボード: <https://nogata.maps.arcgis.com/apps/dashboards/a7e176b0dd544aa4a30551d31890664a>
+- ダッシュボードアイテムID: `a7e176b0dd544aa4a30551d31890664a`（access: public）
+- 参照Webマップ「市民公開用マップ」: `1d74495fd8cb493497639699a66fd625`（access: public）
+- データ所有者: 直方市（ArcGIS Online アカウント `n_saigai_PF`）
+
+> **重要**: これは直方市が「アプリ開発者向けに提供している公開API」ではなく、公開設定された ArcGIS Feature Service を REST API として読んでいるもの。市側の設定変更で予告なく非公開化・URL変更されうる。公式アプリとして公開する場合は市への利用確認を推奨。**書き込み系操作（addFeatures / updateFeatures 等）は行わないこと。**
+
+---
+
+## 1. 共通仕様
+
+### ベースURL
+
+```text
+https://services1.arcgis.com/Po7csFzrJvObgZNq/arcgis/rest/services/{サービス名}/FeatureServer/0
+```
+
+### 認証
+
+不要（匿名アクセス可）。APIキー・トークン不要。
+
+### データ取得エンドポイント
+
+```text
+GET {ベースURL}/query
+```
+
+主なクエリパラメータ:
+
+| パラメータ                                     | 説明                                       | 例                 |
+| ---------------------------------------------- | ------------------------------------------ | ------------------ |
+| `where`                                        | SQL風フィルタ（必須。全件は `1=1`）        | `s_opening <> '0'` |
+| `outFields`                                    | 取得フィールド（カンマ区切り、`*` で全件） | `s_name,s_opening` |
+| `f`                                            | レスポンス形式: `json` / `geojson` / `pbf` | `geojson`          |
+| `outSR`                                        | 出力座標系（`4326` 推奨）                  | `4326`             |
+| `resultOffset` / `resultRecordCount`           | ページネーション                           | `0` / `100`        |
+| `orderByFields`                                | ソート                                     | `updateDt DESC`    |
+| `returnCountOnly`                              | 件数のみ取得                               | `true`             |
+| `outStatistics` / `groupByFieldsForStatistics` | 集計                                       | count 等           |
+| `returnGeometry`                               | ジオメトリ省略で軽量化                     | `false`            |
+
+- 全レイヤーで `maxRecordCount = 2000`、ページネーション対応（`supportsPagination: true`）。
+- レスポンスに `"exceededTransferLimit": true` が含まれたら `resultOffset` を進めて続きを取得する。
+- 対応形式は全レイヤー共通で JSON / GeoJSON / PBF。
+
+### 日時・座標の扱い
+
+- **日付フィールド（esriFieldTypeDate）はすべて UNIXエポックミリ秒**（例: `1783919558000`）。タイムゾーンはUTC基準のエポックなので、表示時に JST 変換する。
+- 座標系はレイヤーごとにバラバラ（JGD2011 平面直角系 / wkid 104020 / WGS84）。**`f=geojson` または `outSR=4326` を指定すれば常に WGS84 経緯度で受け取れる**ので、アプリ側は常にこれを指定すること。
+
+### エラーレスポンス
+
+HTTPステータスは200のまま、ボディにエラーが入る形式:
+
+```json
+{"error": {"code": 400, "message": "...", "details": [...]}}
+```
+
+`error.code` の有無で成否判定すること。
+
+---
+
+## 2. レイヤー一覧とダッシュボードでの使われ方
+
+| #   | サービス名                                   | 内容                  | ジオメトリ | ダッシュボード表示条件           |
+| --- | -------------------------------------------- | --------------------- | ---------- | -------------------------------- |
+| 2.1 | `refuges_opening_status`                     | 避難所と開設状況      | Point      | `s_opening <> '0'`（開設中のみ） |
+| 2.2 | `wl_sensor`                                  | 水位センサー          | Point      | フィルタなし                     |
+| 2.3 | `tipping_gate`                               | 転倒ゲート            | Point      | フィルタなし                     |
+| 2.4 | `traffic_reguration`                         | 交通規制              | Polyline   | `openFlg = '公開'`               |
+| 2.5 | `survey123_9df18097b82b47798f4762b531043442` | 被害報告（Survey123） | Point      | `field_7 = '公開'`               |
+
+---
+
+## 2.1 避難所開設状況 `refuges_opening_status`
+
+```text
+https://services1.arcgis.com/Po7csFzrJvObgZNq/arcgis/rest/services/refuges_opening_status/FeatureServer/0
+```
+
+- ジオメトリ: Point / ネイティブ座標系: JGD2011 平面直角座標系II系（wkid 6670）→ `outSR=4326` 指定推奨
+- 件数: 50（市内の指定避難所マスタ。災害時に開設状況・避難者数が更新される）
+
+### フィールド定義（37）
+
+| フィールド名 | 型           | エイリアス | 長さ | 備考 / ドメイン                                                                               |
+| ------------ | ------------ | ---------- | ---- | --------------------------------------------------------------------------------------------- |
+| `OBJECTID`   | OID          | OBJECTID   |      | 主キー                                                                                        |
+| `id`         | String       | id         | 20   |                                                                                               |
+| `fid_1`      | String       | fid_1      | 28   |                                                                                               |
+| `整備データ` | Integer      | 整備データ |      |                                                                                               |
+| `整備デーA`  | SmallInteger | 整備デーA  |      |                                                                                               |
+| `整備完了日` | String       | 整備完了日 | 8    |                                                                                               |
+| `orgGILvl`   | String       | orgGILvl   | 5    |                                                                                               |
+| `orgMDId`    | String       | orgMDId    | 1    |                                                                                               |
+| `表示区分`   | String       | 表示区分   | 1    |                                                                                               |
+| `種別`       | String       | 種別       | 12   |                                                                                               |
+| `名称`       | String       | 名称       | 12   |                                                                                               |
+| `j_id`       | Integer      | j_id       |      |                                                                                               |
+| `s_name`     | String       | s_name     | 254  | **避難所名**                                                                                  |
+| `address`    | String       | address    | 254  | 住所                                                                                          |
+| `f_suigai`   | String       | f_suigai   | 254  | 水害対応可否                                                                                  |
+| `f_dosya`    | String       | f_dosya    | 254  | 土砂災害対応可否                                                                              |
+| `f_jisin`    | String       | f_jisin    | 254  | 地震対応可否                                                                                  |
+| `f_sonota`   | String       | f_sonota   | 254  | その他対応                                                                                    |
+| `tel`        | String       | tel        | 254  | 電話番号                                                                                      |
+| `fax`        | String       | fax        | 254  | FAX番号                                                                                       |
+| `f_space`    | Integer      | f_space    |      | **床面積（㎡）**。マップのポップアップ表示と実データ（遠賀川水辺館=259）で確認                |
+| `s_capacity` | Integer      | s_capacity |      | 収容可能人数                                                                                  |
+| `s_capa_2`   | Integer      | s_capa_2   |      |                                                                                               |
+| `n_refugees` | Integer      | n_refugees |      | **現在の避難者数**                                                                            |
+| `s_opening`  | String       | s_opening  | 254  | **開設状況**。`0`=閉鎖 / `1`=開設（混雑なし） / `2`=開設（やや混雑） / `3`=開設（非常に混雑） |
+| `n_m_0_3`    | Integer      | n_m_0_3    |      | 男性 0–3歳                                                                                    |
+| `n_f_0_3`    | Integer      | n_f_0_3    |      | 女性 0–3歳                                                                                    |
+| `n_m_3_18`   | Integer      | n_m_3_18   |      | 男性 3–18歳                                                                                   |
+| `n_f_3_18`   | Integer      | n_f_3_18   |      | 女性 3–18歳                                                                                   |
+| `n_m_18_65`  | Integer      | n_m_18_65  |      | 男性 18–65歳                                                                                  |
+| `n_f_18_65`  | Integer      | n_f_18_65  |      | 女性 18–65歳                                                                                  |
+| `n_m_65`     | Integer      | n_m_65     |      | 男性 65歳以上                                                                                 |
+| `n_f_65`     | Integer      | n_f_65     |      | 女性 65歳以上                                                                                 |
+| `n_family`   | Integer      | n_family   |      | **避難世帯数**                                                                                |
+| `input_p`    | String       | input_p    | 255  | 入力者                                                                                        |
+| `input_tel`  | String       | input_tel  | 255  | 入力者電話番号                                                                                |
+| `input_dt`   | Date         | input_dt   | 8    | 入力日時（エポックms）。**未入力の行は 0**（1970/01/01 扱いにせず欠測と解釈すること）         |
+
+※ フィールドの意味の太字は推定を含む（エイリアスが英語名のままのため）。床面積・年齢区分はダッシュボードのグラフでは使われないが、マップのポップアップ詳細に表示される。
+
+### リクエスト例（開設中の避難所のみ）
+
+```text
+GET /refuges_opening_status/FeatureServer/0/query
+    ?where=s_opening <> '0'
+    &outFields=s_name,address,s_opening,n_family,n_refugees,s_capacity,tel,input_dt
+    &orderByFields=s_name
+    &f=geojson
+```
+
+---
+
+## 2.2 水位センサー `wl_sensor`
+
+```text
+https://services1.arcgis.com/Po7csFzrJvObgZNq/arcgis/rest/services/wl_sensor/FeatureServer/0
+```
+
+- ジオメトリ: Point / ネイティブ座標系: wkid 104020 → `outSR=4326` 指定推奨
+- 件数: 20
+- **平常時も高頻度で自動更新される**（調査時点で `updateDt` が数分前の値。IoTセンサー連携と思われる）
+
+### フィールド定義（12）
+
+| フィールド名 | 型      | エイリアス | 長さ | 備考                       |
+| ------------ | ------- | ---------- | ---- | -------------------------- |
+| `OBJECTID`   | OID     | OBJECTID   |      | 主キー                     |
+| `id`         | Integer | id         |      |                            |
+| `facilityCd` | String  | facilityCd | 254  | 施設コード                 |
+| `facilityNm` | String  | facilityNm | 254  | **施設名（設置場所）**     |
+| `updateDt`   | Date    | updateDt   | 8    | **計測日時**（エポックms） |
+| `deleteFlg`  | Integer | deleteFlg  |      | 削除フラグ                 |
+| `waterLv`    | Double  | waterLv    |      | **水位（cm）**             |
+| `flowDir`    | String  | flowDir    | 254  | 流向                       |
+| `flowVel`    | Double  | flowVel    |      | 流速                       |
+| `judgeLv`    | Double  | judgeLv    |      | **警戒水位（cm）**         |
+| `X`          | Double  | X          |      | 経度（属性としても保持）   |
+| `Y`          | Double  | Y          |      | 緯度（属性としても保持）   |
+
+### リクエスト例
+
+```text
+GET /wl_sensor/FeatureServer/0/query
+    ?where=1=1
+    &outFields=facilityNm,waterLv,judgeLv,updateDt
+    &orderByFields=updateDt DESC
+    &f=geojson
+```
+
+レスポンス例（抜粋）:
+
+```json
+{
+  "type": "Feature",
+  "geometry": { "type": "Point", "coordinates": [130.7187, 33.76196] },
+  "properties": {
+    "facilityNm": "知古",
+    "waterLv": 74,
+    "judgeLv": 130,
+    "updateDt": 1783919474000
+  }
+}
+```
+
+---
+
+## 2.3 転倒ゲート `tipping_gate`
+
+```text
+https://services1.arcgis.com/Po7csFzrJvObgZNq/arcgis/rest/services/tipping_gate/FeatureServer/0
+```
+
+- ジオメトリ: Point / ネイティブ座標系: wkid 104020 → `outSR=4326` 指定推奨
+- 件数: 2
+- `wl_sensor` と同一スキーマ（`waterLv`/`flowVel`/`judgeLv` の型が Single である点のみ差異）。高頻度更新。
+
+### フィールド定義（12）
+
+| フィールド名 | 型      | エイリアス | 長さ | 備考                   |
+| ------------ | ------- | ---------- | ---- | ---------------------- |
+| `OBJECTID`   | OID     | OBJECTID   |      | 主キー                 |
+| `id`         | Integer | id         |      |                        |
+| `facilityCd` | String  | facilityCd | 254  | 施設コード             |
+| `facilityNm` | String  | facilityNm | 254  | 施設名                 |
+| `updateDt`   | Date    | updateDt   | 8    | 計測日時（エポックms） |
+| `deleteFlg`  | Integer | deleteFlg  |      | 削除フラグ             |
+| `waterLv`    | Single  | waterLv    |      | 水位（cm）             |
+| `flowDir`    | String  | flowDir    | 254  | 流向                   |
+| `flowVel`    | Single  | flowVel    |      | 流速                   |
+| `judgeLv`    | Single  | judgeLv    |      | 警戒水位（cm）         |
+| `X`          | Double  | X          |      | 経度                   |
+| `Y`          | Double  | Y          |      | 緯度                   |
+
+リクエスト例は `wl_sensor` と同形。
+
+---
+
+## 2.4 交通規制 `traffic_reguration`
+
+```text
+https://services1.arcgis.com/Po7csFzrJvObgZNq/arcgis/rest/services/traffic_reguration/FeatureServer/0
+```
+
+- ジオメトリ: **Polyline**（規制区間の線データ）/ ネイティブ座標系: wkid 104020 → `outSR=4326` 指定推奨
+- 件数: 12（調査時点では全件 `非公開`＝市民向け公開中の規制なし）
+
+### フィールド定義（10）
+
+| フィールド名    | 型       | エイリアス      | 長さ | 備考 / ドメイン                                       |
+| --------------- | -------- | --------------- | ---- | ----------------------------------------------------- |
+| `OBJECTID`      | OID      | OBJECTID        |      | 主キー                                                |
+| `id`            | Integer  | id              |      |                                                       |
+| `status`        | String   | status          | 30   | **規制種別**: `通行止め（一部）` / `通行止め（全面）` |
+| `startDt`       | Date     | startDt         | 8    | 規制開始日時（エポックms）                            |
+| `completeDt`    | Date     | completeDt      | 8    | 規制解除日時（エポックms）                            |
+| `note`          | String   | note            | 100  | 備考                                                  |
+| `openFlg`       | String   | openFlg         | 30   | **公開フラグ**: `公開` / `非公開`                     |
+| `displayFlg`    | String   | displayFlg      | 30   | 表示フラグ: `表示（今回）` / `非表示（前回）`         |
+| `GlobalID`      | GlobalID | GlobalID        | 38   |                                                       |
+| `Shape__Length` | Double   | Shape\_\_Length |      | 線長（システム管理）                                  |
+
+### リクエスト例（公開中の規制のみ — ダッシュボードと同条件）
+
+```text
+GET /traffic_reguration/FeatureServer/0/query
+    ?where=openFlg = '公開'
+    &outFields=status,startDt,completeDt,note
+    &f=geojson
+```
+
+**注意**: アプリで表示する場合は必ず `openFlg = '公開'` で絞ること。フィルタなしだと市の内部運用データ（非公開の規制情報）まで取得できてしまう。
+
+---
+
+## 2.5 被害報告 `survey123_9df18097b82b47798f4762b531043442`
+
+```text
+https://services1.arcgis.com/Po7csFzrJvObgZNq/arcgis/rest/services/survey123_9df18097b82b47798f4762b531043442/FeatureServer/0
+```
+
+- ジオメトリ: Point / ネイティブ座標系: WGS84（wkid 4326）
+- 件数: 112（調査時点では全件 `非公開`。災害時に「公開」レコードが現れる想定）
+- Survey123（現地報告フォーム）由来のデータ。
+
+### フィールド定義（17）
+
+| フィールド名    | 型       | エイリアス        | 長さ | 備考 / ドメイン                                                                                                                              |
+| --------------- | -------- | ----------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `objectid`      | OID      | ObjectID          |      | 主キー                                                                                                                                       |
+| `globalid`      | GlobalID | GlobalID          | 38   |                                                                                                                                              |
+| `CreationDate`  | Date     | CreationDate      | 8    | 報告作成日時（エポックms）                                                                                                                   |
+| `Creator`       | String   | Creator           | 128  | 作成者（内部アカウント名）                                                                                                                   |
+| `EditDate`      | Date     | EditDate          | 8    | 最終更新日時（エポックms）                                                                                                                   |
+| `Editor`        | String   | Editor            | 128  | 更新者                                                                                                                                       |
+| `field_1`       | Double   | 受付番号          |      |                                                                                                                                              |
+| `field_2`       | String   | 災害状況          | 255  | `住家被害` / `非住家被害` / `道路被害` / `用水路` / `河川` / `ため池` / `土砂災害` / `橋りょう` / `断水等` / `人的被害` / `other`（=その他） |
+| `field_2_other` | String   | その他 - 災害状況 | 255  | `field_2 = 'other'` 時の自由記述                                                                                                             |
+| `field_3`       | String   | 作業結果          | 1000 |                                                                                                                                              |
+| `field_4`       | Date     | 作業完了日時      | 255  | エポックms                                                                                                                                   |
+| `field_7`       | String   | 公開フラグ        | 255  | **`公開` / `非公開`**                                                                                                                        |
+| `field_8`       | String   | 表示フラグ        | 255  | `表示（今回）` / `非表示（前回）`                                                                                                            |
+| `field_10`      | String   | 報告者の氏名      | 255  | **個人情報**                                                                                                                                 |
+| `field_11`      | String   | 報告者の電話番号  | 255  | **個人情報**                                                                                                                                 |
+| `field_12`      | String   | 分析係記入欄      | 1000 | 内部運用欄                                                                                                                                   |
+| `field_13`      | String   | 災害対策本部より  | 1000 | 本部コメント                                                                                                                                 |
+
+### リクエスト例（公開分のみ — ダッシュボードと同条件）
+
+```text
+GET /survey123_9df18097b82b47798f4762b531043442/FeatureServer/0/query
+    ?where=field_7 = '公開'
+    &outFields=field_1,field_2,field_2_other,field_3,field_13,CreationDate,EditDate
+    &f=geojson
+```
+
+**注意（個人情報）**: `field_10`（氏名）・`field_11`（電話番号）は報告者の個人情報にあたるため、**アプリでは絶対に取得・表示・保存しないこと**。`outFields` は常に許可フィールドの明示指定とする。
+
+---
+
+## 3. ダッシュボードのウィジェット再現マッピング
+
+モバイルアプリで元ダッシュボードと同じ表示を作る場合の対応表。
+
+| ダッシュボード要素 | レイヤー                                     | フィルタ             | 表示内容                                                                    |
+| ------------------ | -------------------------------------------- | -------------------- | --------------------------------------------------------------------------- |
+| 開設避難所リスト   | refuges                                      | `s_opening <> '0'`   | `{s_opening}` `{s_name}`（`{n_family}`世帯・`{n_refugees}`人が避難中）      |
+| 市内の被害（件数） | survey123                                    | `field_7 = '公開'`   | `count(objectid)` 件                                                        |
+| 交通規制（件数）   | traffic_reguration                           | `openFlg = '公開'`   | `count(OBJECTID)` 箇所                                                      |
+| 水位センサーリスト | wl_sensor                                    | なし                 | `{facilityNm}`: `{updateDt}`時点 水位`{waterLv}`cm（警戒水位`{judgeLv}`cm） |
+| 転倒ゲートリスト   | tipping_gate                                 | なし                 | 同上                                                                        |
+| 市民公開用マップ   | Webマップ `1d74495fd8cb493497639699a66fd625` | 各レイヤー定義に従う | 全レイヤー重畳                                                              |
+
+件数取得は `returnCountOnly=true`、または統計クエリ（`outStatistics` の `count`）を使う。
+
+---
+
+## 4. 実装上の注意
+
+1. **読み取り専用で使うこと。** サービスの capabilities に `Update` / `Editing`（survey123 と traffic_reguration は `Create` / `Delete` も）が含まれているが、これは市の内部運用（Survey123 / 職員編集）用。書き込み系エンドポイントは呼ばない。survey123 レイヤーは匿名の更新・削除が明示的に無効化されているが、他レイヤーも含め一切試みないこと。
+2. **公開フラグの尊重。** 非公開レコードも技術的には取得できるが、アプリではダッシュボードと同じフィルタ（`field_7='公開'`、`openFlg='公開'`、`s_opening` 等）を必ず適用し、市が非公開としているデータを表示しない。
+3. **平常時はデータが少ない。** 被害報告・交通規制の「公開」件数は平常時0件。空状態のUIを設計しておく。水位センサー・転倒ゲートは平常時も更新され続けるので、アプリの疎通確認・鮮度表示にはこれを使うとよい。
+4. **ポーリング間隔は控えめに。** 元ダッシュボードにもリアルタイムpushはなく、ポーリング相当。センサー系は1〜10分間隔、マスタ系（避難所位置等）はアプリ起動時＋長めのキャッシュで十分。自治体の共有インフラなので過剰リクエストは避ける。
+5. **サービス消失への備え。** 市側の都合で非公開化・スキーマ変更されうる。エラー時のフォールバック表示と、フィールド名のハードコードを1箇所に集約する設計を推奨。
+6. **ベースマップ。** Webマップは背景図として ArcGIS Online のアイテム（`73b77bc7...` ほか）を参照している。モバイルアプリでは OpenStreetMap や地理院タイルなど自前のベースマップを使う方がライセンス的に簡明。
+
+---
+
+## 5. 外部連携：川の防災情報（国交省）— リンクアウト方式
+
+遠賀川本川の水位・洪水予報など「川の防災情報」相当の情報は、**アプリ内にデータとして取り込まず、該当ページを外部ブラウザ（または WebView）で開くリンクアウト方式**とする。
+
+背景: `www.river.go.jp`（川の防災情報）・`www1.river.go.jp`（水文水質データベース）はプログラムからのアクセスが 403 Forbidden となり、「This site prohibits data acquisition using tools, etc.（ツール等によるデータ取得禁止）」と明示されている（調査日: 2026-07-13）。サイト内部 API をアプリのデータソースにすることはできないが、ページへのリンクは禁止されていない。
+
+なお、気象庁の防災情報 JSON（警報・指定河川洪水予報等）を代わりに取り込む案は採用しない。サイト内部用の非公式エンドポイントであり、外部利用の保証がなくパス・スキーマが予告なく変わりうるため、防災情報の供給路としては現実的でない。
+
+### リンク先（市町村ページに1本）
+
+観測所を個別にリンクすると、選定・URL 調査・国交省側の改修への追従が観測所の数だけ増える。市町村コードで直方市に絞った観測所一覧ページ1本にして、追従点を1箇所へ集約する。
+
+```text
+https://www.river.go.jp/index/twninfo/pc?prefCd=4001&twnCd=4001204&type=obs&tm=stg
+```
+
+| パラメータ | 意味（URL からの推定を含む）       |
+| ---------- | ---------------------------------- |
+| `prefCd`   | 都道府県コード（`4001` = 福岡）    |
+| `twnCd`    | 市町村コード（`4001204` = 直方市） |
+| `type`     | 表示種別（`obs` = 観測所）         |
+| `tm`       | 観測項目（`stg` = 水位）           |
+
+- パラメータの正確な意味は公開されていないため、**実際にブラウザで目的の表示にした状態の URL をそのままコピーして使う**のが確実。
+- URL 仕様は国交省側の改修で変わりうるため、リンク URL はハードコードせず設定値（`src/constants/links.ts` に集約。将来は Remote Config 等）で持ち、1箇所の変更で差し替えられるようにする。
+
+### 実装イメージ
+
+- 水位画面（§2.2）や地図の要約に「直方市の川の水位（川の防災情報）」ボタンを置き、外部ブラウザで開く。
+- WebView 内表示にする場合も「ページをそのまま表示」するだけとし、WebView 経由でのデータ抽出・加工は行わない。

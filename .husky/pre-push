@@ -1,0 +1,13 @@
+# 保護ブランチへの直接 push を止め、PR 経由に限定する
+# (private + Free プランでは GitHub 側のブランチ保護が使えないため、ローカルで防ぐ)。
+# カレントブランチ名ではなく push 先の ref で判定する:
+# `git push origin feature:develop` のような別名 push もすり抜けさせないため
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main | refs/heads/develop | refs/heads/production)
+      echo "エラー: '${remote_ref#refs/heads/}' ブランチへの直接プッシュは禁止されています。"
+      echo "Pull Request を作成してください。"
+      exit 1
+      ;;
+  esac
+done

@@ -1,0 +1,803 @@
+<title>直方ベース UIカンプ</title>
+<style>
+  /* ==========  sheet tokens  ========== */
+  :root {
+    --bg: #eef1f3;
+    --card: #ffffff;
+    --ink: #1c2a36;
+    --sub: #5b6b78;
+    --line: #d6dde2;
+    --accent: #1e4e79;
+    --accent-soft: #dce8f1;
+    /* app palette (phones keep these in both themes) */
+    --ai: #1e4e79;          /* 川藍 primary */
+    --ai-deep: #16324f;
+    --river: #a9cbdd;
+    --paper: #f7f6f2;
+    --app-ink: #22303c;
+    --app-sub: #77848f;
+    --ok: #2f8f6b;
+    --warn: #d97e00;
+    --danger: #c6372f;
+    --ember: #d96c3d;       /* 燈 — AR 体験のスライダー等 */
+    --demo: #5b4a8a;        /* デモモード識別色 */
+    --wcalm: #3d9bcf;       /* 水位ピン(平常) */
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10181f;
+      --card: #18232c;
+      --ink: #e5ebf0;
+      --sub: #93a3af;
+      --line: #2b3844;
+      --accent: #7fb0d8;
+      --accent-soft: #1d3245;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10181f; --card: #18232c; --ink: #e5ebf0; --sub: #93a3af;
+    --line: #2b3844; --accent: #7fb0d8; --accent-soft: #1d3245;
+  }
+  :root[data-theme="light"] {
+    --bg: #eef1f3; --card: #ffffff; --ink: #1c2a36; --sub: #5b6b78;
+    --line: #d6dde2; --accent: #1e4e79; --accent-soft: #dce8f1;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 56px 24px 80px; }
+
+  /* ==========  sheet typography  ========== */
+  .eyebrow {
+    font-size: 12px; letter-spacing: .14em; color: var(--sub);
+    text-transform: uppercase; margin: 0 0 14px;
+  }
+  h1 {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    font-size: clamp(30px, 5vw, 44px);
+    font-weight: 600; letter-spacing: .04em;
+    margin: 0 0 6px; text-wrap: balance;
+  }
+  .tagline {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    font-size: 17px; color: var(--accent); letter-spacing: .06em; margin: 0 0 18px;
+  }
+  .lede { max-width: 40em; color: var(--sub); margin: 0; }
+  h2 {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    font-size: 22px; font-weight: 600; letter-spacing: .06em;
+    margin: 72px 0 8px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .sec-note { color: var(--sub); font-size: 13px; margin: 0 0 28px; max-width: 46em; }
+
+  /* ==========  principles  ========== */
+  .principles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .pr {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .pr b { display: block; font-size: 14px; margin-bottom: 4px; color: var(--accent); }
+  .pr p { margin: 0; font-size: 13px; color: var(--sub); }
+
+  /* ==========  tokens  ========== */
+  .swatches { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+  .sw { width: 132px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .sw .chip { height: 56px; }
+  .sw .meta { padding: 8px 10px 10px; }
+  .sw .nm { font-size: 12px; font-weight: 600; display: block; }
+  .sw .hx { font-family: "SF Mono", Menlo, monospace; font-size: 11px; color: var(--sub); }
+  .tok-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 13px; color: var(--sub); }
+  .st-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 999px; padding: 3px 12px; font-size: 12px; font-weight: 600; color: #fff;
+  }
+  .st-chip i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.85); }
+
+  /* ==========  phone frame  ========== */
+  .screens { display: flex; flex-wrap: wrap; gap: 36px 28px; justify-content: center; }
+  figure.shot { margin: 0; width: 276px; }
+  .phone {
+    width: 276px; height: 588px;
+    background: #0b0f14; border-radius: 42px; padding: 10px;
+    box-shadow: 0 24px 48px -24px rgba(10, 30, 50, .45);
+  }
+  .screen {
+    position: relative; width: 100%; height: 100%;
+    background: var(--paper); border-radius: 33px; overflow: hidden;
+    display: flex; flex-direction: column;
+    color: var(--app-ink);
+    font-size: 12px; line-height: 1.5;
+  }
+  figcaption { margin-top: 14px; }
+  figcaption .sid {
+    font-family: "SF Mono", Menlo, monospace; font-size: 11px; color: var(--accent);
+    letter-spacing: .08em; display: block; margin-bottom: 2px;
+  }
+  figcaption .tt { font-weight: 600; font-size: 14px; display: block; margin-bottom: 3px; }
+  figcaption p { margin: 0; font-size: 12.5px; color: var(--sub); }
+
+  /* status bar / tab bar */
+  .sbar {
+    height: 30px; flex: none; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 18px; font-size: 11px; font-weight: 600;
+  }
+  .sbar .batt { width: 20px; height: 10px; border: 1px solid currentColor; border-radius: 3px; position: relative; opacity: .8; }
+  .sbar .batt::after { content: ""; position: absolute; inset: 2px 5px 2px 2px; background: currentColor; border-radius: 1px; }
+  .tabbar {
+    flex: none; height: 56px; background: #fff; border-top: 1px solid #e6e4dd;
+    display: flex; align-items: stretch;
+  }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #9aa4ac; font-size: 9px; }
+  .tab svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.6; }
+  .tab.on { color: var(--ai); font-weight: 600; }
+
+  .ph-head { flex: none; padding: 4px 16px 6px; display: flex; align-items: baseline; justify-content: space-between; }
+  .ph-head .ttl { font-size: 17px; font-weight: 700; letter-spacing: .02em; }
+  .ph-head .loc { font-size: 10px; color: var(--app-sub); }
+
+  /* ==========  map  ========== */
+  .map { position: relative; flex: 1; background: #ece9e0; overflow: hidden; }
+  .river {
+    position: absolute; top: -12%; bottom: -12%; left: 52%; width: 44px;
+    background: linear-gradient(90deg, #9ec3d8, var(--river) 55%, #9ec3d8);
+    transform: rotate(9deg); border-radius: 40px;
+  }
+  .river-branch {
+    position: absolute; top: 52%; left: -8%; width: 70%; height: 26px;
+    background: #b7d3e2; transform: rotate(-14deg); border-radius: 30px;
+  }
+  .road { position: absolute; background: #fdfcf8; box-shadow: 0 0 0 1px #dcd8cc; }
+  .road.h1 { top: 30%; left: -4%; right: -4%; height: 7px; transform: rotate(-4deg); }
+  .road.h2 { top: 71%; left: -4%; right: -4%; height: 7px; transform: rotate(3deg); }
+  .road.v1 { top: -4%; bottom: -4%; left: 24%; width: 7px; transform: rotate(6deg); }
+  .rail { position: absolute; top: 12%; left: -5%; right: -5%; height: 3px; transform: rotate(-9deg);
+    background: repeating-linear-gradient(90deg, #7a7f85 0 10px, #fff 10px 16px); opacity: .6; }
+
+  .pin { position: absolute; width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+  .pin.shelter-closed { width: 10px; height: 10px; background: #b8bdc2; }
+  .pin.ok { background: var(--ok); }
+  .pin.warn { background: var(--warn); }
+  .pin.danger { background: var(--danger); }
+  .pin.sensor { border-radius: 3px; background: var(--wcalm); }
+  .pin.sensor.warn { background: var(--warn); }
+  .pin.sensor.danger { background: var(--danger); }
+  .pin.car { border-radius: 4px; background: var(--ai); width: 15px; height: 15px; }
+  .pin.dmg { background: var(--warn); transform: rotate(45deg); border-radius: 3px; }
+  .tline { position: absolute; height: 4px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  .homepin-mini {
+    position: absolute; width: 16px; height: 16px; border-radius: 50% 50% 50% 3px;
+    background: var(--ai); border: 2px solid #fff; transform: rotate(45deg);
+    box-shadow: 0 1px 4px rgba(0,0,0,.3);
+  }
+
+  /* hazard patches(重ねるハザードマップと同じ凡例色) */
+  .hz { position: absolute; border-radius: 45% 55% 50% 50%; opacity: .55; }
+  .hz.d1 { background: #f7f5a9; }
+  .hz.d2 { background: #ffd8c0; }
+  .hz.d3 { background: #ffb7b7; }
+
+  /* layer chips: 意味で2段(上=場所・観測点、下=災害情報) */
+  .layer-chips { position: absolute; top: 8px; left: 8px; right: 64px; display: flex; flex-direction: column; gap: 4px; }
+  .layer-row { display: flex; gap: 4px; flex-wrap: wrap; }
+  .lchip { background: rgba(255,255,255,.94); border-radius: 999px; padding: 3px 9px; font-size: 9px; font-weight: 600; color: var(--app-sub); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .lchip.on { background: var(--ai); color: #fff; }
+
+  /* 右上の丸ボタン(市域に戻る・現在地) */
+  .map-btns { position: absolute; top: 8px; right: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .map-btn {
+    width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,.94);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ai); font-size: 12px; font-weight: 700;
+    box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  }
+  .map-btn .loc-arrow { display: inline-block; transform: rotate(-45deg); font-size: 10px; }
+
+  /* ハザードパネル(レイヤー選択+凡例。凡例はたためる) */
+  .hz-panel {
+    flex: none; margin: 0 12px 8px; position: relative; z-index: 2;
+    background: #fff; border-radius: 14px; padding: 8px 12px;
+    box-shadow: 0 6px 20px -8px rgba(20,40,60,.25);
+  }
+  .hz-chips { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .hz-chip { border-radius: 999px; padding: 2.5px 9px; font-size: 9px; font-weight: 600; background: var(--paper); color: var(--app-sub); }
+  .hz-chip.on { background: var(--ai); color: #fff; }
+  .hz-fold { margin-left: auto; font-size: 9.5px; font-weight: 600; color: var(--app-sub); }
+  .hz-fold b { color: var(--ai); font-size: 12px; font-weight: 600; }
+  .hz-legend { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; font-size: 8.5px; color: var(--app-sub); }
+  .hz-legend i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 3px; vertical-align: -1px; }
+  .hz-src { margin-top: 5px; font-size: 8px; color: var(--app-sub); }
+
+  /* summary card(いまの状況。たためる) */
+  .sumcard {
+    flex: none; margin: 0 12px 10px; position: relative; z-index: 2;
+    background: #fff; border-radius: 14px; padding: 8px 14px 10px;
+    box-shadow: 0 6px 20px -8px rgba(20,40,60,.25);
+  }
+  .sumhead { display: flex; align-items: center; justify-content: space-between; padding-bottom: 2px; }
+  .sumhead .cap { font-size: 10px; font-weight: 600; color: var(--app-sub); }
+  .sumhead .chev { font-size: 13px; font-weight: 600; color: var(--ai); }
+  .sumrow { display: flex; align-items: center; gap: 8px; padding: 3.5px 0; font-size: 11px; }
+  .sumrow .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .sumrow.link { color: var(--ai); font-weight: 600; border-top: 1px solid #eeece6; margin-top: 4px; padding-top: 7px; }
+  .sumrow .val { margin-left: auto; color: var(--app-sub); font-variant-numeric: tabular-nums; }
+  .sumrow.muted { color: var(--app-sub); }
+
+  .demo-banner {
+    flex: none; background: var(--demo); color: #fff; font-size: 9px; font-weight: 600;
+    padding: 5px 12px; display: flex; align-items: center; gap: 6px; white-space: nowrap;
+  }
+  .demo-banner i { width: 7px; height: 7px; border-radius: 50%; background: #ffd76b; }
+
+  /* ==========  water list  ========== */
+  .wl-sum { flex: none; margin: 4px 14px 8px; background: var(--ai); color: #fff; border-radius: 14px; padding: 12px 16px; }
+  .wl-sum .big { font-size: 15px; font-weight: 700; }
+  .wl-sum .sub { font-size: 10px; opacity: .8; }
+  .wl-cap { flex: none; margin: 0 16px 4px; font-size: 11px; font-weight: 700; }
+  .wl-list { flex: 1; overflow: hidden; padding: 0 14px; display: flex; flex-direction: column; gap: 7px; }
+  .wl-row { background: #fff; border-radius: 12px; padding: 8px 12px 9px; box-shadow: 0 1px 4px rgba(30,50,70,.08); }
+  .wl-top { display: flex; align-items: center; gap: 8px; }
+  .wl-top .nm { font-weight: 600; font-size: 12px; }
+  .wl-top .st { margin-left: auto; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 999px; color: #fff; }
+  .wl-val { font-size: 10px; color: var(--app-sub); font-variant-numeric: tabular-nums; margin: 1px 0 5px; }
+  .bar { height: 6px; border-radius: 4px; background: #edeae2; position: relative; overflow: hidden; }
+  .bar i { position: absolute; inset: 0 auto 0 0; border-radius: 4px; }
+  .wl-link { flex: none; margin: 8px 14px 12px; background: #fff; border: 1px solid #e2ded4; border-radius: 12px; padding: 10px 14px; font-size: 11px; font-weight: 600; color: var(--ai); display: flex; justify-content: space-between; align-items: center; }
+  .wl-link small { display: block; font-weight: 400; font-size: 9px; color: var(--app-sub); }
+
+  /* ==========  shelter list  ========== */
+  .flt { flex: none; padding: 0 16px 8px; }
+  .flt .lb { font-size: 10px; color: var(--app-sub); margin-bottom: 4px; }
+  .flt .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .fchip { border-radius: 999px; padding: 3px 12px; font-size: 10px; font-weight: 600; background: #fff; border: 1px solid #e2ded4; color: var(--app-sub); }
+  .fchip.on { background: var(--ai); border-color: var(--ai); color: #fff; }
+  .sl-head { flex: none; padding: 0 16px 4px; font-size: 10.5px; color: var(--app-sub); }
+  .sl-list { flex: 1; overflow: hidden; padding: 0 14px; display: flex; flex-direction: column; gap: 7px; }
+  .sl-row { background: #fff; border-radius: 12px; padding: 8px 12px 9px; box-shadow: 0 1px 4px rgba(30,50,70,.08); }
+  .sl-row.closed { opacity: .78; }
+  .sl-top { display: flex; align-items: center; gap: 6px; }
+  .sl-top .nm { font-weight: 600; font-size: 12px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sl-top .st { font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 999px; color: #fff; flex: none; }
+  .sl-top .arw { color: #c4c9cd; }
+  .sl-addr { font-size: 9.5px; color: var(--app-sub); margin-top: 1px; }
+  .sl-stat { font-size: 10.5px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .sl-tags { display: flex; gap: 5px; margin-top: 5px; }
+  .htag { font-size: 9px; padding: 2px 8px; border-radius: 999px; background: #e9f2ee; color: var(--ok); font-weight: 600; }
+
+  /* ==========  AR  ========== */
+  .ar-scene { position: relative; flex: 1; background: linear-gradient(#b9cdda 0%, #dbe6ec 46%, #e9ede6 60%); overflow: hidden; }
+  .bld { position: absolute; bottom: 40%; background: #46525c; }
+  .bld.b1 { left: -4%; width: 26%; height: 30%; }
+  .bld.b2 { left: 20%; width: 15%; height: 22%; background: #526069; }
+  .bld.b3 { right: 24%; width: 20%; height: 36%; }
+  .bld.b4 { right: -3%; width: 24%; height: 26%; background: #526069; }
+  .ground { position: absolute; bottom: 37%; left: 0; right: 0; height: 3%; background: #cfcabb; }
+  /* 実写ループ動画の濁流をグラデで代用 */
+  .water {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 40%;
+    background: linear-gradient(rgba(122,84,56,.88), rgba(74,48,30,.94));
+    border-top: 2px solid rgba(240,225,205,.6);
+  }
+  .water::before {
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(176deg, rgba(255,235,210,.10) 0 3px, transparent 3px 16px);
+  }
+  /* 量水標(目盛り付きポール) */
+  .gauge { position: absolute; bottom: 37%; left: 46%; width: 7px; height: 48%; background: #e8e6e0; border-radius: 2px; box-shadow: 0 0 3px rgba(0,0,0,.25); }
+  .gauge::before { content: ""; position: absolute; top: -6px; left: -1px; right: -1px; height: 7px; background: var(--danger); border-radius: 2px; }
+  .gauge-mark { position: absolute; left: 12px; font-size: 8.5px; color: #3b4652; background: rgba(255,255,255,.8); border-radius: 3px; padding: 0 4px; }
+  .depth-tag {
+    position: absolute; bottom: 40%; left: 56%;
+    color: #2fbfa6; font-size: 12px; font-weight: 700; letter-spacing: .03em;
+    text-shadow: 0 1px 3px rgba(0,0,0,.5);
+  }
+  .ar-note {
+    position: absolute; top: 40px; left: 50%; transform: translateX(-50%);
+    background: rgba(14,42,61,.78); color: #fff; font-size: 9.5px; border-radius: 999px; padding: 4px 12px; white-space: nowrap;
+  }
+  .ar-close { position: absolute; top: 38px; left: 12px; width: 26px; height: 26px; border-radius: 50%; background: rgba(14,42,61,.7); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .ar-ctl {
+    position: absolute; left: 10px; right: 10px; bottom: 10px;
+    background: rgba(255,255,255,.95); border-radius: 16px; padding: 10px 14px 12px;
+  }
+  .ar-res { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .ar-res b { font-size: 13px; color: var(--danger); font-variant-numeric: tabular-nums; }
+  .kind-chips { display: flex; gap: 5px; }
+  .kchip { border-radius: 999px; padding: 2.5px 10px; font-size: 9px; font-weight: 700; background: #edeae2; color: var(--app-sub); }
+  .kchip.on { background: var(--ai); color: #fff; }
+  .ar-ctl .lbl { display: flex; justify-content: space-between; align-items: baseline; font-size: 9.5px; color: var(--app-sub); font-weight: 600; margin-top: 6px; }
+  .ar-ctl .lbl b { color: var(--app-ink); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .track { position: relative; height: 4px; border-radius: 4px; background: #dfe3e0; margin-top: 6px; }
+  .track .fill { position: absolute; inset: 0 89% 0 0; background: var(--ember); border-radius: 4px; }
+  .track .thumb { position: absolute; top: 50%; left: 11%; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2.5px solid var(--ember); transform: translate(-50%, -50%); box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+  .track.blue .fill { inset: 0 100% 0 0; background: var(--ai); }
+  .track.blue .thumb { left: 0%; border-color: var(--ai); }
+  .ar-hint { margin-top: 5px; font-size: 8.5px; color: var(--app-sub); text-align: center; }
+
+  /* ==========  detail sheet  ========== */
+  .sheet {
+    position: absolute; left: 8px; right: 8px; bottom: 8px; background: #fff;
+    border-radius: 18px; padding: 10px 16px 14px;
+    box-shadow: 0 10px 30px -10px rgba(20,40,60,.4);
+  }
+  .grab { width: 36px; height: 4px; border-radius: 3px; background: #d8d5cc; margin: 0 auto 8px; }
+  .sh-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .sh-close { color: var(--app-sub); font-size: 13px; }
+  .sh-name { font-size: 14px; font-weight: 700; }
+  .sh-addr { font-size: 9.5px; color: var(--app-sub); margin-bottom: 6px; }
+  .sh-stats { display: flex; gap: 6px; margin: 6px 0; }
+  .stat { flex: 1; background: var(--paper); border-radius: 10px; padding: 6px 9px; }
+  .stat .k { font-size: 8.5px; color: var(--app-sub); }
+  .stat .v { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat .v small { font-size: 8.5px; font-weight: 500; color: var(--app-sub); }
+  .sh-when { font-size: 9px; color: var(--app-sub); margin-bottom: 6px; }
+  .sh-sec { font-size: 9px; font-weight: 700; color: var(--app-sub); margin: 6px 0 4px; }
+  .haz-tags { display: flex; gap: 5px; }
+  .htag.off { background: #f0efe9; color: #a6adb3; }
+  .bd { border: 1px solid #eeece6; border-radius: 10px; overflow: hidden; font-size: 10px; }
+  .bd-row { display: flex; border-top: 1px solid #eeece6; }
+  .bd-row:first-child { border-top: 0; background: var(--paper); font-weight: 600; color: var(--app-sub); font-size: 9px; }
+  .bd-row span { flex: 1; padding: 3px 8px; font-variant-numeric: tabular-nums; }
+  .bd-row span + span { text-align: right; }
+  .sh-tel { font-size: 10px; color: var(--app-sub); margin: 6px 0; }
+  .btn { text-align: center; border-radius: 12px; padding: 8px 0; font-size: 12px; font-weight: 700; }
+  .btn.pri { background: var(--ai); color: #fff; }
+
+  /* ==========  settings  ========== */
+  .set-scroll { flex: 1; overflow: hidden; padding-top: 2px; }
+  .set-group { margin: 0 14px 12px; }
+  .set-cap { font-size: 10px; color: var(--app-sub); letter-spacing: .08em; margin: 0 4px 4px; }
+  .set-card { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(30,50,70,.07); }
+  .set-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; font-size: 12px; font-weight: 600; border-top: 1px solid #f0eee8; }
+  .set-row:first-child { border-top: 0; }
+  .set-row .arw { margin-left: auto; color: #c4c9cd; }
+  .set-row .state { margin-left: auto; font-size: 9.5px; font-weight: 400; color: var(--app-sub); }
+  .set-row .state + .arw { margin-left: 6px; }
+  .set-row .soon { margin-left: auto; font-size: 9px; font-weight: 700; color: var(--app-sub); background: #eeece6; border-radius: 999px; padding: 2px 9px; }
+  .set-row.off { color: #a6adb3; }
+  .segment { margin-left: auto; display: flex; background: var(--paper); border-radius: 999px; padding: 2px; }
+  .seg { border-radius: 999px; padding: 2px 9px; font-size: 9.5px; font-weight: 600; color: var(--app-sub); }
+  .seg.on { background: var(--ai); color: #fff; }
+  .toggle { margin-left: auto; width: 36px; height: 21px; border-radius: 999px; background: #d8d5cc; position: relative; flex: none; }
+  .toggle::after { content: ""; position: absolute; top: 2px; left: 2px; width: 17px; height: 17px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .toggle.on { background: var(--demo); }
+  .toggle.on::after { left: auto; right: 2px; }
+  .set-note { font-size: 9px; color: var(--app-sub); margin: 4px 6px 0; }
+  .legal { padding: 8px 14px; font-size: 9.5px; font-weight: 400; color: var(--app-sub); line-height: 1.55; border-top: 1px solid #f0eee8; }
+  .legal:first-child { border-top: 0; }
+
+  /* ==========  home pin (S-07)  ========== */
+  .homepin {
+    position: absolute; top: 46%; left: 50%; transform: translate(-50%, -50%);
+    width: 28px; height: 28px; border-radius: 50% 50% 50% 4px;
+    background: var(--ai); border: 2.5px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 13px; box-shadow: 0 3px 10px rgba(0,0,0,.35);
+  }
+  .pin-panel { flex: none; background: #fff; padding: 8px 16px 10px; display: flex; flex-direction: column; gap: 5px; }
+  .pin-panel .hint { font-size: 10.5px; line-height: 1.45; }
+  .pin-panel .privacy { font-size: 9px; color: var(--app-sub); line-height: 1.45; }
+  .pin-panel .clear { text-align: center; font-size: 11px; font-weight: 600; color: var(--danger); padding-top: 2px; }
+
+  /* pair connector */
+  .pair { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; justify-content: center; }
+  .connector {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--sub); font-size: 11px; max-width: 130px; text-align: center;
+  }
+  .connector .sw-ic {
+    width: 46px; height: 46px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+    display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 700;
+  }
+
+  .foot { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--sub); font-size: 12px; }
+  .foot p { margin: 4px 0; }
+  @media (max-width: 640px) {
+    .wrap { padding: 40px 16px 60px; }
+    .screens { gap: 28px 16px; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">UI Design Comp v2.0 / 2026-07-19 / 実装反映版(e-ZUKA スマートアプリコンテスト2026)</p>
+    <h1>直方ベース</h1>
+    <p class="tagline">遠賀川のまちの、ふだんの入口。</p>
+    <p class="lede">防災アプリの「非常時の赤」で塗らない。ふだん開きたくなる生活アプリの顔で作り、危険は水の言葉(平常・注意・危険)で静かに、しかしはっきり語る。本版は実装済みの機能構成(F-01〜F-13)を反映したカンプで、画面の要素・文言は実アプリと対応する。</p>
+  </header>
+
+  <h2>デザインの前提</h2>
+  <div class="principles">
+    <div class="pr"><b>川藍を基調に</b><p>アイデンティティの中心は遠賀川。主色は川藍(#1E4E79)、背景は生成りの紙色。緊急色は状態表示のためだけに取っておく。</p></div>
+    <div class="pr"><b>状態は3色の水の言葉</b><p>平常(緑)・注意(橙)・危険(赤)を全画面で共通化。ピンもバーもチップも同じ言語を話す。灰色は「閉鎖・データなし」。</p></div>
+    <div class="pr"><b>平常時が主役</b><p>平常時は空データが正常系(要件 NF-05)。「何もない」を安心の表示として設計し、災害時の姿はデモモード(紫)で切り替えて見せる。</p></div>
+    <div class="pr"><b>だれでも読める</b><p>文字サイズは標準・大きめ・特大の3段階。やさしい日本語モード(F-13)では全文言がふりがな付きの平易な表現に切り替わる。</p></div>
+  </div>
+
+  <h2>トークン</h2>
+  <div class="swatches">
+    <div class="sw"><div class="chip" style="background:#1e4e79"></div><div class="meta"><span class="nm">川藍 / Primary</span><span class="hx">#1E4E79</span></div></div>
+    <div class="sw"><div class="chip" style="background:#f7f6f2"></div><div class="meta"><span class="nm">生成り / BG</span><span class="hx">#F7F6F2</span></div></div>
+    <div class="sw"><div class="chip" style="background:#2f8f6b"></div><div class="meta"><span class="nm">平常 / OK</span><span class="hx">#2F8F6B</span></div></div>
+    <div class="sw"><div class="chip" style="background:#d97e00"></div><div class="meta"><span class="nm">注意 / Warn</span><span class="hx">#D97E00</span></div></div>
+    <div class="sw"><div class="chip" style="background:#c6372f"></div><div class="meta"><span class="nm">危険 / Danger</span><span class="hx">#C6372F</span></div></div>
+    <div class="sw"><div class="chip" style="background:#d96c3d"></div><div class="meta"><span class="nm">燈 / AR 操作色</span><span class="hx">#D96C3D</span></div></div>
+    <div class="sw"><div class="chip" style="background:#5b4a8a"></div><div class="meta"><span class="nm">デモモード</span><span class="hx">#5B4A8A</span></div></div>
+    <div class="sw"><div class="chip" style="background:#3d9bcf"></div><div class="meta"><span class="nm">水位ピン(平常)</span><span class="hx">#3D9BCF</span></div></div>
+  </div>
+  <div class="tok-row">
+    <span>状態チップ:</span>
+    <span class="st-chip" style="background:#2f8f6b"><i></i>平常</span>
+    <span class="st-chip" style="background:#d97e00"><i></i>注意</span>
+    <span class="st-chip" style="background:#c6372f"><i></i>危険</span>
+    <span style="margin-left:12px">書体: Hiragino Sans(システム)/ 数値は tabular-nums。コンテスト版はライトテーマのみ。地図上の水位ピンは、平常時のみ避難所の緑と紛れない水色にする(一覧の状態チップは共通3色のまま)。</span>
+  </div>
+
+  <h2>S-01 ホーム地図(平常時とデモモード)</h2>
+  <p class="sec-note">同じ画面がトグルひとつで災害時の姿になる。これがデモブースの主役(要件 F-09)。レイヤーは6種(避難所・車中泊・水位・被害・規制・ハザード)を意味で2段に分け、要約カード「いまの状況」はたためる。デモモード中は紫のバナーを常時表示し、有効化と同時に地図が直方市中心(直方駅付近)へ戻る。</p>
+
+  <div class="pair">
+    <!-- S-01 平常時 -->
+    <figure class="shot">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="batt"></span></div>
+        <div class="ph-head"><span class="ttl">直方ベース</span></div>
+        <div class="map">
+          <div class="rail"></div>
+          <div class="river"></div>
+          <div class="river-branch"></div>
+          <div class="road h1"></div><div class="road h2"></div><div class="road v1"></div>
+          <div class="layer-chips">
+            <div class="layer-row"><span class="lchip on">避難所</span><span class="lchip on">車中泊</span><span class="lchip on">水位</span></div>
+            <div class="layer-row"><span class="lchip on">被害</span><span class="lchip on">規制</span><span class="lchip">ハザード</span></div>
+          </div>
+          <div class="map-btns"><div class="map-btn">⌂</div><div class="map-btn"><span class="loc-arrow">➤</span></div></div>
+          <span class="pin shelter-closed" style="top:32%;left:14%"></span>
+          <span class="pin shelter-closed" style="top:48%;left:33%"></span>
+          <span class="pin shelter-closed" style="top:62%;left:18%"></span>
+          <span class="pin shelter-closed" style="top:40%;left:70%"></span>
+          <span class="pin shelter-closed" style="top:76%;left:64%"></span>
+          <span class="pin car" style="top:36%;left:44%"></span>
+          <span class="pin car" style="top:70%;left:38%"></span>
+          <span class="pin sensor" style="top:28%;left:56%"></span>
+          <span class="pin sensor" style="top:52%;left:60%"></span>
+          <span class="pin sensor" style="top:66%;left:44%"></span>
+          <span class="homepin-mini" style="top:56%;left:27%"></span>
+        </div>
+        <div class="sumcard">
+          <div class="sumhead"><span class="cap">いまの状況</span><span class="chev">▾</span></div>
+          <div class="sumrow"><span class="dot" style="background:#2f8f6b"></span>水位 全22地点 平常</div>
+          <div class="sumrow muted"><span class="dot" style="background:#b8bdc2"></span>開設中の避難所 なし</div>
+          <div class="sumrow muted"><span class="dot" style="background:#b8bdc2"></span>現在、公開されている被害情報はありません</div>
+          <div class="sumrow muted"><span class="dot" style="background:#b8bdc2"></span>交通規制はありません</div>
+          <div class="sumrow"><span class="dot" style="background:#1e4e79"></span>最寄りの避難所 天理教筑紫大教会(約 650m)</div>
+          <div class="sumrow link">直方市の川の水位(川の防災情報) ↗</div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><svg viewBox="0 0 20 20"><path d="M3 5l4.5-2 5 2L17 3v12l-4.5 2-5-2L3 17zM7.5 3v12M12.5 5v12"/></svg>ホーム</div>
+          <div class="tab"><svg viewBox="0 0 20 20"><path d="M2 7q2.5-3 5 0t5 0 5 0M2 13q2.5-3 5 0t5 0 5 0"/></svg>水位</div>
+          <div class="tab"><svg viewBox="0 0 20 20"><path d="M3 10l7-6 7 6M5 9v7h10V9"/></svg>避難所</div>
+          <div class="tab"><svg viewBox="0 0 20 20"><circle cx="4.5" cy="10" r="1.4"/><circle cx="10" cy="10" r="1.4"/><circle cx="15.5" cy="10" r="1.4"/></svg>その他</div>
+        </div>
+      </div></div>
+      <figcaption><span class="sid">S-01 / F-01, F-02, F-03, F-05, F-06, F-12</span><span class="tt">ホーム(平常時)</span>
+      <p>避難所は閉鎖=灰の小ドットで気配だけ残し、車中泊避難所(川藍の角ピン)と水位ピン(水色)が常設で並ぶ。被害・規制は0件が正常で、要約カードは「なし」を安心の言葉で言い切る。自宅ピン(F-12)を置くと最寄り避難所の行が加わる。</p></figcaption>
+    </figure>
+
+    <div class="connector">
+      <div class="sw-ic">⇄</div>
+      その他 › デモモード<br>トグルひとつで切替<br>(通信なしで動作)
+    </div>
+
+    <!-- S-01 デモモード -->
+    <figure class="shot">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="batt"></span></div>
+        <div class="demo-banner"><i></i>デモモード — 大雨災害の再現シナリオを表示中</div>
+        <div class="ph-head"><span class="ttl">直方ベース</span></div>
+        <div class="map">
+          <div class="rail"></div>
+          <div class="hz d1" style="top:6%;left:30%;width:64%;height:60%"></div>
+          <div class="hz d2" style="top:18%;left:42%;width:44%;height:42%"></div>
+          <div class="hz d3" style="top:26%;left:50%;width:26%;height:26%"></div>
+          <div class="river"></div>
+          <div class="river-branch"></div>
+          <div class="road h1"></div><div class="road h2"></div><div class="road v1"></div>
+          <div class="layer-chips">
+            <div class="layer-row"><span class="lchip on">避難所</span><span class="lchip on">車中泊</span><span class="lchip on">水位</span></div>
+            <div class="layer-row"><span class="lchip on">被害</span><span class="lchip on">規制</span><span class="lchip on">ハザード</span></div>
+          </div>
+          <div class="map-btns"><div class="map-btn">⌂</div><div class="map-btn"><span class="loc-arrow">➤</span></div></div>
+          <span class="pin ok" style="top:30%;left:14%"></span>
+          <span class="pin ok" style="top:48%;left:33%"></span>
+          <span class="pin warn" style="top:64%;left:18%"></span>
+          <span class="pin danger" style="top:76%;left:64%"></span>
+          <span class="pin sensor danger" style="top:26%;left:56%"></span>
+          <span class="pin sensor warn" style="top:52%;left:60%"></span>
+          <span class="pin sensor" style="top:66%;left:44%"></span>
+          <span class="pin dmg" style="top:44%;left:48%"></span>
+          <span class="pin dmg" style="top:58%;left:38%"></span>
+          <span class="tline" style="top:70%;left:26%;width:22%;background:#c6372f;transform:rotate(3deg)"></span>
+        </div>
+        <div class="hz-panel">
+          <div class="hz-chips">
+            <span class="hz-chip on">洪水</span><span class="hz-chip">土石流</span><span class="hz-chip">急傾斜地</span><span class="hz-chip">家屋倒壊</span>
+            <span class="hz-fold">凡例 <b>▸</b></span>
+          </div>
+          <div class="hz-src">出典: ハザードマップポータルサイト(国土交通省)</div>
+        </div>
+        <div class="sumcard">
+          <div class="sumhead"><span class="cap">いまの状況</span><span class="chev">▸</span></div>
+          <div class="sumrow link" style="border-top:0;margin-top:0;padding-top:4px">現在地の浸水を AR で体感する ›</div>
+          <div class="sumrow link">直方市の川の水位(川の防災情報) ↗</div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><svg viewBox="0 0 20 20"><path d="M3 5l4.5-2 5 2L17 3v12l-4.5 2-5-2L3 17zM7.5 3v12M12.5 5v12"/></svg>ホーム</div>
+          <div class="tab"><svg viewBox="0 0 20 20"><path d="M2 7q2.5-3 5 0t5 0 5 0M2 13q2.5-3 5 0t5 0 5 0"/></svg>水位</div>
+          <div class="tab"><svg viewBox="0 0 20 20"><path d="M3 10l7-6 7 6M5 9v7h10V9"/></svg>避難所</div>
+          <div class="tab"><svg viewBox="0 0 20 20"><circle cx="4.5" cy="10" r="1.4"/><circle cx="10" cy="10" r="1.4"/><circle cx="15.5" cy="10" r="1.4"/></svg>その他</div>
+        </div>
+      </div></div>
+      <figcaption><span class="sid">S-01 / F-05, F-06, F-07, F-09</span><span class="tt">ホーム(デモモード=災害時)</span>
+      <p>ハザード4レイヤー(洪水・土石流・急傾斜地・家屋倒壊)の選択と凡例をひとつのパネルにまとめ、避難所ピンが開設状況の3色に点灯。被害ピン(橙のひし形)と規制線(赤)が加わる。要約をたたむと AR への導線と川の水位リンクだけが残る。AR 導線は洪水レイヤー表示中のみ出す。</p></figcaption>
+    </figure>
+  </div>
+
+  <h2>S-02 / S-03 水位と避難所の一覧</h2>
+  <p class="sec-note">水位一覧は「本物のデータが数分おきに動いている」ことの実証点(要件 F-03)。避難所一覧は対応災害でしぼれて、自宅ピンを置くと近い順に並ぶ(距離の数値はあえて出さない)。どちらも圏外ではキャッシュを表示し「◯月◯日 ◯:◯ 時点の情報」と古さを明示する(NF-04)。</p>
+
+  <div class="screens">
+    <!-- S-02 水位一覧 -->
+    <figure class="shot">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="batt"></span></div>
+        <div class="ph-head"><span class="ttl">水位</span></div>
+        <div class="wl-sum"><div class="big">全22地点 平常</div><div class="sub">市内の水位センサー・転倒ゲート(数分おきに更新)</div></div>
+        <div class="wl-cap">水位センサー(20)</div>
+        <div class="wl-list">
+          <div class="wl-row">
+            <div class="wl-top"><span class="nm">知古</span><span class="st" style="background:#2f8f6b">平常</span></div>
+            <div class="wl-val">水位 74cm / 警戒 130cm ・ 7月19日 9:31 時点</div>
+            <div class="bar"><i style="width:57%;background:#2f8f6b"></i></div>
+          </div>
+          <div class="wl-row">
+            <div class="wl-top"><span class="nm">明神工業団地</span><span class="st" style="background:#2f8f6b">平常</span></div>
+            <div class="wl-val">水位 0cm / 警戒 5cm ・ 7月19日 9:29 時点</div>
+            <div class="bar"><i style="width:3%;background:#2f8f6b"></i></div>
+          </div>
+          <div class="wl-cap" style="margin:2px 2px 0">転倒ゲート(2)</div>
+          <div class="wl-row">
+            <div class="wl-top"><span class="nm">木屋瀬川</span><span class="st" style="background:#2f8f6b">平常</span></div>
+            <div class="wl-val">水位 12cm / 警戒 100cm ・ 7月19日 9:32 時点</div>
+            <div class="bar"><i style="width:12%;background:#2f8f6b"></i></div>
+          </div>
+        </div>
+        <div class="wl-link"><span>直方市の川の水位<small>川の防災情報(国土交通省)を開きます</small></span><span>↗</span></div>
+        <div class="tabbar">
+          <div class="tab"><svg viewBox="0 0 20 20"><path d="M3 5l4.5-2 5 2L17 3v12l-4.5 2-5-2L3 17zM7.5 3v12M12.5 5v12"/></svg>ホーム</div>
+          <div class="tab on"><svg viewBox="0 0 20 20"><path d="M2 7q2.5-3 5 0t5 0 5 0M2 13q2.5-3 5 0t5 0 5 0"/></svg>水位</div>
+          <div class="tab"><svg viewBox="0 0 20 20"><path d="M3 10l7-6 7 6M5 9v7h10V9"/></svg>避難所</div>
+          <div class="tab"><svg viewBox="0 0 20 20"><circle cx="4.5" cy="10" r="1.4"/><circle cx="10" cy="10" r="1.4"/><circle cx="15.5" cy="10" r="1.4"/></svg>その他</div>
+        </div>
+      </div></div>
+      <figcaption><span class="sid">S-02 / F-03, F-04, F-10</span><span class="tt">水位一覧</span>
+      <p>元ダッシュボードと同じく水位センサーと転倒ゲートを別グループで見せ、危険度の高い地点を上に並べる。警戒水位に対する比率のバーで、数値が読めなくても危うさが分かる。全地点平常の見出しは緊急色ではなく川藍。最下部は kawabou へのリンクアウト。</p></figcaption>
+    </figure>
+
+    <!-- S-03 避難所一覧 -->
+    <figure class="shot">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="batt"></span></div>
+        <div class="ph-head"><span class="ttl">避難所</span></div>
+        <div class="flt">
+          <div class="lb">対応災害でしぼる</div>
+          <div class="chips"><span class="fchip on">水害</span><span class="fchip">土砂</span><span class="fchip">地震</span><span class="fchip">その他</span></div>
+        </div>
+        <div class="sl-head">水害に対応 38箇所(自宅から近い順)</div>
+        <div class="sl-list">
+          <div class="sl-row closed">
+            <div class="sl-top"><span class="nm">天理教筑紫大教会</span><span class="st" style="background:#b8bdc2">閉鎖</span><span class="arw">›</span></div>
+            <div class="sl-addr">直方市大字下境◯◯◯◯</div>
+            <div class="sl-stat">収容目安 250人</div>
+            <div class="sl-tags"><span class="htag">水害 ○</span><span class="htag">土砂 ○</span><span class="htag">地震 ○</span></div>
+          </div>
+          <div class="sl-row closed">
+            <div class="sl-top"><span class="nm">下境小学校</span><span class="st" style="background:#b8bdc2">閉鎖</span><span class="arw">›</span></div>
+            <div class="sl-addr">直方市大字下境◯◯◯◯</div>
+            <div class="sl-stat">収容目安 700人</div>
+            <div class="sl-tags"><span class="htag">水害 ○</span><span class="htag">地震 ○</span></div>
+          </div>
+          <div class="sl-row closed">
+            <div class="sl-top"><span class="nm">直方市体育館</span><span class="st" style="background:#b8bdc2">閉鎖</span><span class="arw">›</span></div>
+            <div class="sl-addr">直方市大字頓野◯◯◯◯</div>
+            <div class="sl-stat">収容目安 900人</div>
+            <div class="sl-tags"><span class="htag">水害 ○</span><span class="htag">土砂 ○</span><span class="htag">地震 ○</span></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><svg viewBox="0 0 20 20"><path d="M3 5l4.5-2 5 2L17 3v12l-4.5 2-5-2L3 17zM7.5 3v12M12.5 5v12"/></svg>ホーム</div>
+          <div class="tab"><svg viewBox="0 0 20 20"><path d="M2 7q2.5-3 5 0t5 0 5 0M2 13q2.5-3 5 0t5 0 5 0"/></svg>水位</div>
+          <div class="tab on"><svg viewBox="0 0 20 20"><path d="M3 10l7-6 7 6M5 9v7h10V9"/></svg>避難所</div>
+          <div class="tab"><svg viewBox="0 0 20 20"><circle cx="4.5" cy="10" r="1.4"/><circle cx="10" cy="10" r="1.4"/><circle cx="15.5" cy="10" r="1.4"/></svg>その他</div>
+        </div>
+      </div></div>
+      <figcaption><span class="sid">S-03 / F-02, F-12</span><span class="tt">避難所一覧</span>
+      <p>閉鎖中も収容目安と対応災害タグを出し、平常時の「避難所選びの下調べ」に使える一覧にする。自宅ピンを置くと近い順に並ぶが、距離の数値は出さない(近さの順序だけが要る情報だから)。行タップで S-05 の詳細シートを開く。</p></figcaption>
+    </figure>
+  </div>
+
+  <h2>S-04 AR 浸水体験</h2>
+  <p class="sec-note">本作品の核(要件 F-08)。起動すると現在地の想定浸水深をハザードタイルから読み、水面の初期値にする。水面は実写の濁流ループ動画をテクスチャにして床アンカーへ敷き、人物セグメンテーションで「人が水に浸かる」見え方を作る。</p>
+
+  <div class="screens">
+    <figure class="shot">
+      <div class="phone"><div class="screen">
+        <div class="ar-scene">
+          <div class="ar-close">✕</div>
+          <div class="ar-note">水面を表示しています</div>
+          <div class="bld b1"></div><div class="bld b2"></div><div class="bld b3"></div><div class="bld b4"></div>
+          <div class="ground"></div>
+          <div class="gauge">
+            <span class="gauge-mark" style="bottom:34%">1m</span>
+            <span class="gauge-mark" style="bottom:72%">2m</span>
+          </div>
+          <div class="water"></div>
+          <div class="depth-tag">1.0m</div>
+          <div class="ar-ctl">
+            <div class="ar-res"><b>足元の浸水 1.0m</b>
+              <span class="kind-chips"><span class="kchip on">泥水</span><span class="kchip">真水</span></span>
+            </div>
+            <div class="lbl"><span>想定浸水深(地面から)</span><b>1.0m</b></div>
+            <div class="track"><div class="fill"></div><div class="thumb"></div></div>
+            <div class="ar-hint">この場所の想定: 0.5〜3m(想定最大規模)</div>
+            <div class="lbl"><span>今いる場所の高さ(地面から)</span><b>0.0m</b></div>
+            <div class="track blue"><div class="fill"></div><div class="thumb"></div></div>
+            <div class="ar-hint">2階なら約3m、3階なら約6m。高い階ほど足元まで水が来にくくなります</div>
+          </div>
+        </div>
+      </div></div>
+      <figcaption><span class="sid">S-04 / F-08</span><span class="tt">AR 浸水体験</span>
+      <p>見慣れた景色の腰の高さに濁った水面が張り付き、目盛り付きの量水標が実寸を語る。スライダーは2本: 想定浸水深(燈)と、2階や高台にいる場合の「今いる場所の高さ」(川藍)。差し引いた足元の水位が0になると「この高さなら浸水しません」に変わり、垂直避難の意味が体でわかる。</p></figcaption>
+    </figure>
+  </div>
+
+  <h2>S-05 / S-06 / S-07 詳細シート、設定、じぶん設定</h2>
+  <p class="sec-note">詳細シートは地図の文脈を保ったまま画面下に重ね、要約カードと入れ替わる。その他画面は「備え / 暮らし / アプリ / 出典・免責」の4群。じぶん設定は住所を入力させず、地図をタップするか現在地ボタンでピンを置くだけにする(要件 F-12 / NF-07)。</p>
+
+  <div class="screens">
+    <!-- S-05 避難所詳細 -->
+    <figure class="shot">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="batt"></span></div>
+        <div class="ph-head"><span class="ttl">直方ベース</span></div>
+        <div class="map">
+          <div class="river"></div>
+          <div class="road h1"></div><div class="road v1"></div>
+          <span class="pin ok" style="top:14%;left:44%"></span>
+          <div class="sheet">
+            <div class="grab"></div>
+            <div class="sh-top"><span class="st-chip" style="background:#2f8f6b;font-size:10px"><i></i>開設(混雑なし)</span><span class="sh-close">✕</span></div>
+            <div class="sh-name">天理教筑紫大教会</div>
+            <div class="sh-addr">直方市大字下境◯◯◯◯</div>
+            <div class="sh-stats">
+              <div class="stat"><div class="k">収容可能人数</div><div class="v">250<small>人</small></div></div>
+              <div class="stat"><div class="k">床面積</div><div class="v">400<small>㎡</small></div></div>
+              <div class="stat"><div class="k">避難中</div><div class="v">12<small>世帯</small> 34<small>人</small></div></div>
+            </div>
+            <div class="sh-when">7月19日 9:32 時点</div>
+            <div class="sh-sec">対応する災害</div>
+            <div class="haz-tags"><span class="htag">水害 ○</span><span class="htag">土砂 ○</span><span class="htag">地震 ○</span><span class="htag off">その他 —</span></div>
+            <div class="sh-sec">避難中の内訳</div>
+            <div class="bd">
+              <div class="bd-row"><span>年齢</span><span>男性</span><span>女性</span></div>
+              <div class="bd-row"><span>65歳以上</span><span>6</span><span>8</span></div>
+              <div class="bd-row"><span>18〜64歳</span><span>9</span><span>7</span></div>
+              <div class="bd-row"><span>18歳未満</span><span>2</span><span>2</span></div>
+            </div>
+            <div class="sh-tel">電話: 0949-◯◯-◯◯◯◯</div>
+            <div class="btn pri">経路を見る(地図アプリ) ↗</div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><svg viewBox="0 0 20 20"><path d="M3 5l4.5-2 5 2L17 3v12l-4.5 2-5-2L3 17zM7.5 3v12M12.5 5v12"/></svg>ホーム</div>
+          <div class="tab"><svg viewBox="0 0 20 20"><path d="M2 7q2.5-3 5 0t5 0 5 0M2 13q2.5-3 5 0t5 0 5 0"/></svg>水位</div>
+          <div class="tab"><svg viewBox="0 0 20 20"><path d="M3 10l7-6 7 6M5 9v7h10V9"/></svg>避難所</div>
+          <div class="tab"><svg viewBox="0 0 20 20"><circle cx="4.5" cy="10" r="1.4"/><circle cx="10" cy="10" r="1.4"/><circle cx="15.5" cy="10" r="1.4"/></svg>その他</div>
+        </div>
+      </div></div>
+      <figcaption><span class="sid">S-05 / F-02</span><span class="tt">避難所詳細シート</span>
+      <p>開設状況チップ→名前→数字→行動(経路)の順で、急いでいる人の視線の流れに合わせる。開設中は避難者の年齢別内訳まで出す。水位・車中泊・被害・規制のピンにも同型のシートがあり、要約カードと入れ替わりで表示する。数値・住所はダミー。</p></figcaption>
+    </figure>
+
+    <!-- S-06 その他 -->
+    <figure class="shot">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="batt"></span></div>
+        <div class="ph-head"><span class="ttl">その他</span></div>
+        <div class="set-scroll">
+          <div class="set-group">
+            <div class="set-cap">備え</div>
+            <div class="set-card">
+              <div class="set-row">AR 浸水体験<span class="arw">›</span></div>
+              <div class="set-row">ハザードマップを重ねる<span class="arw">›</span></div>
+              <div class="set-row">じぶん設定(自宅ピン)<span class="state">設定済み</span><span class="arw">›</span></div>
+            </div>
+          </div>
+          <div class="set-group">
+            <div class="set-cap">暮らし</div>
+            <div class="set-card">
+              <div class="set-row off">ごみ収集日<span class="soon">準備中</span></div>
+              <div class="set-row off">市のお知らせ<span class="soon">準備中</span></div>
+            </div>
+            <div class="set-note">防災のつぎは、毎日の暮らしへ。</div>
+          </div>
+          <div class="set-group">
+            <div class="set-cap">アプリ</div>
+            <div class="set-card">
+              <div class="set-row">文字サイズ<span class="segment"><span class="seg on">標準</span><span class="seg">大きめ</span><span class="seg">特大</span></span></div>
+              <div class="set-row">やさしい日本語<span class="toggle"></span></div>
+              <div class="set-row">デモモード<span class="toggle on"></span></div>
+            </div>
+            <div class="set-note">大雨災害の再現シナリオを表示します。通信は行いません。</div>
+          </div>
+          <div class="set-group">
+            <div class="set-cap">出典・免責</div>
+            <div class="set-card">
+              <div class="legal">避難所・水位・被害・交通規制のデータ: 直方市 災害時情報共有PF(公開用)</div>
+              <div class="legal">本アプリは直方市の公式アプリではありません。避難の判断は、市の発表する公式の情報に従ってください。</div>
+            </div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><svg viewBox="0 0 20 20"><path d="M3 5l4.5-2 5 2L17 3v12l-4.5 2-5-2L3 17zM7.5 3v12M12.5 5v12"/></svg>ホーム</div>
+          <div class="tab"><svg viewBox="0 0 20 20"><path d="M2 7q2.5-3 5 0t5 0 5 0M2 13q2.5-3 5 0t5 0 5 0"/></svg>水位</div>
+          <div class="tab"><svg viewBox="0 0 20 20"><path d="M3 10l7-6 7 6M5 9v7h10V9"/></svg>避難所</div>
+          <div class="tab on"><svg viewBox="0 0 20 20"><circle cx="4.5" cy="10" r="1.4"/><circle cx="10" cy="10" r="1.4"/><circle cx="15.5" cy="10" r="1.4"/></svg>その他</div>
+        </div>
+      </div></div>
+      <figcaption><span class="sid">S-06 / F-09, F-11, F-12, F-13, NF-06</span><span class="tt">その他(設定)</span>
+      <p>「備え / 暮らし / アプリ / 出典・免責」の4群。見出しは標準モードでは漢字、やさしい日本語モードでは「そなえ・くらし」に切り替わる。文字サイズは特大まで3段階。準備中の暮らし機能を灰色で見せ、防災だけのアプリではない未来を画面自体に語らせる。</p></figcaption>
+    </figure>
+
+    <!-- S-07 じぶん設定 -->
+    <figure class="shot">
+      <div class="phone"><div class="screen">
+        <div class="sbar"><span>9:41</span><span class="batt"></span></div>
+        <div class="ph-head"><span class="loc" style="color:var(--ai);font-weight:600">‹ 戻る</span><span class="ttl" style="font-size:14px">じぶん設定</span><span class="loc" style="visibility:hidden">‹ 戻る</span></div>
+        <div class="map">
+          <div class="rail"></div>
+          <div class="river"></div>
+          <div class="river-branch"></div>
+          <div class="road h1"></div><div class="road h2"></div><div class="road v1"></div>
+          <div class="map-btns"><div class="map-btn"><span class="loc-arrow">➤</span></div></div>
+          <div class="homepin"><span>⌂</span></div>
+          <span class="pin shelter-closed" style="top:30%;left:20%"></span>
+          <span class="pin shelter-closed" style="top:64%;left:66%"></span>
+        </div>
+        <div class="pin-panel">
+          <div class="hint">地図をタップするか、右上のボタンで現在地に印を付けてください。</div>
+          <div class="privacy">この場所は端末の中にだけ保存され、外部には送信されません。</div>
+          <div class="btn pri">この場所を自宅にする</div>
+          <div class="clear">設定を解除する</div>
+        </div>
+      </div></div>
+      <figcaption><span class="sid">S-07 / F-12, NF-07</span><span class="tt">じぶん設定(自宅ピン)</span>
+      <p>住所は入力させず、地図タップか現在地ボタンでピンを置いて「この場所を自宅にする」だけ。プライバシーの約束(端末内にのみ保存)を操作の真横に置き、信頼をコピーで担保する。設定するとホームの地図と要約、避難所一覧の並び順に効く。</p></figcaption>
+    </figure>
+  </div>
+
+  <div class="foot">
+    <p>S-xx / F-xx は <code>docs/requirements.md</code> の画面・機能 ID に対応。地図は抽象表現、画面内の数値・住所はダミー(観測点名・避難所名は実データより)。デモモードの件数はデモシナリオのフィクスチャに準拠。</p>
+    <p>ハザード凡例色はハザードマップポータルサイト(国土交通省)の配信タイルに準拠。実装は react-native-maps + UrlTile で洪水・土石流・急傾斜地・家屋倒壊の4レイヤーを重ねる。</p>
+    <p>すべての文言は標準とやさしい日本語(F-13。ふりがな付き・分かち書き)の2系統を持つ。本カンプは標準表記のみ示す。</p>
+  </div>
+</div>
