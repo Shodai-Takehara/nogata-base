@@ -11,15 +11,15 @@
 ## 必要なもの
 
 - Node.js(LTS)と npm
-- Xcode + iOS シミュレータ、または実機 iPhone
+- Xcode と実機 iPhone
 - **Expo Go では動かない**。ネイティブモジュール(ViroReact・react-native-maps)を含むため、dev client のビルドが必要
+- **iOS シミュレータでも動かない**。ViroKit が実機専用バイナリのため、シミュレータ向けビルド自体が失敗する
 
 ## 起動
 
 ```bash
 npm install
-npx expo run:ios            # シミュレータ。初回はネイティブビルドで数分かかる
-npx expo run:ios --device   # 実機。AR を試すならこちら
+npx expo run:ios --device   # 実機のみ。初回はネイティブビルドで数分かかる
 ```
 
 2回目以降は dev client がインストール済みなので、`npm start` で開発サーバを起動してアプリを開くだけでよい。
@@ -33,7 +33,7 @@ npx expo run:ios --device   # 実機。AR を試すならこちら
 
 ### AR について
 
-ViroKit は実機専用のため、シミュレータ・Expo Go では AR 画面は案内表示にフォールバックする。水面の表示検証は実機でしかできない。
+AR 非対応の環境では、AR 画面は案内表示にフォールバックする。水面の表示検証は実機でしかできない。
 
 ## 開発コマンド
 
