@@ -12,8 +12,8 @@ type Props = {
 };
 
 /**
- * 地図に出ている塗りと区域の凡例を1行にまとめた帯(S-01)。
- * 出典表記(NF-06)は塗りか区域がある間は常に見せるため、帯の2行目に置く
+ * 地図に出ている塗りと区域の凡例を1行にまとめた帯。
+ * 出典表記は塗りか区域がある間は常に見せるため、帯の2行目に置く
  */
 export function LegendStrip({ blocks, onExpand }: Props) {
   const copy = useCopy();

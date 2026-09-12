@@ -33,7 +33,7 @@ describe('凡例のまとまり', () => {
     expect(block.entries).toHaveLength(4);
   });
 
-  it('地震の塗りは5段階の帯に、断層線の見本と注意書きを添える(F-15 の受入条件)', () => {
+  it('地震の塗りは5段階の帯に、断層線の見本と注意書きを添える', () => {
     const [block] = legendBlocks(withFill('quake'), copy, false);
     expect(block.scale).toBe(true);
     expect(block.title).toBe(copy.quakeLegendTitle);
@@ -62,7 +62,7 @@ describe('凡例のまとまり', () => {
     const state = mapLayersReducer(INITIAL_MAP_LAYERS, { type: 'toggleArea', key: 'landslide' });
     const blocks = legendBlocks(state, copy, false);
     expect(blocks.map((b) => b.key)).toEqual(['debrisFlow', 'steepSlope']);
-    // 区分名が同じなので、帯では短い名前で種別を見分けさせる(F-07 の受入条件)
+    // 区分名が同じなので、帯では短い名前で種別を見分けさせる
     expect(blocks.map((b) => b.short)).toEqual(['土石流', '急傾斜地']);
     for (const block of blocks) {
       expect(block.scale).toBe(false);

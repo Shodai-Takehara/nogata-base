@@ -428,7 +428,7 @@ export default function HomeScreen() {
                 />
               ))
             : null}
-          {/* 自宅ピン(F-12)。じぶん設定画面と同じ見た目にして同一概念とわかるようにする。
+          {/* 自宅ピン。じぶん設定画面と同じ見た目にして同一概念とわかるようにする。
               状態を持つデータピンと違い、詳細シートがないため選択対象にしない */}
           {homePin ? (
             <Marker
@@ -570,7 +570,7 @@ const WaterMarker = memo(function WaterMarker({
 });
 
 /**
- * 人口メッシュ(F-14)。202セルの静的データで、レイヤーを点けている間は
+ * 人口メッシュ。202セルの静的データで、レイヤーを点けている間は
  * 全セルを描画したままにする。選択の変更ではセル単位の memo により、
  * 枠線が変わる2セルぶんだけがネイティブ更新になる。
  * zIndex は付けない(Apple Maps 側が面オーバーレイでは無視するため効かない。
@@ -627,7 +627,7 @@ const PopulationCellOverlay = memo(function PopulationCellOverlay({
 });
 
 /**
- * 地震ハザードの塗り(F-15)。面オーバーレイの数を抑えるため区分ごとに融合した面だけを描き
+ * 地震ハザードの塗り。面オーバーレイの数を抑えるため区分ごとに融合した面だけを描き
  * (QUAKE_CLASSES)、セル単位の面は持たない。そのため面の onPress ではタップを取れず、
  * MapView の onPress で座標からセルを引いている
  */
@@ -681,7 +681,7 @@ type Summary = {
   damageReports: DamageReport[] | null;
   trafficRegulations: TrafficRegulation[] | null;
   nearest: { shelter: Shelter; meters: number } | null;
-  /** 自宅ピンの地点の地震ハザード(F-15)。自宅が市域の外なら null */
+  /** 自宅ピンの地点の地震ハザード。自宅が市域の外なら null */
   homeQuake: QuakeCell | null;
   loading: boolean;
 };
@@ -713,7 +713,7 @@ function summarize(data: HomeData | null, homePin: LatLng | null): Summary {
   const shelters = data?.shelters ?? null;
   const openCount = shelters ? shelters.filter((s) => isShelterOpen(s.opening)).length : null;
 
-  // 自宅ピン設定時の最寄り避難所(F-12)。開設有無は問わず平常時の備えとして出す
+  // 自宅ピン設定時の最寄り避難所。開設有無は問わず平常時の備えとして出す
   let nearest: Summary['nearest'] = null;
   if (homePin && shelters && shelters.length > 0) {
     let best: Shelter = shelters[0];
@@ -746,7 +746,7 @@ function summarize(data: HomeData | null, homePin: LatLng | null): Summary {
 type SummaryStatusProps = {
   summary: Summary;
   hasError: boolean;
-  /** 表示中データの取得時刻。取得失敗時に古さを明示する(NF-04) */
+  /** 表示中データの取得時刻。取得失敗時に古さを明示する */
   cachedAt: number | null;
   onRetry: () => void;
 };
@@ -897,7 +897,7 @@ function SummaryRows({
 }
 
 /**
- * 自宅ピンの地点の地震ハザード(F-15)。塗りを地震にしていなくても出す。
+ * 自宅ピンの地点の地震ハザード。塗りを地震にしていなくても出す。
  * 「自分の場所の数字」を、地図を操作せずに読めるようにするため
  */
 function HomeQuakeRow({ cell }: { cell: QuakeCell }) {

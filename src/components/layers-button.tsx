@@ -11,7 +11,7 @@ type Props = {
 };
 
 /**
- * 地図左上のレイヤーボタン(S-01)。チップの並びに代わり、
+ * 地図左上のレイヤーボタン。チップの並びに代わり、
  * 何を出すかの選択をレイヤー選択シートへ集める入口
  */
 export function LayersButton({ count, onPress }: Props) {

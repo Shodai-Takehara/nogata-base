@@ -1,9 +1,9 @@
 /**
- * AR 浸水体験(要件 F-08)の純粋ロジック。
+ * AR 浸水体験の純粋ロジック。
  * Viro に依存させないことで、実機なしでテストできる範囲を最大化する。
  */
 
-/** スライダーの可動域(要件 F-08: 0.5m〜5.0m) */
+/** スライダーの可動域(0.5m〜5.0m) */
 export const DEPTH_MIN_M = 0.5;
 export const DEPTH_MAX_M = 5.0;
 export const DEPTH_STEP_M = 0.1;

@@ -3,7 +3,7 @@ import type { DataSource } from '@/data/types';
 import type { EvacueeCount, Shelter, ShelterOpening } from '@/domain/models';
 
 /**
- * デモモード(要件 F-09): 2023年7月豪雨を参考にした「大雨災害時の直方市」の模擬シナリオ。
+ * デモモード: 2023年7月豪雨を参考にした「大雨災害時の直方市」の模擬シナリオ。
  * 施設名・座標・警戒水位は実データの取り込み(demo-master.ts)で、開設状況・水位・
  * 被害・規制の「状態」だけをここで与える。通信を一切行わないため、会場が圏外でも
  * デモが成立する。

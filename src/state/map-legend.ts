@@ -86,7 +86,7 @@ export function fillLegend(fill: FillKey, copy: Copy, easy: boolean): LegendBloc
   }
 }
 
-/** 人口メッシュ(F-14)の凡例。塗りの下に敷くので、帯でも塗りより前に置く */
+/** 人口メッシュの凡例。塗りの下に敷くので、帯でも塗りより前に置く */
 export function populationLegend(copy: Copy): LegendBlock {
   return {
     key: 'population',
@@ -125,7 +125,7 @@ export function legendBlocks(state: MapLayerState, copy: Copy, easy: boolean): L
   return blocks;
 }
 
-/** 出典表記(NF-06)。同じ提供元のレイヤーが複数出ていても1行にまとめる */
+/** 出典表記。同じ提供元のレイヤーが複数出ていても1行にまとめる */
 export function legendAttributions(blocks: readonly LegendBlock[]): string[] {
   return [...new Set(blocks.map((b) => b.attribution))];
 }

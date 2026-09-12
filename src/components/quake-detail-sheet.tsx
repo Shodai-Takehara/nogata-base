@@ -14,7 +14,7 @@ type Props = {
 };
 
 /**
- * 地震ハザードのセルをタップしたときの詳細シート(S-05)。
+ * 地震ハザードのセルをタップしたときの詳細シート。
  * 主値の横に区分名と色見本を置き、地図の塗りのどの段階かを読めるようにする
  */
 export function QuakeDetailSheet({ cell, onClose }: Props) {

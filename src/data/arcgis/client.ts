@@ -60,12 +60,12 @@ export async function queryGeoJson(
 }
 
 /**
- * ホワイトリスト(NF-01)の強制。個人情報フィールドの取得をコードレベルで不可能にするため、
+ * ホワイトリストの強制。個人情報フィールドの取得をコードレベルで不可能にするため、
  * 検証を通らないクエリはネットワークに出る前に例外で落とす。
  */
 function assertAllowedFields(layer: LayerConfig, outFields: readonly string[]) {
   if (outFields.length === 0) {
-    throw new ArcgisError('outFields は明示指定が必須です(NF-01)');
+    throw new ArcgisError('outFields は明示指定が必須です');
   }
   for (const field of outFields) {
     if (field === '*' || !layer.allowedFields.includes(field)) {

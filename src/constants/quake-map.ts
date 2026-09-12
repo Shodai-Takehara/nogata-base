@@ -6,7 +6,7 @@ import type { MeshSize } from '@/utils/mesh-code';
 import quakeMesh from './quake-mesh.json';
 
 /**
- * 地震ハザードレイヤー(F-15)のメッシュデータと塗り分け。
+ * 地震ハザードレイヤーのメッシュデータと塗り分け。
  * データは J-SHIS(防災科学技術研究所)の確率論的地震動予測地図(2024年版)と表層地盤を
  * scripts/quake-hazard.py で直方市域の 250m メッシュぶんに切り出したもの。
  * 年版更新のデータなので API は持たず、バンドルして機内モードでも表示できるようにする。
@@ -189,7 +189,7 @@ export const JNAME_NOTE: Readonly<Record<string, { standard: string; easy: strin
 
 /**
  * 微地形区分の名称に添える読み(やさしい日本語モード用)。名称は J-SHIS の原文のまま出し、
- * 語を変えない(F-13)。市域に現れる区分だけを持ち、無い名称は読みなしで出す
+ * 語を変えない。市域に現れる区分だけを持ち、無い名称は読みなしで出す
  */
 export const JNAME_READING: Readonly<Record<string, string>> = {
   山地: 'さんち',

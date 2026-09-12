@@ -2,7 +2,7 @@ import type { DamageReport, Shelter, TrafficRegulation, WaterLevel } from '@/dom
 
 /**
  * 画面が依存するデータ取得の抽象。
- * ライブ(ArcGIS)とデモモード(フィクスチャ)をこのインターフェースで差し替える(要件 F-09)。
+ * ライブ(ArcGIS)とデモモード(フィクスチャ)をこのインターフェースで差し替える。
  */
 export type DataSource = {
   fetchShelters(): Promise<Shelter[]>;

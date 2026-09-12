@@ -10,7 +10,7 @@ import type { CopyKey } from './plain-japanese-copy';
 
 type Copy = Record<CopyKey, string>;
 
-/** 地震ハザードの詳細シート(S-05)と要約の1行に出す値。表示側で計算を重複させないためにここで確定する */
+/** 地震ハザードの詳細シートと要約の1行に出す値。表示側で計算を重複させないためにここで確定する */
 export type QuakeDetail = {
   /** 主値(震度6弱以上)。区分名と色は凡例との対応を取るために添える */
   main: { label: string; value: string; bucket: string; color: string };
@@ -31,7 +31,7 @@ export function formatProbability(p: number): string {
   return `${(p * 100).toFixed(1)}%`;
 }
 
-/** 微地形区分の名称は原文のまま出し、やさしい日本語モードでは読みを添える(F-13) */
+/** 微地形区分の名称は原文のまま出し、やさしい日本語モードでは読みを添える */
 export function groundLabel(jname: string, easy: boolean): string {
   const reading = JNAME_READING[jname];
   return easy && reading ? `${jname}(${reading})` : jname;

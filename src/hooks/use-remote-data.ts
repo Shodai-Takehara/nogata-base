@@ -18,7 +18,7 @@ type RemoteState<T> = {
  * 呼び出し側は loader を useCallback で dataSource に依存させること。
  *
  * `cacheKey` を渡すと成功結果を端末に保存し、次回起動時はまずそれを表示してから
- * 最新を取りに行く(要件 NF-04: 圏外でも前回データを出す)。デモモード中は
+ * 最新を取りに行く(圏外でも前回データを出す)。デモモード中は
  * 模擬データを本物の器に残さないよう、保存も復元もしない。
  */
 export function useRemoteData<T>(loader: () => Promise<T>, cacheKey?: string) {
@@ -55,7 +55,7 @@ export function useRemoteData<T>(loader: () => Promise<T>, cacheKey?: string) {
     } catch (e) {
       if (generation.current === current) {
         setState((prev) => ({
-          // 直前のデータは残す。エラー時もキャッシュ表示を続けるため(要件 NF-03)
+          // 直前のデータは残す。エラー時もキャッシュ表示を続けるため
           data: prev.data,
           loading: false,
           error: e instanceof Error ? e : new Error(String(e)),
@@ -84,7 +84,7 @@ export function useRemoteData<T>(loader: () => Promise<T>, cacheKey?: string) {
     };
   }, [persistKey]);
 
-  // フォアグラウンド復帰時の再取得(要件 NF-03 / F-03)。頻発はスロットル層が抑える
+  // フォアグラウンド復帰時の再取得。頻発はスロットル層が抑える
   useEffect(() => {
     const sub = AppState.addEventListener('change', (status) => {
       if (status === 'active') refresh();

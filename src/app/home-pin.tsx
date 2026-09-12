@@ -12,8 +12,8 @@ import { useSettings } from '@/state/settings';
 import { getCurrentLocation } from '@/utils/current-location';
 
 /**
- * じぶん設定(S-07 / F-12)。自宅(よく居る場所)を地図のピンで設定する。
- * 住所のテキスト入力は設けない(要件)。値は端末内にのみ保存する(NF-07)。
+ * じぶん設定。自宅(よく居る場所)を地図のピンで設定する。
+ * 住所のテキスト入力は設けない(要件)。値は端末内にのみ保存する。
  */
 export default function HomePinScreen() {
   const router = useRouter();

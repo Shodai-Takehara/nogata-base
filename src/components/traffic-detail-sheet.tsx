@@ -15,7 +15,7 @@ type Props = {
 };
 
 /**
- * 交通規制の線をタップしたときの詳細シート(要件 S-05 / F-06)。
+ * 交通規制の線をタップしたときの詳細シート。
  * 規制種別・備考は API 由来の日本語をそのまま出す。
  */
 export function TrafficDetailSheet({ regulation, onClose }: Props) {

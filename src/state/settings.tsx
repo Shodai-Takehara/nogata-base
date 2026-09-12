@@ -24,13 +24,13 @@ const TEXT_SIZE_SCALE: Record<TextSize, number> = {
   xlarge: 1.6,
 };
 
-/** じぶん設定と開発者向け設定。端末内にのみ保存し、外部送信しない(要件 NF-07) */
+/** じぶん設定と開発者向け設定。端末内にのみ保存し、外部送信しない */
 type Settings = {
   demoMode: boolean;
   textSize: TextSize;
-  /** やさしい日本語モード(F-13)。固定 UI 文言を平易版へ切り替える */
+  /** やさしい日本語モード。固定 UI 文言を平易版へ切り替える */
   easyJapanese: boolean;
-  /** 自宅(よく居る場所)のピン(F-12)。未設定は null */
+  /** 自宅(よく居る場所)のピン。未設定は null */
   homePin: LatLng | null;
 };
 
@@ -124,7 +124,7 @@ export function useEasyJapanese(): boolean {
   return settings.easyJapanese;
 }
 
-/** 自宅ピンを返す。距離順の並び替えと最寄り避難所の表示(F-12)が使う */
+/** 自宅ピンを返す。距離順の並び替えと最寄り避難所の表示が使う */
 export function useHomePin(): LatLng | null {
   const { settings } = useSettings();
   return settings.homePin;

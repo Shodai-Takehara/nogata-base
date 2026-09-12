@@ -1,6 +1,6 @@
 import { FORBIDDEN_FIELDS, LAYERS } from '@/data/arcgis/layers';
 
-describe('レイヤー定義(NF-01 / NF-02 の防御)', () => {
+describe('レイヤー定義(個人情報フィールドと公開フラグの防御)', () => {
   it.each(Object.entries(LAYERS))(
     '%s のホワイトリストに個人情報・内部運用フィールドが混入していない',
     (_name, layer) => {

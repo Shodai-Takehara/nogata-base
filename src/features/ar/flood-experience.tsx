@@ -41,8 +41,8 @@ export default function FloodExperience() {
   const [siteLookupDone, setSiteLookupDone] = useState(false);
   const effectiveDepthM = effectiveWaterDepth(depthM, floorHeightM);
 
-  // 現在地の想定浸水深(F-08 ストレッチ)。取れたら水面の初期値にする。
-  // 位置情報は端末内でタイル座標の計算に使うだけで、外部へは送らない(NF-07)
+  // 現在地の想定浸水深。取れたら水面の初期値にする。
+  // 位置情報は端末内でタイル座標の計算に使うだけで、外部へは送らない
   useEffect(() => {
     let cancelled = false;
     const lookup = async (): Promise<FloodDepthRank | null> => {

@@ -16,7 +16,7 @@ export default function RootLayout() {
           <AnimatedSplashOverlay />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
-            {/* AR はタブバーごと覆う全画面体験にする(要件 F-08 / S-04) */}
+            {/* AR はタブバーごと覆う全画面体験にする */}
             <Stack.Screen name="ar" options={{ presentation: 'fullScreenModal' }} />
           </Stack>
         </DataSourceProvider>
