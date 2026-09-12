@@ -1,7 +1,9 @@
 import {
+  AREA_LAYERS,
   FLOOD_LEGEND,
   FLOOD_TILE_URL_TEMPLATE,
   HAZARD_LAYERS,
+  hazardLayer,
   HAZARD_TILE_MAX_Z,
   HAZARD_TILE_MIN_Z,
   HAZARD_TILE_OPACITY,
@@ -67,5 +69,24 @@ describe('ハザードマップタイル定義', () => {
       expect(color).toMatch(/^#[0-9A-F]{6}$/);
       expect(label.length).toBeGreaterThan(0);
     }
+  });
+
+  it('区域の切替は定義済みのタイルだけを指し、洪水(塗り)は含まない', () => {
+    const keys = HAZARD_LAYERS.map((l) => l.key);
+    for (const tiles of Object.values(AREA_LAYERS)) {
+      for (const key of tiles) {
+        expect(keys).toContain(key);
+        expect(key).not.toBe('flood');
+      }
+    }
+  });
+
+  it('土砂災害の区域は土石流と急傾斜地の2タイルを出す(2026-09-12 の統合)', () => {
+    expect(AREA_LAYERS.landslide).toEqual(['debrisFlow', 'steepSlope']);
+    expect(AREA_LAYERS.houseCollapse).toEqual(['houseCollapse']);
+  });
+
+  it('キーからレイヤー定義を引ける', () => {
+    expect(hazardLayer('flood').urlTemplate).toBe(FLOOD_TILE_URL_TEMPLATE);
   });
 });

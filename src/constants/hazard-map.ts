@@ -34,10 +34,10 @@ export type HazardLayerKey = 'flood' | 'debrisFlow' | 'steepSlope' | 'houseColla
 
 export type HazardLayer = {
   key: HazardLayerKey;
-  /** 選択チップに載せる短い名前 */
+  /** 凡例ストリップで色見本の前に置く短い名前(正式名称は長すぎて1行に収まらない) */
   label: string;
   /**
-   * やさしい日本語モード用のチップ名(F-13)。防災用語の意味を保つため
+   * やさしい日本語モード用の短い名前(F-13)。防災用語の意味を保つため
    * 語は変えず読みだけ添える。凡例の見出し(title)は法令上の正式名称なので変えない
    */
   labelEasy: string;
@@ -94,3 +94,22 @@ export const HAZARD_LAYERS: readonly HazardLayer[] = [
     legend: [{ color: '#FF0000', label: '区域内' }],
   },
 ];
+
+/**
+ * 「重ねる区域」の切替1つが出すタイルの組(F-07 変更、2026-09-12 決定)。
+ * 土石流と急傾斜地は市の Web 版では別の図だが、どちらも土砂災害警戒区域で
+ * 色の意味(警戒、特別警戒)が同じなので、切替と凡例だけを1つにまとめる。
+ * タイルの定義(HAZARD_LAYERS)は市の Web 版と同じ2件のまま残す
+ */
+export const AREA_LAYERS = {
+  landslide: ['debrisFlow', 'steepSlope'],
+  houseCollapse: ['houseCollapse'],
+} as const satisfies Record<string, readonly HazardLayerKey[]>;
+
+export type AreaLayerKey = keyof typeof AREA_LAYERS;
+
+export function hazardLayer(key: HazardLayerKey): HazardLayer {
+  const layer = HAZARD_LAYERS.find((l) => l.key === key);
+  if (!layer) throw new Error(`ハザードレイヤー ${key} が定義にありません`);
+  return layer;
+}
