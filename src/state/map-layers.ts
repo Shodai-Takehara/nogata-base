@@ -13,7 +13,7 @@ import { AREA_LAYERS, type AreaLayerKey } from '@/constants/hazard-map';
 export const PIN_KEYS = ['shelters', 'carShelters', 'water', 'damage', 'traffic'] as const;
 export type PinLayerKey = (typeof PIN_KEYS)[number];
 
-export const FILL_KEYS = ['none', 'flood', 'population'] as const;
+export const FILL_KEYS = ['none', 'flood', 'quake', 'population'] as const;
 export type FillKey = (typeof FILL_KEYS)[number];
 
 /** 区域は hazard-map.ts の AREA_LAYERS が正で、その定義順に並べる */

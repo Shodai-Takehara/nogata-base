@@ -13,7 +13,7 @@ import {
   type MapLayerState,
   type PinLayerKey,
 } from '@/state/map-layers';
-import { areaLegend, fillLegend, type LegendBlock } from '@/state/map-legend';
+import { areaLegend, fillLegend, type LegendBlock, type LegendLine } from '@/state/map-legend';
 import { useCopy } from '@/state/plain-japanese';
 import { useEasyJapanese } from '@/state/settings';
 
@@ -53,6 +53,7 @@ export function LayerPicker({ state, dispatch, onOpenAr }: Props) {
   const fillLabel: Record<FillKey, { label: string; desc?: string }> = {
     none: { label: copy.fillNone },
     flood: { label: copy.fillFlood, desc: copy.fillFloodDesc },
+    quake: { label: copy.fillQuake, desc: copy.fillQuakeDesc },
     population: { label: copy.fillPopulation, desc: copy.fillPopulationDesc },
   };
   const areaLabel: Record<AreaKey, string> = {
@@ -199,7 +200,40 @@ function LegendDetail({ block }: { block: LegendBlock }) {
           </View>
         ))}
       </View>
+      {block.line ? <LegendLineRow line={block.line} /> : null}
+      {block.note ? <AppText style={styles.legendNote}>{block.note}</AppText> : null}
       <AppText style={styles.legendSource}>{block.attribution}</AppText>
+      {block.line?.detailAttribution ? (
+        <AppText style={styles.legendSource}>{block.line.detailAttribution}</AppText>
+      ) : null}
+    </View>
+  );
+}
+
+function LegendLineRow({ line }: { line: LegendLine }) {
+  return (
+    <View style={styles.legendLine}>
+      <DashedLineSample line={line} />
+      <View style={styles.legendLineText}>
+        <AppText style={styles.legendLabel}>{line.label}</AppText>
+        {line.detail ? <AppText style={styles.legendLabel}>{line.detail}</AppText> : null}
+      </View>
+    </View>
+  );
+}
+
+/**
+ * 破線の見本。地図の線と同じ太さと間隔にする。
+ * View の borderStyle: 'dashed' は iOS では間隔が線幅の3倍に固定され、地図の線と同じ
+ * 見本にならないため、短い矩形を並べて描く
+ */
+function DashedLineSample({ line }: { line: LegendLine }) {
+  const [dash, gap] = line.dashPattern;
+  return (
+    <View style={[styles.dashes, { gap }]}>
+      {[0, 1, 2].map((i) => (
+        <View key={i} style={{ width: dash, height: line.width, backgroundColor: line.color }} />
+      ))}
     </View>
   );
 }
@@ -311,6 +345,25 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: AppColors.ink,
     fontVariant: ['tabular-nums'],
+  },
+  legendLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 6,
+  },
+  legendLineText: {
+    flex: 1,
+    gap: 2,
+  },
+  dashes: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  legendNote: {
+    fontSize: 11,
+    color: AppColors.inkSub,
+    marginTop: 6,
   },
   legendSource: {
     fontSize: 8.5,

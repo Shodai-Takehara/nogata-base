@@ -5,6 +5,12 @@ import {
   type HazardLegendEntry,
 } from '@/constants/hazard-map';
 import { POPULATION_ATTRIBUTION, POPULATION_BUCKETS } from '@/constants/population-map';
+import {
+  FUKUCHIYAMA_FAULT,
+  QUAKE_ATTRIBUTION,
+  QUAKE_BUCKETS,
+  QUAKE_FAULT_LINE,
+} from '@/constants/quake-map';
 
 import { AREA_KEYS, type AreaKey, type FillKey, type MapLayerState } from './map-layers';
 import type { CopyKey } from './plain-japanese-copy';
@@ -23,6 +29,23 @@ export type LegendBlock = {
    * 両端のラベルだけ出す。false は区分ごとに名前が要る(警戒区域、特別警戒区域)
    */
   scale: boolean;
+  /**
+   * 塗りと一緒に描く線(断層)。地図上の帯には載せず、シートの凡例にだけ出す。
+   * 帯は塗りの段階を読ませる場所で、線まで足すと1行に収まらない
+   */
+  line?: LegendLine;
+  /** 読み方の注意。シートの凡例にだけ出す */
+  note?: string;
+};
+
+export type LegendLine = {
+  color: string;
+  width: number;
+  dashPattern: readonly number[];
+  label: string;
+  /** 線そのものとは別の出典を持つ補足(断層の規模と発生確率) */
+  detail?: string;
+  detailAttribution?: string;
 };
 
 type Copy = Record<CopyKey, string>;
@@ -42,6 +65,24 @@ export function fillLegend(fill: FillKey, copy: Copy, easy: boolean): LegendBloc
         scale: true,
       };
     }
+    case 'quake':
+      return {
+        key: 'quake',
+        title: copy.quakeLegendTitle,
+        short: copy.fillQuake,
+        entries: QUAKE_BUCKETS.map((b) => ({ color: b.fill, label: b.label })),
+        attribution: QUAKE_ATTRIBUTION,
+        scale: true,
+        line: {
+          color: QUAKE_FAULT_LINE.color,
+          width: QUAKE_FAULT_LINE.width,
+          dashPattern: QUAKE_FAULT_LINE.dashPattern,
+          label: copy.quakeFaultLegend,
+          detail: `${FUKUCHIYAMA_FAULT.magnitude}、${FUKUCHIYAMA_FAULT.probability}`,
+          detailAttribution: FUKUCHIYAMA_FAULT.attribution,
+        },
+        note: copy.quakeNote,
+      };
     case 'population':
       return {
         key: 'population',

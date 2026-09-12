@@ -1,7 +1,14 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
-import MapView, { Marker, Polygon, Polyline, UrlTile, type LatLng } from 'react-native-maps';
+import MapView, {
+  Marker,
+  Polygon,
+  Polyline,
+  UrlTile,
+  type LatLng,
+  type MapPressEvent,
+} from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/app-text';
@@ -13,6 +20,7 @@ import { LayersButton } from '@/components/layers-button';
 import { LegendStrip } from '@/components/legend-strip';
 import { MapBottomSheet, type SheetMode } from '@/components/map-bottom-sheet';
 import { PopulationDetailSheet } from '@/components/population-detail-sheet';
+import { QuakeDetailSheet } from '@/components/quake-detail-sheet';
 import { ShelterDetailSheet } from '@/components/shelter-detail-sheet';
 import { TrafficDetailSheet } from '@/components/traffic-detail-sheet';
 import { WaterDetailSheet } from '@/components/water-detail-sheet';
@@ -34,6 +42,18 @@ import {
   populationFill,
   type PopulationCell,
 } from '@/constants/population-map';
+import {
+  FUKUCHIYAMA_FAULT,
+  QUAKE_BUCKETS,
+  QUAKE_CELLS,
+  QUAKE_CLASSES,
+  QUAKE_FAULT_LINE,
+  QUAKE_META,
+  QUAKE_SELECTED_STROKE,
+  QUAKE_SELECTED_STROKE_WIDTH,
+  QUAKE_STROKE,
+  type QuakeCell,
+} from '@/constants/quake-map';
 import { AppColors, NOGATA_REGION } from '@/constants/tokens';
 import { useDataSource } from '@/data/data-source-context';
 import type {
@@ -57,10 +77,12 @@ import { useRemoteData } from '@/hooks/use-remote-data';
 import { AREA_KEYS, INITIAL_MAP_LAYERS, mapLayersReducer, overlayCount } from '@/state/map-layers';
 import { legendBlocks } from '@/state/map-legend';
 import { useCopy } from '@/state/plain-japanese';
+import { quakeDetail } from '@/state/quake-detail';
 import { useEasyJapanese, useHomePin, useSettings } from '@/state/settings';
 import { getCurrentLocation } from '@/utils/current-location';
 import { formatJstMoment } from '@/utils/datetime';
 import { formatDistanceMeters, haversineMeters } from '@/utils/geo';
+import { meshCodeAt, meshPolygon } from '@/utils/mesh-code';
 
 /**
  * 地図ピンは scripts/generate-map-pins.js で SVG テンプレートから生成した
@@ -90,6 +112,15 @@ const CAR_PIN_IMAGE = require('../../../assets/map-pins/car-shelter.png');
 const DAMAGE_PIN_IMAGE = require('../../../assets/map-pins/damage-report.png');
 
 /**
+ * 重なった対象(ピン、規制線、塗り)のタップの譲り合い。1回のタップがそれぞれに届き、
+ * 届く順も一定でないため、後回しにする対象ほど長く待ってから判定する(線 < 面)。
+ * 待ち時間内に他の対象が押されていれば、その対象に譲る
+ */
+const LINE_TAP_DELAY_MS = 50;
+const FILL_TAP_DELAY_MS = 120;
+const PRESS_YIELD_MS = 300;
+
+/**
  * 地図上で選択中のピン。詳細はネイティブの吹き出し(Callout)ではなく
  * 画面下の自前シートで出す。Callout は New Architecture で開閉が
  * 不安定なため使わない。
@@ -100,7 +131,9 @@ type MapSelection =
   | { kind: 'car'; id: number }
   | { kind: 'damage'; id: number }
   | { kind: 'traffic'; id: number }
-  | { kind: 'population'; index: number };
+  | { kind: 'population'; index: number }
+  /** 地震ハザードはセル単位の面を持たないので、タップ地点から求めたメッシュコードで持つ */
+  | { kind: 'quake'; code: string };
 
 export default function HomeScreen() {
   const dataSource = useDataSource();
@@ -193,12 +226,16 @@ export default function HomeScreen() {
     selection?.kind === 'population' && layers.fill === 'population'
       ? (POPULATION_CELLS[selection.index] ?? null)
       : null;
+  const selectedQuake =
+    selection?.kind === 'quake' && layers.fill === 'quake'
+      ? (QUAKE_CELLS[selection.code] ?? null)
+      : null;
 
   /**
    * iOS はマーカーをタップしても地図タップ判定が走り、タップ地点から
    * 10px 以内にある規制線の onPress まで発火する(ピンと線が近接する
    * 感田交差点などで詳細シートの取り合いになる)。マーカー側を優先するため、
-   * マーカー押下時刻を覚えて、直後の線タップは無視する
+   * マーカー押下時刻を覚えて、直後の線と面のタップは譲らせる
    */
   const markerPressedAt = useRef(0);
   const stampMarkerPress = () => {
@@ -222,39 +259,53 @@ export default function HomeScreen() {
     stampMarkerPress();
     setSelection({ kind: 'damage', id });
   }, []);
-  // 規制線の押下時刻。線の上をタップすると下の人口メッシュも発火するため、
-  // メッシュ側が線に譲る判定に使う
+  // 規制線の押下時刻。線の上をタップすると下の塗りも発火するため、塗り側が線に譲る判定に使う
   const linePressedAt = useRef(0);
   const selectTraffic = useCallback((id: number) => {
     linePressedAt.current = Date.now();
     // マーカーの onPress が線より後に届くことがあるため、一拍置いてから判定する
     setTimeout(() => {
-      if (Date.now() - markerPressedAt.current < 300) return;
+      if (Date.now() - markerPressedAt.current < PRESS_YIELD_MS) return;
       setSelection({ kind: 'traffic', id });
-    }, 50);
+    }, LINE_TAP_DELAY_MS);
   }, []);
   // レイヤー選択シートを地図タップで閉じた時刻。閉じるためのタップが、地図を覆う
   // 人口メッシュの選択として届くのを防ぐ判定に使う
   const layersClosedAt = useRef(0);
-  const selectPopulation = useCallback((index: number) => {
-    // メッシュは地図の大半を覆うため、ピン・規制線のタップと必ず重なる。
-    // 規制線(50ms)より遅らせて、他の対象が選ばれていたら譲る
+  // 塗り(人口メッシュ、地震ハザード)は地図の大半を覆うため、ピン・規制線のタップと必ず重なる。
+  // 規制線より遅らせて、他の対象が選ばれていたら譲る
+  const selectFill = useCallback((next: MapSelection) => {
     setTimeout(() => {
-      if (Date.now() - markerPressedAt.current < 300) return;
-      if (Date.now() - linePressedAt.current < 300) return;
-      if (Date.now() - layersClosedAt.current < 300) return;
-      setSelection({ kind: 'population', index });
-    }, 120);
+      if (Date.now() - markerPressedAt.current < PRESS_YIELD_MS) return;
+      if (Date.now() - linePressedAt.current < PRESS_YIELD_MS) return;
+      if (Date.now() - layersClosedAt.current < PRESS_YIELD_MS) return;
+      setSelection(next);
+    }, FILL_TAP_DELAY_MS);
   }, []);
+  const selectPopulation = useCallback(
+    (index: number) => selectFill({ kind: 'population', index }),
+    [selectFill],
+  );
   const closeSelection = useCallback(() => setSelection(null), []);
 
   // レイヤー選択はシート外の地図タップで閉じる(地図アプリで慣れた操作に合わせる)。
-  // iOS ではピンをタップしても地図タップが届くが、ピンの詳細がシートに入れ替わるだけなので支障はない
-  const mapPressed = useCallback(() => {
-    if (sheetMode !== 'layers') return;
-    layersClosedAt.current = Date.now();
-    setSheetMode('peek');
-  }, [sheetMode]);
+  // iOS ではピンをタップしても地図タップが届くが、ピンの詳細がシートに入れ替わるだけなので支障はない。
+  // 地震の塗りは面ごとの onPress を持たないため、同じ地図タップから地点のセルを引く
+  const mapPressed = useCallback(
+    (e: MapPressEvent) => {
+      if (sheetMode === 'layers') {
+        layersClosedAt.current = Date.now();
+        setSheetMode('peek');
+        return;
+      }
+      if (layers.fill !== 'quake') return;
+      const { latitude, longitude } = e.nativeEvent.coordinate;
+      const code = meshCodeAt(latitude, longitude, QUAKE_META.mesh);
+      if (QUAKE_CELLS[code] == null) return;
+      selectFill({ kind: 'quake', code });
+    },
+    [sheetMode, layers.fill, selectFill],
+  );
 
   // 詳細シートはレイヤー選択より優先して表示されるため、閉じてからシートを切り替える
   // (閉じないと、詳細を閉じたあとに選択シートが突然出る)
@@ -277,6 +328,8 @@ export default function HomeScreen() {
     <TrafficDetailSheet regulation={selectedTraffic} onClose={closeSelection} />
   ) : selectedPopulation ? (
     <PopulationDetailSheet cell={selectedPopulation} onClose={closeSelection} />
+  ) : selectedQuake ? (
+    <QuakeDetailSheet cell={selectedQuake} onClose={closeSelection} />
   ) : null;
 
   return (
@@ -307,6 +360,9 @@ export default function HomeScreen() {
               selectedIndex={selection?.kind === 'population' ? selection.index : null}
               onSelect={selectPopulation}
             />
+          ) : null}
+          {layers.fill === 'quake' ? (
+            <QuakeLayer selectedCode={selection?.kind === 'quake' ? selection.code : null} />
           ) : null}
           {layers.fill === 'flood' ? (
             <UrlTile
@@ -565,6 +621,48 @@ const PopulationCellOverlay = memo(function PopulationCellOverlay({
   );
 });
 
+/**
+ * 地震ハザードの塗り(F-15)。面オーバーレイの数を抑えるため区分ごとに融合した面だけを描き
+ * (QUAKE_CLASSES)、セル単位の面は持たない。そのため面の onPress ではタップを取れず、
+ * MapView の onPress で座標からセルを引いている
+ */
+const QuakeLayer = memo(function QuakeLayer({ selectedCode }: { selectedCode: string | null }) {
+  return (
+    <>
+      {QUAKE_CLASSES.flatMap((cls) =>
+        cls.polys.map((poly, part) => (
+          /* この Polygon の props を5つから増やさない。Apple Maps 側(AIRMapPolygon)は coordinates を
+             受けた時点で面を組み、holes を後から受けても組み直さない。旧アーキテクチャ互換層は
+             props を差分辞書の列挙順(キーの組で決まり、挿入順によらない)に適用し、この5つなら
+             holes が先に届く(2026-09-12 に macOS の Foundation で全順列を確認)。
+             lineCap 等を足すと順が入れ替わり、穴が空かなくなる */
+          <Polygon
+            key={`quake-${cls.bucket}-${part}`}
+            coordinates={poly.outer}
+            holes={poly.holes}
+            fillColor={QUAKE_BUCKETS[cls.bucket].fill}
+            strokeColor={QUAKE_STROKE}
+            strokeWidth={0.5}
+          />
+        )),
+      )}
+      <Polyline
+        coordinates={FUKUCHIYAMA_FAULT.top}
+        strokeColor={QUAKE_FAULT_LINE.color}
+        strokeWidth={QUAKE_FAULT_LINE.width}
+        lineDashPattern={QUAKE_FAULT_LINE.dashPattern}
+      />
+      {selectedCode ? (
+        <Polygon
+          coordinates={meshPolygon(selectedCode)}
+          strokeColor={QUAKE_SELECTED_STROKE}
+          strokeWidth={QUAKE_SELECTED_STROKE_WIDTH}
+        />
+      ) : null}
+    </>
+  );
+});
+
 type HomeData = {
   shelters: Shelter[] | null;
   waterLevels: WaterLevel[] | null;
@@ -578,6 +676,8 @@ type Summary = {
   damageReports: DamageReport[] | null;
   trafficRegulations: TrafficRegulation[] | null;
   nearest: { shelter: Shelter; meters: number } | null;
+  /** 自宅ピンの地点の地震ハザード(F-15)。自宅が市域の外なら null */
+  homeQuake: QuakeCell | null;
   loading: boolean;
 };
 
@@ -623,12 +723,17 @@ function summarize(data: HomeData | null, homePin: LatLng | null): Summary {
     nearest = { shelter: best, meters: bestMeters };
   }
 
+  const homeQuake = homePin
+    ? (QUAKE_CELLS[meshCodeAt(homePin.latitude, homePin.longitude, QUAKE_META.mesh)] ?? null)
+    : null;
+
   return {
     water,
     openCount,
     damageReports: data?.damageReports ?? null,
     trafficRegulations: data?.trafficRegulations ?? null,
     nearest,
+    homeQuake,
     loading: data == null,
   };
 }
@@ -706,7 +811,8 @@ function SummaryRows({
 }: SummaryStatusProps & { showArLink: boolean }) {
   const router = useRouter();
   const copy = useCopy();
-  const { water, openCount, damageReports, trafficRegulations, nearest, loading } = summary;
+  const { water, openCount, damageReports, trafficRegulations, nearest, homeQuake, loading } =
+    summary;
 
   return (
     <View>
@@ -758,6 +864,8 @@ function SummaryRows({
         </View>
       ) : null}
 
+      {homeQuake ? <HomeQuakeRow cell={homeQuake} /> : null}
+
       {loading && !hasError ? (
         <View style={styles.row}>
           <Dot color={AppColors.none} />
@@ -783,8 +891,29 @@ function SummaryRows({
   );
 }
 
-function Dot({ color }: { color: string }) {
-  return <View style={[styles.dot, { backgroundColor: color }]} />;
+/**
+ * 自宅ピンの地点の地震ハザード(F-15)。塗りを地震にしていなくても出す。
+ * 「自分の場所の数字」を、地図を操作せずに読めるようにするため
+ */
+function HomeQuakeRow({ cell }: { cell: QuakeCell }) {
+  const copy = useCopy();
+  const easy = useEasyJapanese();
+  const detail = quakeDetail(cell, copy, easy);
+  return (
+    // 数字を省略すると意味が無いので折り返しを許し、点は1行目に合わせる
+    <View style={[styles.row, styles.rowWrap]}>
+      {/* 区分の色は透過で 9pt の点では白地に埋もれるため、同じ色相の不透明色で地震の行だと示す */}
+      <Dot color={QUAKE_SELECTED_STROKE} top />
+      <AppText style={[styles.rowText, styles.rowTextShrink]}>
+        {copy.summaryHomeQuake}: {detail.main.label} {detail.main.value}({copy.quakeGroundLabel}:{' '}
+        {detail.ground})
+      </AppText>
+    </View>
+  );
+}
+
+function Dot({ color, top }: { color: string; top?: boolean }) {
+  return <View style={[styles.dot, top && styles.dotTop, { backgroundColor: color }]} />;
 }
 
 const styles = StyleSheet.create({
@@ -875,14 +1004,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: AppColors.ink,
   },
-  // 最寄り避難所の名称が長いときに行内で省略させる
+  // 長い文を行内に収める(省略するか折り返すかは numberOfLines で決める)
   rowTextShrink: {
     flexShrink: 1,
+  },
+  rowWrap: {
+    alignItems: 'flex-start',
   },
   dot: {
     width: 9,
     height: 9,
     borderRadius: 5,
+  },
+  // 折り返す行で点を1行目の中央に置く(13pt の行高との差の半分)
+  dotTop: {
+    marginTop: 4,
   },
   linkRow: {
     borderTopWidth: StyleSheet.hairlineWidth,
