@@ -126,6 +126,10 @@ export default function MoreScreen() {
             NIED作成版を加工して作成
           </AppText>
           <Separator />
+          <AppText style={styles.legal}>
+            福智山断層帯の規模と発生確率: 地震調査研究推進本部 長期評価
+          </AppText>
+          <Separator />
           <AppText style={styles.legal}>{copy.disclaimerNotOfficial}</AppText>
         </View>
       </ScrollView>
