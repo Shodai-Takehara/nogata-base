@@ -35,7 +35,7 @@ export function PopulationDetailSheet({ cell, onClose }: Props) {
         </Pressable>
       </View>
 
-      {/* 地域名は固有名詞のため、やさしい日本語モードでも原文のまま出す(F-13) */}
+      {/* 地域名は固有名詞のため、やさしい日本語モードでも原文のまま出す */}
       <AppText style={styles.area}>
         {cell.name}
         {copy.populationAreaSuffix}

@@ -2,6 +2,7 @@ import type { LatLng } from 'react-native-maps';
 
 import {
   FUKUCHIYAMA_FAULT,
+  JNAME_NOTE,
   JNAME_READING,
   QUAKE_ATTRIBUTION,
   QUAKE_BUCKETS,
@@ -139,6 +140,19 @@ describe('地震ハザードのメッシュデータ', () => {
     for (const name of names) expect(JNAME_READING[name]).toBeTruthy();
     // 市域に無い区分の読みは持たない(使われない読みを保守しない)
     for (const name of Object.keys(JNAME_READING)) expect(names.has(name)).toBe(true);
+  });
+
+  it('市域に現れる微地形区分はすべて説明を持ち、平易版は標準と異なる', () => {
+    const names = new Set(Object.values(QUAKE_CELLS).map((c) => c.jname));
+    for (const name of names) {
+      const note = JNAME_NOTE[name];
+      expect(note.standard.length).toBeGreaterThan(0);
+      expect(note.easy.length).toBeGreaterThan(0);
+      expect(note.easy).not.toBe(note.standard);
+      // 液状化の傾向にどれかは触れる(国土交通省の5段階に対応させている)
+      expect(note.standard).toMatch(/液状化(しやすい|もしにくい|の可能性がある)/);
+    }
+    for (const name of Object.keys(JNAME_NOTE)) expect(names.has(name)).toBe(true);
   });
 
   it('断層は上端2点で、出典を持つ', () => {

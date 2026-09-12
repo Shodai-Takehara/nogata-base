@@ -1,4 +1,4 @@
-"""浸水想定区域内の推計人口と、人口レイヤー(F-14)のバンドルデータを生成するスクリプト。
+"""浸水想定区域内の推計人口と、人口レイヤーのバンドルデータを生成するスクリプト。
 
   python3 scripts/flood-population.py
   出力: docs/data/flood-population.json(数値は docs/flood-population.md に転記)
@@ -228,7 +228,7 @@ def dominant_area_name(cell, areas):
 
 
 def export_app_mesh(meshes, areas):
-    """人口レイヤー(F-14)がバンドルする JSON を書き出す。
+    """人口レイヤーがバンドルする JSON を書き出す。
 
     人数はメッシュ全体の値ではなく市内ぶんの按分値にする。市境のメッシュで
     市外の人口まで塗りの濃さに乗るのを避けるため。座標は約1mの精度(5桁)で

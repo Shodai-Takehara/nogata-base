@@ -83,16 +83,19 @@ export function fillLegend(fill: FillKey, copy: Copy, easy: boolean): LegendBloc
         },
         note: copy.quakeNote,
       };
-    case 'population':
-      return {
-        key: 'population',
-        title: copy.populationLegendTitle,
-        short: copy.fillPopulation,
-        entries: POPULATION_BUCKETS.map((b) => ({ color: b.fill, label: b.label })),
-        attribution: POPULATION_ATTRIBUTION,
-        scale: true,
-      };
   }
+}
+
+/** 人口メッシュの凡例。塗りの下に敷くので、帯でも塗りより前に置く */
+export function populationLegend(copy: Copy): LegendBlock {
+  return {
+    key: 'population',
+    title: copy.populationLegendTitle,
+    short: copy.areaPopulation,
+    entries: POPULATION_BUCKETS.map((b) => ({ color: b.fill, label: b.label })),
+    attribution: POPULATION_ATTRIBUTION,
+    scale: true,
+  };
 }
 
 /** 区域はタイルごとに凡例を分ける(土砂災害は土石流と急傾斜地で色が違うため) */
@@ -110,9 +113,10 @@ export function areaLegend(area: AreaKey, easy: boolean): LegendBlock[] {
   });
 }
 
-/** 地図に出ている塗りと区域の凡例を、描画順(塗り → 区域)に並べる */
+/** 地図に出ている人口、塗り、区域の凡例を、描画順(下から上)に並べる */
 export function legendBlocks(state: MapLayerState, copy: Copy, easy: boolean): LegendBlock[] {
   const blocks: LegendBlock[] = [];
+  if (state.population) blocks.push(populationLegend(copy));
   const fill = fillLegend(state.fill, copy, easy);
   if (fill) blocks.push(fill);
   for (const area of AREA_KEYS) {
@@ -121,7 +125,7 @@ export function legendBlocks(state: MapLayerState, copy: Copy, easy: boolean): L
   return blocks;
 }
 
-/** 出典表記(NF-06)。同じ提供元のレイヤーが複数出ていても1行にまとめる */
+/** 出典表記。同じ提供元のレイヤーが複数出ていても1行にまとめる */
 export function legendAttributions(blocks: readonly LegendBlock[]): string[] {
   return [...new Set(blocks.map((b) => b.attribution))];
 }

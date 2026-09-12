@@ -100,7 +100,7 @@ export default function SheltersScreen() {
               </AppText>
             ) : null}
             {error ? <AppText style={styles.error}>{copy.listLoadError}</AppText> : null}
-            {/* 圏外などでキャッシュを見せているときは、いつの情報かを明示する(NF-04) */}
+            {/* 圏外などでキャッシュを見せているときは、いつの情報かを明示する */}
             {error && data && fetchedAt != null ? (
               <AppText style={styles.cachedAt}>
                 {formatJstMoment(fetchedAt, easy)}

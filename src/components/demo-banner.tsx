@@ -6,7 +6,7 @@ import { useCopy } from '@/state/plain-japanese';
 import { useSettings } from '@/state/settings';
 
 /**
- * デモモード中に全画面へ常時表示するバナー(要件 F-09)。
+ * デモモード中に全画面へ常時表示するバナー。
  * 模擬データが本物の防災情報と混ざって見えることを防ぐ、安全のための表示。
  */
 export function DemoBanner() {

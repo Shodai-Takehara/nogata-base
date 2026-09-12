@@ -4,7 +4,7 @@ const EARTH_RADIUS_M = 6_371_000;
 
 /**
  * 2点間の直線距離(m)をハバサイン法で求める。
- * 要件 F-12 により距離は端末内で計算する(自宅位置を外部へ送らない)。
+ * 距離は端末内で計算する(自宅位置を外部へ送らない)。
  * 市域(数 km 四方)では球面近似で十分な精度になる。
  */
 export function haversineMeters(a: LatLng, b: LatLng): number {

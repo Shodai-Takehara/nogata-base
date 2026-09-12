@@ -14,7 +14,7 @@ const ANCHOR_GAP = 6;
 type Anchor = { x: number; y: number; width: number; height: number };
 
 type Props = {
-  /** 1〜2行で収まる短い説明。長い案内は詳細画面側に置く */
+  /** 数行で収まる短い説明。長い案内は詳細画面側に置く */
   text: string;
 };
 

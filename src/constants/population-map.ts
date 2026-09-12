@@ -3,7 +3,7 @@ import type { LatLng } from 'react-native-maps';
 import meshCells from './population-mesh.json';
 
 /**
- * 人口レイヤー(F-14)のメッシュデータと塗り分け。
+ * 人口レイヤーのメッシュデータと塗り分け。
  * データは国土数値情報 500mメッシュ別将来推計人口(R6国政局推計)を
  * scripts/flood-population.py で直方市域に切り出したもの(2025年推計・市内ぶんの按分値)。
  * 年次更新のデータなので API は持たず、バンドルして機内モードでも表示できるようにする。

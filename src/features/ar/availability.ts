@@ -1,5 +1,5 @@
 /**
- * AR 機能を開けるかどうかの判定(要件 F-08 のフォールバック)。
+ * AR 機能を開けるかどうかの判定(使えないときは案内画面に切り替える)。
  * ViroKit は実機専用のネイティブモジュールで、Expo Go には含まれない。
  */
 export type ArAvailability = 'available' | 'needs-device' | 'needs-dev-build';

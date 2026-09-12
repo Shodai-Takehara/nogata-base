@@ -1,7 +1,7 @@
 /**
  * 重ねるハザードマップ(国土交通省)の洪水浸水想定区域(想定最大規模)タイル。
  * 仕様: https://disaportal.gsi.go.jp/hazardmap/copyright/opendata.html
- * 出典表記はポータルサイトへの言及が利用条件(NF-06)。
+ * 出典表記はポータルサイトへの言及が利用条件。
  */
 export const FLOOD_TILE_URL_TEMPLATE =
   'https://disaportaldata.gsi.go.jp/raster/01_flood_l2_shinsuishin_data/{z}/{x}/{y}.png';
@@ -37,7 +37,7 @@ export type HazardLayer = {
   /** 凡例ストリップで色見本の前に置く短い名前(正式名称は長すぎて1行に収まらない) */
   label: string;
   /**
-   * やさしい日本語モード用の短い名前(F-13)。防災用語の意味を保つため
+   * やさしい日本語モード用の短い名前。防災用語の意味を保つため
    * 語は変えず読みだけ添える。凡例の見出し(title)は法令上の正式名称なので変えない
    */
   labelEasy: string;
@@ -96,7 +96,7 @@ export const HAZARD_LAYERS: readonly HazardLayer[] = [
 ];
 
 /**
- * 「重ねる区域」の切替1つが出すタイルの組(F-07 変更、2026-09-12 決定)。
+ * 「重ねる区域」の切替1つが出すタイルの組(2026-09-12 決定)。
  * 土石流と急傾斜地は市の Web 版では別の図だが、どちらも土砂災害警戒区域で
  * 色の意味(警戒、特別警戒)が同じなので、切替と凡例だけを1つにまとめる。
  * タイルの定義(HAZARD_LAYERS)は市の Web 版と同じ2件のまま残す

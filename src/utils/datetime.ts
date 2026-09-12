@@ -1,7 +1,7 @@
 import { PLAIN_JAPANESE_COPY } from '@/state/plain-japanese-copy';
 
 /**
- * データソースの日時はすべてエポックms。表示は常に JST(要件 NF-05)。
+ * データソースの日時はすべてエポックms。表示は常に JST。
  * 端末のタイムゾーン設定に依存しないよう timeZone を明示する。
  */
 const jstFormatter = new Intl.DateTimeFormat('ja-JP', {
@@ -15,7 +15,7 @@ const jstFormatter = new Intl.DateTimeFormat('ja-JP', {
 /**
  * 「時点」を付けない版。規制の開始・解除など「出来事の時刻」に使う
  * (未来の見込み時刻に「時点」が付くと、その時点の情報と誤読されるため)。
- * `easy` はやさしい日本語モード(F-13)。純関数のままにするため
+ * `easy` はやさしい日本語モード。純関数のままにするため
  * フックでなく引数で受け、呼び出し側が useEasyJapanese の値を渡す。
  */
 export function formatJstMoment(epochMs: number | null, easy = false): string {
@@ -25,7 +25,7 @@ export function formatJstMoment(epochMs: number | null, easy = false): string {
   return jstFormatter.format(new Date(epochMs));
 }
 
-/** 「◯月◯日 ◯:◯ 時点」形式(要件 NF-05)。計測・更新時刻の鮮度表示に使う */
+/** 「◯月◯日 ◯:◯ 時点」形式。計測・更新時刻の鮮度表示に使う */
 export function formatJst(epochMs: number | null, easy = false): string {
   const moment = formatJstMoment(epochMs, easy);
   if (epochMs == null) return moment;

@@ -12,7 +12,7 @@ const throttledLiveSource = withMinInterval(liveDataSource);
 
 const DataSourceContext = createContext<DataSource>(throttledLiveSource);
 
-/** デモモード設定に応じてライブ/フィクスチャを差し替える(要件 F-09) */
+/** デモモード設定に応じてライブ/フィクスチャを差し替える */
 export function DataSourceProvider({ children }: { children: ReactNode }) {
   const { settings, ready } = useSettings();
   const dataSource = useMemo(

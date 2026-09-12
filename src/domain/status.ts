@@ -32,7 +32,7 @@ export const WATER_STATUS_LABEL: Record<WaterStatus, string> = {
 };
 
 /**
- * やさしい日本語版の状態ラベル(F-13)。漢語を避け、危険は和語「あぶない」にする。
+ * やさしい日本語版の状態ラベル。漢語を避け、危険は和語「あぶない」にする。
  * 注意は短い和語がないため読みの「ちゅうい」を当てる。チップ幅に収まる短さを保つ。
  */
 export const WATER_STATUS_LABEL_EASY: Record<WaterStatus, string> = {
@@ -57,7 +57,7 @@ export const SHELTER_OPENING_LABEL: Record<ShelterOpening, string> = {
 };
 
 /**
- * やさしい日本語版の開設状況(F-13)。開いているかを動詞で示し、混雑は色でも伝わる。
+ * やさしい日本語版の開設状況。開いているかを動詞で示し、混雑は色でも伝わる。
  * 「混雑なし」は空きがある含意で「あいて いる」とし、色(緑)と併せて読ませる。
  */
 export const SHELTER_OPENING_LABEL_EASY: Record<ShelterOpening, string> = {
@@ -85,7 +85,7 @@ export const AGE_BRACKET_LABEL: Record<AgeBracket, string> = {
   '65+': '65歳以上',
 };
 
-/** やさしい日本語版の年齢区分(F-13)。「以上」を避けつつ 65 を含む言い方にする */
+/** やさしい日本語版の年齢区分。「以上」を避けつつ 65 を含む言い方にする */
 export const AGE_BRACKET_LABEL_EASY: Record<AgeBracket, string> = {
   '0-3': '0〜3さい',
   '3-18': '3〜18さい',
@@ -99,13 +99,13 @@ export const WATER_KIND_LABEL: Record<WaterKind, string> = {
   gate: '転倒ゲート',
 };
 
-/** やさしい日本語版(F-13)。設備の固有な呼び名のため語は変えず、読みだけ添える */
+/** やさしい日本語版。設備の固有な呼び名のため語は変えず、読みだけ添える */
 export const WATER_KIND_LABEL_EASY: Record<WaterKind, string> = {
   sensor: '水位(すいい)センサー',
   gate: '転倒(てんとう)ゲート',
 };
 
-/** 交通規制の程度。線の色分け(F-06)に使う */
+/** 交通規制の程度。線の色分けに使う */
 export type TrafficSeverity = 'full' | 'partial' | 'unknown';
 
 /**
@@ -135,7 +135,7 @@ export const HAZARD_TYPE_LABEL: Record<HazardType, string> = {
   other: 'その他',
 };
 
-/** やさしい日本語版の災害種別(F-13)。用語の意味を保つため語は変えず、読みだけ添える */
+/** やさしい日本語版の災害種別。用語の意味を保つため語は変えず、読みだけ添える */
 export const HAZARD_TYPE_LABEL_EASY: Record<HazardType, string> = {
   flood: '水害(すいがい)',
   landslide: '土砂(どしゃ)',

@@ -1,11 +1,11 @@
-"""地震ハザードレイヤー(F-15)のバンドルデータを生成するスクリプト。
+"""地震ハザードレイヤーのバンドルデータを生成するスクリプト。
 
   /usr/bin/python3 scripts/quake-hazard.py [--mesh 500] [--csv DIR]
   出力: src/constants/quake-mesh.json
 
 J-SHIS(防災科学技術研究所)の2つの API から、直方市域に掛かる 250m メッシュの
 確率論的地震動予測地図(2024年版)と表層地盤の値を取り出し、静的 JSON にする。
-実行時に API を叩かないため(要件 NF-04)、ビルド前にここで市域ぶんを切り出す。
+実行時に API を叩かないため、ビルド前にここで市域ぶんを切り出す。
 
   地震ハザード情報提供 API: https://www.j-shis.bosai.go.jp/api-pshm-meshinfo
   表層地盤情報提供 API:     https://www.j-shis.bosai.go.jp/api-sstruct-meshinfo

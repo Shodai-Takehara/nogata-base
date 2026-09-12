@@ -15,7 +15,7 @@ type Props = {
   onClose: () => void;
 };
 
-/** 地図の避難所ピンをタップしたときの詳細シート(要件 S-05 / F-02) */
+/** 地図の避難所ピンをタップしたときの詳細シート */
 export function ShelterDetailSheet({ shelter, onClose }: Props) {
   const labels = useStatusLabels();
   const copy = useCopy();
