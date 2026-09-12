@@ -25,8 +25,9 @@ describe('凡例のまとまり', () => {
     expect(block.attribution).toBe(FLOOD_ATTRIBUTION);
   });
 
-  it('人口の塗りは見出しを文言カタログから引く(平易版があるため)', () => {
-    const [block] = legendBlocks(withFill('population'), copy, false);
+  it('人口は見出しを文言カタログから引く(平易版があるため)', () => {
+    const state = mapLayersReducer(INITIAL_MAP_LAYERS, { type: 'togglePopulation' });
+    const [block] = legendBlocks(state, copy, false);
     expect(block.title).toBe(copy.populationLegendTitle);
     expect(block.attribution).toBe(POPULATION_ATTRIBUTION);
     expect(block.entries).toHaveLength(4);
@@ -45,8 +46,13 @@ describe('凡例のまとまり', () => {
   });
 
   it('断層線の見本と注意書きは地震の塗りにだけ付く', () => {
-    for (const fill of ['flood', 'population'] as const) {
-      const [block] = legendBlocks(withFill(fill), copy, false);
+    const [flood] = legendBlocks(withFill('flood'), copy, false);
+    const [population] = legendBlocks(
+      mapLayersReducer(INITIAL_MAP_LAYERS, { type: 'togglePopulation' }),
+      copy,
+      false,
+    );
+    for (const block of [flood, population]) {
       expect(block.line).toBeUndefined();
       expect(block.note).toBeUndefined();
     }
@@ -71,12 +77,14 @@ describe('凡例のまとまり', () => {
     expect(debris.title).toBe('土砂災害警戒区域(土石流)');
   });
 
-  it('塗り → 区域の順に並ぶ(地図の描画順と同じ)', () => {
-    let state = withFill('population');
+  it('人口 → 塗り → 区域の順に並ぶ(地図の描画順、下から上と同じ)', () => {
+    let state = withFill('flood');
     state = mapLayersReducer(state, { type: 'toggleArea', key: 'houseCollapse' });
     state = mapLayersReducer(state, { type: 'toggleArea', key: 'landslide' });
+    state = mapLayersReducer(state, { type: 'togglePopulation' });
     expect(legendBlocks(state, copy, false).map((b) => b.key)).toEqual([
       'population',
+      'flood',
       'debrisFlow',
       'steepSlope',
       'houseCollapse',
@@ -88,7 +96,7 @@ describe('凡例のまとまり', () => {
     state = mapLayersReducer(state, { type: 'toggleArea', key: 'landslide' });
     expect(legendAttributions(legendBlocks(state, copy, false))).toEqual([FLOOD_ATTRIBUTION]);
 
-    state = mapLayersReducer(state, { type: 'setFill', fill: 'population' });
+    state = mapLayersReducer(state, { type: 'togglePopulation' });
     expect(legendAttributions(legendBlocks(state, copy, false))).toEqual([
       POPULATION_ATTRIBUTION,
       FLOOD_ATTRIBUTION,

@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { memo, useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { Fragment, memo, useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, {
   Marker,
@@ -223,7 +223,7 @@ export default function HomeScreen() {
       ? (data?.trafficRegulations?.find((t) => t.id === selection.id) ?? null)
       : null;
   const selectedPopulation =
-    selection?.kind === 'population' && layers.fill === 'population'
+    selection?.kind === 'population' && layers.population
       ? (POPULATION_CELLS[selection.index] ?? null)
       : null;
   const selectedQuake =
@@ -272,9 +272,9 @@ export default function HomeScreen() {
   // レイヤー選択シートを地図タップで閉じた時刻。閉じるためのタップが、地図を覆う
   // 人口メッシュの選択として届くのを防ぐ判定に使う
   const layersClosedAt = useRef(0);
-  // 塗り(人口メッシュ、地震ハザード)は地図の大半を覆うため、ピン・規制線のタップと必ず重なる。
+  // 面(人口メッシュ、地震ハザード)は地図の大半を覆うため、ピン・規制線のタップと必ず重なる。
   // 規制線より遅らせて、他の対象が選ばれていたら譲る
-  const selectFill = useCallback((next: MapSelection) => {
+  const selectOverlay = useCallback((next: MapSelection) => {
     setTimeout(() => {
       if (Date.now() - markerPressedAt.current < PRESS_YIELD_MS) return;
       if (Date.now() - linePressedAt.current < PRESS_YIELD_MS) return;
@@ -283,8 +283,8 @@ export default function HomeScreen() {
     }, FILL_TAP_DELAY_MS);
   }, []);
   const selectPopulation = useCallback(
-    (index: number) => selectFill({ kind: 'population', index }),
-    [selectFill],
+    (index: number) => selectOverlay({ kind: 'population', index }),
+    [selectOverlay],
   );
   const closeSelection = useCallback(() => setSelection(null), []);
 
@@ -302,9 +302,9 @@ export default function HomeScreen() {
       const { latitude, longitude } = e.nativeEvent.coordinate;
       const code = meshCodeAt(latitude, longitude, QUAKE_META.mesh);
       if (QUAKE_CELLS[code] == null) return;
-      selectFill({ kind: 'quake', code });
+      selectOverlay({ kind: 'quake', code });
     },
-    [sheetMode, layers.fill, selectFill],
+    [sheetMode, layers.fill, selectOverlay],
   );
 
   // 詳細シートはレイヤー選択より優先して表示されるため、閉じてからシートを切り替える
@@ -349,40 +349,45 @@ export default function HomeScreen() {
           showsUserLocation={locationEnabled}
           onPress={mapPressed}>
           {/* 面オーバーレイの重なり順について: Apple Maps 側は zIndex を無視し、
-              addOverlay された順(=マウント順)で描画される。塗り(人口メッシュ)の青が
-              区域タイルの色を覆わないよう「区域タイルが常に上」を保証したいので、
-              区域タイルの key に塗りの種類を入れ、塗りが変わるたびに再マウントさせる。
-              同一コミット内の挿入は子の並び順(塗り→区域)になるため順序が決まる。
-              塗りを「なし」にしたときの再マウントは不要だが、洪水→人口のように塗りが
-              入れ替わるときと区別する手間に見合わないので、そのまま再マウントさせている */}
-          {layers.fill === 'population' ? (
+              addOverlay された順(=マウント順)で描画される。人口メッシュの青がハザードの
+              塗りと区域タイルの色を覆わないよう「人口 → 塗り → 区域タイル」を保証したいので、
+              上に来る側を key 付きの Fragment で包み、下側(人口の有無、塗りの種類)が変わる
+              たびに上側をまとめて再マウントさせる。同一コミット内の挿入は子の並び順になる
+              ため順序が決まる。塗りを足すときは Fragment の中に置けばこの規則に乗る。
+              下側を消したとき(人口オフ、塗りなし)の再マウントは不要だが、入れ替わりと
+              区別する手間に見合わないので、そのまま再マウントさせている */}
+          {layers.population ? (
             <PopulationLayer
               selectedIndex={selection?.kind === 'population' ? selection.index : null}
               onSelect={selectPopulation}
             />
           ) : null}
-          {layers.fill === 'quake' ? (
-            <QuakeLayer selectedCode={selection?.kind === 'quake' ? selection.code : null} />
-          ) : null}
-          {layers.fill === 'flood' ? (
-            <UrlTile
-              urlTemplate={FLOOD_TILE_URL_TEMPLATE}
-              minimumZ={HAZARD_TILE_MIN_Z}
-              maximumZ={HAZARD_TILE_MAX_Z}
-              opacity={HAZARD_TILE_OPACITY}
-            />
-          ) : null}
-          {AREA_KEYS.filter((area) => layers.areas[area])
-            .flatMap((area) => AREA_LAYERS[area])
-            .map((key) => (
+          <Fragment key={`above-population-${layers.population}`}>
+            {layers.fill === 'quake' ? (
+              <QuakeLayer selectedCode={selection?.kind === 'quake' ? selection.code : null} />
+            ) : null}
+            {layers.fill === 'flood' ? (
               <UrlTile
-                key={`${key}-${layers.fill}`}
-                urlTemplate={hazardLayer(key).urlTemplate}
+                urlTemplate={FLOOD_TILE_URL_TEMPLATE}
                 minimumZ={HAZARD_TILE_MIN_Z}
                 maximumZ={HAZARD_TILE_MAX_Z}
                 opacity={HAZARD_TILE_OPACITY}
               />
-            ))}
+            ) : null}
+            <Fragment key={`above-fill-${layers.fill}`}>
+              {AREA_KEYS.filter((area) => layers.areas[area])
+                .flatMap((area) => AREA_LAYERS[area])
+                .map((key) => (
+                  <UrlTile
+                    key={key}
+                    urlTemplate={hazardLayer(key).urlTemplate}
+                    minimumZ={HAZARD_TILE_MIN_Z}
+                    maximumZ={HAZARD_TILE_MAX_Z}
+                    opacity={HAZARD_TILE_OPACITY}
+                  />
+                ))}
+            </Fragment>
+          </Fragment>
           {layers.pins.shelters
             ? data?.shelters?.map((s) => (
                 <ShelterMarker
@@ -565,7 +570,7 @@ const WaterMarker = memo(function WaterMarker({
 });
 
 /**
- * 人口メッシュの塗り(F-14)。202セルの静的データで、レイヤーを点けている間は
+ * 人口メッシュ(F-14)。202セルの静的データで、レイヤーを点けている間は
  * 全セルを描画したままにする。選択の変更ではセル単位の memo により、
  * 枠線が変わる2セルぶんだけがネイティブ更新になる。
  * zIndex は付けない(Apple Maps 側が面オーバーレイでは無視するため効かない。

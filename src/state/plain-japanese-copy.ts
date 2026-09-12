@@ -145,15 +145,6 @@ export const PLAIN_JAPANESE_COPY = {
     standard: '今後30年に強い揺れに見舞われる確率と地盤',
     easy: 'これから 30年(ねん)で 強(つよ)く ゆれる かのうせいと、地面(じめん)の かたさ',
   },
-  fillPopulation: {
-    standard: '人口',
-    easy: '人(ひと)の 数(かず)',
-  },
-  fillPopulationDesc: {
-    standard: '500mごとの推計人口',
-    // 「推計」を落とすと実数に読めるため、「だいたいの」で見積もりだと分かるようにする
-    easy: '500m ごとの だいたいの 人(ひと)の 数(かず)',
-  },
   areaLandslide: {
     standard: '土砂災害の区域',
     easy: '土砂(どしゃ)災害(さいがい)の ところ',
@@ -162,6 +153,15 @@ export const PLAIN_JAPANESE_COPY = {
     standard: '家屋倒壊の区域',
     // 「想定区域」なので、必ず壊れると読まれないよう「かもしれない」を入れる
     easy: '家(いえ)が こわれる かもしれない ところ',
+  },
+  areaPopulation: {
+    standard: '人口',
+    easy: '人(ひと)の 数(かず)',
+  },
+  areaPopulationDesc: {
+    standard: '500mごとの推計人口。地震のリスクとは同時に出せません',
+    // 「推計」を落とすと実数に読めるため、「だいたいの」で見積もりだと分かるようにする
+    easy: '500m ごとの だいたいの 人(ひと)の 数(かず)。地震(じしん)の きけんと いっしょには 出(だ)せません',
   },
   legendExpand: {
     standard: '凡例を見る',

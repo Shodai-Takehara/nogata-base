@@ -13,7 +13,13 @@ import {
   type MapLayerState,
   type PinLayerKey,
 } from '@/state/map-layers';
-import { areaLegend, fillLegend, type LegendBlock, type LegendLine } from '@/state/map-legend';
+import {
+  areaLegend,
+  fillLegend,
+  populationLegend,
+  type LegendBlock,
+  type LegendLine,
+} from '@/state/map-legend';
 import { useCopy } from '@/state/plain-japanese';
 import { useEasyJapanese } from '@/state/settings';
 
@@ -54,12 +60,12 @@ export function LayerPicker({ state, dispatch, onOpenAr }: Props) {
     none: { label: copy.fillNone },
     flood: { label: copy.fillFlood, desc: copy.fillFloodDesc },
     quake: { label: copy.fillQuake, desc: copy.fillQuakeDesc },
-    population: { label: copy.fillPopulation, desc: copy.fillPopulationDesc },
   };
   const areaLabel: Record<AreaKey, string> = {
     landslide: copy.areaLandslide,
     houseCollapse: copy.areaHouseCollapse,
   };
+  const population = populationLegend(copy);
 
   return (
     <View style={styles.body}>
@@ -127,6 +133,15 @@ export function LayerPicker({ state, dispatch, onOpenAr }: Props) {
           </View>
         );
       })}
+      {/* 人口は塗りと重ねる切替(map-layers.ts)。見出しを増やさず区域の並びに置く */}
+      <ToggleRow
+        label={copy.areaPopulation}
+        desc={copy.areaPopulationDesc}
+        on={state.population}
+        onToggle={() => dispatch({ type: 'togglePopulation' })}
+        swatches={population.entries}
+      />
+      {state.population ? <LegendDetail block={population} /> : null}
     </View>
   );
 }
@@ -137,12 +152,14 @@ function SectionTitle({ title }: { title: string }) {
 
 function ToggleRow({
   label,
+  desc,
   on,
   onToggle,
   swatches,
   round,
 }: {
   label: string;
+  desc?: string;
   on: boolean;
   onToggle: () => void;
   swatches: readonly Swatch[];
@@ -155,12 +172,14 @@ function ToggleRow({
       onPress={onToggle}
       accessibilityRole="switch"
       accessibilityState={{ checked: on }}
-      accessibilityLabel={label}>
+      accessibilityLabel={label}
+      accessibilityHint={desc}>
       <View style={styles.rowMain}>
         <View style={styles.labelLine}>
           <Swatches entries={swatches} round={round} />
           <AppText style={styles.label}>{label}</AppText>
         </View>
+        {desc ? <AppText style={styles.desc}>{desc}</AppText> : null}
       </View>
       {/* 行全体を押せるようにし、スイッチ自体は触れない見た目だけの部品にする。
           スイッチにも押下を持たせると、iOS で行とスイッチの両方が反応して2回切り替わりうる */}
