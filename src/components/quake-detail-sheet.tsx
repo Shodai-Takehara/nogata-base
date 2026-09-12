@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
+import { InfoTooltip } from '@/components/info-tooltip';
 import { QUAKE_ATTRIBUTION, type QuakeCell } from '@/constants/quake-map';
 import { AppColors } from '@/constants/tokens';
 import { useCopy } from '@/state/plain-japanese';
@@ -49,9 +50,13 @@ export function QuakeDetailSheet({ cell, onClose }: Props) {
           {sub.label}: {sub.value}
         </AppText>
       ))}
-      <AppText style={styles.sub}>
-        {copy.quakeGroundLabel}: {detail.ground}
-      </AppText>
+      {/* 区分名だけでは地盤の良し悪しが読めないため、ⓘ で土地の成り立ちと傾向を出す */}
+      <View style={styles.groundLine}>
+        <AppText style={styles.sub}>
+          {copy.quakeGroundLabel}: {detail.ground}
+        </AppText>
+        {detail.groundNote ? <InfoTooltip text={detail.groundNote} /> : null}
+      </View>
       {detail.amplification ? (
         <AppText style={styles.sub}>
           {copy.quakeAmpLabel}: {detail.amplification}
@@ -140,6 +145,11 @@ const styles = StyleSheet.create({
     color: AppColors.ink,
     marginTop: 4,
     fontVariant: ['tabular-nums'],
+  },
+  groundLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   note: {
     fontSize: 11,

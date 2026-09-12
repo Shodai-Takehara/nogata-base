@@ -1,6 +1,6 @@
 import { QUAKE_BUCKETS, QUAKE_META, type QuakeCell } from '@/constants/quake-map';
 import { PLAIN_JAPANESE_COPY, type CopyKey } from '@/state/plain-japanese-copy';
-import { formatProbability, groundLabel, quakeDetail } from '@/state/quake-detail';
+import { formatProbability, groundLabel, groundNote, quakeDetail } from '@/state/quake-detail';
 
 const copy = Object.fromEntries(
   Object.entries(PLAIN_JAPANESE_COPY).map(([key, entry]) => [key, entry.standard]),
@@ -62,6 +62,13 @@ describe('地震ハザードの詳細に出す値', () => {
     expect(groundLabel('自然堤防', true)).toBe('自然堤防(しぜん ていぼう)');
     expect(groundLabel('自然堤防', false)).toBe('自然堤防');
     expect(groundLabel('埋立地', true)).toBe('埋立地');
+  });
+
+  it('微地形区分の説明はモードで切り替え、説明の無い区分では出さない', () => {
+    expect(groundNote('自然堤防', false)).toContain('液状化しやすい');
+    expect(groundNote('自然堤防', true)).toContain('液状化(えきじょうか)');
+    expect(groundNote('埋立地', false)).toBeNull();
+    expect(quakeDetail(CELL, copy, false).groundNote).toBe(groundNote('自然堤防', false));
   });
 
   it('メッシュ幅の注記は同梱データのメッシュ幅と一致する(--mesh 500 で作り直したら書き換える)', () => {
