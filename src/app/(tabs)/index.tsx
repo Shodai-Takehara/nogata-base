@@ -1,30 +1,32 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
-import MapView, { Marker, Polygon, Polyline, UrlTile } from 'react-native-maps';
+import MapView, { Marker, Polygon, Polyline, UrlTile, type LatLng } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/app-text';
 import { CarShelterDetailSheet } from '@/components/car-shelter-detail-sheet';
 import { DamageDetailSheet } from '@/components/damage-detail-sheet';
 import { DemoBanner } from '@/components/demo-banner';
+import { LayerPicker } from '@/components/layer-picker';
+import { LayersButton } from '@/components/layers-button';
+import { LegendStrip } from '@/components/legend-strip';
+import { MapBottomSheet, type SheetMode } from '@/components/map-bottom-sheet';
 import { PopulationDetailSheet } from '@/components/population-detail-sheet';
 import { ShelterDetailSheet } from '@/components/shelter-detail-sheet';
 import { TrafficDetailSheet } from '@/components/traffic-detail-sheet';
 import { WaterDetailSheet } from '@/components/water-detail-sheet';
 import { CAR_SHELTERS, type CarShelter } from '@/constants/car-shelters';
 import {
-  FLOOD_ATTRIBUTION,
-  HAZARD_LAYERS,
+  AREA_LAYERS,
+  FLOOD_TILE_URL_TEMPLATE,
   HAZARD_TILE_MAX_Z,
   HAZARD_TILE_MIN_Z,
   HAZARD_TILE_OPACITY,
-  type HazardLayerKey,
+  hazardLayer,
 } from '@/constants/hazard-map';
 import { RIVER_INFO_URL } from '@/constants/links';
 import {
-  POPULATION_ATTRIBUTION,
-  POPULATION_BUCKETS,
   POPULATION_CELLS,
   POPULATION_SELECTED_STROKE,
   POPULATION_SELECTED_STROKE_WIDTH,
@@ -52,6 +54,8 @@ import {
   type WaterStatus,
 } from '@/domain/status';
 import { useRemoteData } from '@/hooks/use-remote-data';
+import { AREA_KEYS, INITIAL_MAP_LAYERS, mapLayersReducer, overlayCount } from '@/state/map-layers';
+import { legendBlocks } from '@/state/map-legend';
 import { useCopy } from '@/state/plain-japanese';
 import { useEasyJapanese, useHomePin, useSettings } from '@/state/settings';
 import { getCurrentLocation } from '@/utils/current-location';
@@ -102,22 +106,11 @@ export default function HomeScreen() {
   const dataSource = useDataSource();
   const insets = useSafeAreaInsets();
   const copy = useCopy();
-  const [showShelters, setShowShelters] = useState(true);
-  const [showCarShelters, setShowCarShelters] = useState(true);
-  const [showWater, setShowWater] = useState(true);
-  const [showDamage, setShowDamage] = useState(true);
-  const [showTraffic, setShowTraffic] = useState(true);
-  // 非公式アプリが想定浸水域を常時表示するより、利用者に明示的に出させる方が誤解が少ない
-  const [showHazard, setShowHazard] = useState(false);
-  // 人口レイヤー(F-14)。平常時の主目的(避難所・水位の確認)には不要な情報のため既定は非表示
-  const [showPopulation, setShowPopulation] = useState(false);
-  // 市の Web 版ハザードマップと同じく複数レイヤーを重ねられる。既定は洪水のみ
-  const [activeHazards, setActiveHazards] = useState<HazardLayerKey[]>(['flood']);
-  // 凡例の開閉。パネルはピン選択のたびに入れ替わるため、たたんだ状態を保てるよう親が持つ。
-  // 初回は色の意味を知ってもらうためにひらいておく
-  const [legendOpen, setLegendOpen] = useState(true);
-  // 要約カードの開閉。凡例と同じ理由で親が持つ。初回は市内の状況を見せるためひらいておく
-  const [summaryOpen, setSummaryOpen] = useState(true);
+  const easy = useEasyJapanese();
+  const router = useRouter();
+  const [layers, dispatchLayers] = useReducer(mapLayersReducer, INITIAL_MAP_LAYERS);
+  // 既定は peek(1行)。市内の状況は1行で足り、地図を広く見せる方を優先する
+  const [sheetMode, setSheetMode] = useState<SheetMode>('peek');
   const [locationEnabled, setLocationEnabled] = useState(false);
   // 選択は id で保持し、表示は最新データから解決する(更新でシートが古くならないように)
   const [selection, setSelection] = useState<MapSelection | null>(null);
@@ -130,7 +123,7 @@ export default function HomeScreen() {
     if (demoMode) mapRef.current?.animateToRegion(NOGATA_REGION, 500);
   }, [demoMode]);
 
-  // その他タブの「ハザードマップを重ねる」からの遷移で有効化する。
+  // その他タブの「ハザードマップを重ねる」からの遷移で塗りを洪水にする。
   // 値は遷移のたびに変わる(more.tsx 側で発行)ため、変化=遷移として扱える。
   // useEffect で拾うと React Compiler の set-state-in-effect ルールに反するため、
   // 前回レンダーの値を記録してレンダー中に検知する
@@ -138,14 +131,8 @@ export default function HomeScreen() {
   const [handledHazardParam, setHandledHazardParam] = useState<string | undefined>(undefined);
   if (hazard !== handledHazardParam) {
     setHandledHazardParam(hazard);
-    if (hazard != null) setShowHazard(true);
+    if (hazard != null) dispatchLayers({ type: 'applyDeepLink', link: 'hazard' });
   }
-
-  const toggleHazardLayer = useCallback((key: HazardLayerKey) => {
-    setActiveHazards((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
-    );
-  }, []);
 
   // 現在地表示は許可が要るため、勝手に出さずボタンを導線にする(押されたときだけ要求)
   const locateMe = useCallback(async () => {
@@ -183,27 +170,27 @@ export default function HomeScreen() {
   const homePin = useHomePin();
   // レイヤーを非表示にしたら詳細シートも出さない(地図に無いものの詳細が残るのを防ぐ)
   const selectedShelter =
-    selection?.kind === 'shelter' && showShelters
+    selection?.kind === 'shelter' && layers.pins.shelters
       ? (data?.shelters?.find((s) => s.id === selection.id) ?? null)
       : null;
   const selectedWater =
-    selection?.kind === 'water' && showWater
+    selection?.kind === 'water' && layers.pins.water
       ? (data?.waterLevels?.find((w) => w.id === selection.id) ?? null)
       : null;
   const selectedCar =
-    selection?.kind === 'car' && showCarShelters
+    selection?.kind === 'car' && layers.pins.carShelters
       ? (CAR_SHELTERS.find((c) => c.id === selection.id) ?? null)
       : null;
   const selectedDamage =
-    selection?.kind === 'damage' && showDamage
+    selection?.kind === 'damage' && layers.pins.damage
       ? (data?.damageReports?.find((d) => d.id === selection.id) ?? null)
       : null;
   const selectedTraffic =
-    selection?.kind === 'traffic' && showTraffic
+    selection?.kind === 'traffic' && layers.pins.traffic
       ? (data?.trafficRegulations?.find((t) => t.id === selection.id) ?? null)
       : null;
   const selectedPopulation =
-    selection?.kind === 'population' && showPopulation
+    selection?.kind === 'population' && layers.fill === 'population'
       ? (POPULATION_CELLS[selection.index] ?? null)
       : null;
 
@@ -246,16 +233,51 @@ export default function HomeScreen() {
       setSelection({ kind: 'traffic', id });
     }, 50);
   }, []);
+  // レイヤー選択シートを地図タップで閉じた時刻。閉じるためのタップが、地図を覆う
+  // 人口メッシュの選択として届くのを防ぐ判定に使う
+  const layersClosedAt = useRef(0);
   const selectPopulation = useCallback((index: number) => {
     // メッシュは地図の大半を覆うため、ピン・規制線のタップと必ず重なる。
     // 規制線(50ms)より遅らせて、他の対象が選ばれていたら譲る
     setTimeout(() => {
       if (Date.now() - markerPressedAt.current < 300) return;
       if (Date.now() - linePressedAt.current < 300) return;
+      if (Date.now() - layersClosedAt.current < 300) return;
       setSelection({ kind: 'population', index });
     }, 120);
   }, []);
   const closeSelection = useCallback(() => setSelection(null), []);
+
+  // レイヤー選択はシート外の地図タップで閉じる(地図アプリで慣れた操作に合わせる)。
+  // iOS ではピンをタップしても地図タップが届くが、ピンの詳細がシートに入れ替わるだけなので支障はない
+  const mapPressed = useCallback(() => {
+    if (sheetMode !== 'layers') return;
+    layersClosedAt.current = Date.now();
+    setSheetMode('peek');
+  }, [sheetMode]);
+
+  // 詳細シートはレイヤー選択より優先して表示されるため、閉じてからシートを切り替える
+  // (閉じないと、詳細を閉じたあとに選択シートが突然出る)
+  const openLayers = useCallback(() => {
+    setSelection(null);
+    setSheetMode('layers');
+  }, []);
+
+  const summary = summarize(data ?? null, homePin);
+  const showArLink = layers.fill === 'flood';
+  const detail = selectedShelter ? (
+    <ShelterDetailSheet shelter={selectedShelter} onClose={closeSelection} />
+  ) : selectedWater ? (
+    <WaterDetailSheet waterLevel={selectedWater} onClose={closeSelection} />
+  ) : selectedCar ? (
+    <CarShelterDetailSheet shelter={selectedCar} onClose={closeSelection} />
+  ) : selectedDamage ? (
+    <DamageDetailSheet report={selectedDamage} onClose={closeSelection} />
+  ) : selectedTraffic ? (
+    <TrafficDetailSheet regulation={selectedTraffic} onClose={closeSelection} />
+  ) : selectedPopulation ? (
+    <PopulationDetailSheet cell={selectedPopulation} onClose={closeSelection} />
+  ) : null;
 
   return (
     <View style={styles.container}>
@@ -271,32 +293,41 @@ export default function HomeScreen() {
           ref={mapRef}
           style={styles.map}
           initialRegion={NOGATA_REGION}
-          showsUserLocation={locationEnabled}>
+          showsUserLocation={locationEnabled}
+          onPress={mapPressed}>
           {/* 面オーバーレイの重なり順について: Apple Maps 側は zIndex を無視し、
-              addOverlay された順(=マウント順)で描画される。人口メッシュの青が
-              浸水深の色を覆わないよう「タイルが常に上」を保証したいので、
-              互いのトグルを key に入れて相手が出入りするたびに再マウントさせる。
-              同一コミット内の挿入は子の並び順(人口→タイル)になるため順序が決まる */}
-          {showPopulation ? (
+              addOverlay された順(=マウント順)で描画される。塗り(人口メッシュ)の青が
+              区域タイルの色を覆わないよう「区域タイルが常に上」を保証したいので、
+              区域タイルの key に塗りの種類を入れ、塗りが変わるたびに再マウントさせる。
+              同一コミット内の挿入は子の並び順(塗り→区域)になるため順序が決まる。
+              塗りを「なし」にしたときの再マウントは不要だが、洪水→人口のように塗りが
+              入れ替わるときと区別する手間に見合わないので、そのまま再マウントさせている */}
+          {layers.fill === 'population' ? (
             <PopulationLayer
-              key={`population-${showHazard}`}
               selectedIndex={selection?.kind === 'population' ? selection.index : null}
               onSelect={selectPopulation}
             />
           ) : null}
-          {showHazard
-            ? HAZARD_LAYERS.filter((l) => activeHazards.includes(l.key)).map((l) => (
-                <UrlTile
-                  key={`${l.key}-${showPopulation}`}
-                  urlTemplate={l.urlTemplate}
-                  minimumZ={HAZARD_TILE_MIN_Z}
-                  maximumZ={HAZARD_TILE_MAX_Z}
-                  opacity={HAZARD_TILE_OPACITY}
-                  zIndex={-1}
-                />
-              ))
-            : null}
-          {showShelters
+          {layers.fill === 'flood' ? (
+            <UrlTile
+              urlTemplate={FLOOD_TILE_URL_TEMPLATE}
+              minimumZ={HAZARD_TILE_MIN_Z}
+              maximumZ={HAZARD_TILE_MAX_Z}
+              opacity={HAZARD_TILE_OPACITY}
+            />
+          ) : null}
+          {AREA_KEYS.filter((area) => layers.areas[area])
+            .flatMap((area) => AREA_LAYERS[area])
+            .map((key) => (
+              <UrlTile
+                key={`${key}-${layers.fill}`}
+                urlTemplate={hazardLayer(key).urlTemplate}
+                minimumZ={HAZARD_TILE_MIN_Z}
+                maximumZ={HAZARD_TILE_MAX_Z}
+                opacity={HAZARD_TILE_OPACITY}
+              />
+            ))}
+          {layers.pins.shelters
             ? data?.shelters?.map((s) => (
                 <ShelterMarker
                   key={`shelter-${s.id}-${s.opening}`}
@@ -305,12 +336,12 @@ export default function HomeScreen() {
                 />
               ))
             : null}
-          {showCarShelters
+          {layers.pins.carShelters
             ? CAR_SHELTERS.map((c) => (
                 <CarShelterMarker key={`car-${c.id}`} shelter={c} onSelect={selectCar} />
               ))
             : null}
-          {showWater
+          {layers.pins.water
             ? data?.waterLevels?.map((w) => (
                 <WaterMarker
                   key={`${w.id}-${waterStatus(w.levelCm, w.alertLevelCm)}`}
@@ -319,12 +350,12 @@ export default function HomeScreen() {
                 />
               ))
             : null}
-          {showDamage
+          {layers.pins.damage
             ? data?.damageReports?.map((d) => (
                 <DamageMarker key={`damage-${d.id}`} report={d} onSelect={selectDamage} />
               ))
             : null}
-          {showTraffic
+          {layers.pins.traffic
             ? data?.trafficRegulations?.map((t) => (
                 <Polyline
                   key={`traffic-${t.id}`}
@@ -347,48 +378,8 @@ export default function HomeScreen() {
           ) : null}
         </MapView>
 
-        {/* 1行だと6チップが収まらずハザードだけ落ちて不揃いになるため、
-            意味で2段に分ける(上=場所・観測点のピン、下=災害情報) */}
-        <View style={styles.layerChips}>
-          <View style={styles.layerChipRow}>
-            <LayerChip
-              label={copy.layerShelters}
-              active={showShelters}
-              onPress={() => setShowShelters((v) => !v)}
-            />
-            <LayerChip
-              label={copy.layerCarShelters}
-              active={showCarShelters}
-              onPress={() => setShowCarShelters((v) => !v)}
-            />
-            <LayerChip
-              label={copy.layerWater}
-              active={showWater}
-              onPress={() => setShowWater((v) => !v)}
-            />
-          </View>
-          <View style={styles.layerChipRow}>
-            <LayerChip
-              label={copy.layerDamage}
-              active={showDamage}
-              onPress={() => setShowDamage((v) => !v)}
-            />
-            <LayerChip
-              label={copy.layerTraffic}
-              active={showTraffic}
-              onPress={() => setShowTraffic((v) => !v)}
-            />
-            <LayerChip
-              label={copy.layerHazard}
-              active={showHazard}
-              onPress={() => setShowHazard((v) => !v)}
-            />
-            <LayerChip
-              label={copy.layerPopulation}
-              active={showPopulation}
-              onPress={() => setShowPopulation((v) => !v)}
-            />
-          </View>
+        <View style={styles.topLeft}>
+          <LayersButton count={overlayCount(layers)} onPress={openLayers} />
         </View>
 
         <View style={styles.mapButtons}>
@@ -408,46 +399,37 @@ export default function HomeScreen() {
             <Text style={styles.locateIcon}>➤</Text>
           </Pressable>
         </View>
-      </View>
 
-      <View style={[styles.bottomArea, { marginBottom: insets.bottom + 8 }]}>
-        {selectedShelter ? (
-          <ShelterDetailSheet shelter={selectedShelter} onClose={closeSelection} />
-        ) : selectedWater ? (
-          <WaterDetailSheet waterLevel={selectedWater} onClose={closeSelection} />
-        ) : selectedCar ? (
-          <CarShelterDetailSheet shelter={selectedCar} onClose={closeSelection} />
-        ) : selectedDamage ? (
-          <DamageDetailSheet report={selectedDamage} onClose={closeSelection} />
-        ) : selectedTraffic ? (
-          <TrafficDetailSheet regulation={selectedTraffic} onClose={closeSelection} />
-        ) : selectedPopulation ? (
-          <PopulationDetailSheet cell={selectedPopulation} onClose={closeSelection} />
-        ) : (
-          <>
-            {showHazard ? (
-              <HazardPanel
-                active={activeHazards}
-                onToggle={toggleHazardLayer}
-                legendOpen={legendOpen}
-                onToggleLegend={() => setLegendOpen((v) => !v)}
-              />
-            ) : null}
-            {showPopulation ? <PopulationLegend /> : null}
-            <SummaryCard
-              shelters={data?.shelters ?? null}
-              waterLevels={data?.waterLevels ?? null}
-              damageReports={data?.damageReports ?? null}
-              trafficRegulations={data?.trafficRegulations ?? null}
+        <MapBottomSheet
+          mode={sheetMode}
+          onChangeMode={setSheetMode}
+          legend={<LegendStrip blocks={legendBlocks(layers, copy, easy)} onExpand={openLayers} />}
+          detail={detail}
+          peek={
+            <SummaryPeek
+              summary={summary}
               hasError={hasError}
               cachedAt={fetchedAt}
               onRetry={refresh}
-              showArLink={showHazard && activeHazards.includes('flood')}
-              open={summaryOpen}
-              onToggle={() => setSummaryOpen((v) => !v)}
             />
-          </>
-        )}
+          }
+          summary={
+            <SummaryRows
+              summary={summary}
+              hasError={hasError}
+              cachedAt={fetchedAt}
+              onRetry={refresh}
+              showArLink={showArLink}
+            />
+          }
+          layers={
+            <LayerPicker
+              state={layers}
+              dispatch={dispatchLayers}
+              onOpenAr={() => router.push('/ar')}
+            />
+          }
+        />
       </View>
     </View>
   );
@@ -583,195 +565,52 @@ const PopulationCellOverlay = memo(function PopulationCellOverlay({
   );
 });
 
-/** 人口レイヤーの凡例。ハザードの凡例パネルと同じ見た目で下部に出す */
-function PopulationLegend() {
-  const copy = useCopy();
-  return (
-    <View style={styles.legend}>
-      <AppText maxScale={PANEL_MAX_SCALE} style={styles.legendTitle}>
-        {copy.populationLegendTitle}
-      </AppText>
-      <View style={styles.legendRows}>
-        {POPULATION_BUCKETS.map((bucket) => (
-          <View key={bucket.min} style={styles.legendRow}>
-            <View style={[styles.legendSwatch, { backgroundColor: bucket.fill }]} />
-            <AppText maxScale={PANEL_MAX_SCALE} style={styles.legendLabel}>
-              {bucket.label}
-            </AppText>
-          </View>
-        ))}
-      </View>
-      {/* 出典表記は NF-06 のため、レイヤーを出している間は常に見せる */}
-      <AppText maxScale={PANEL_MAX_SCALE} style={styles.legendSource}>
-        {POPULATION_ATTRIBUTION}
-      </AppText>
-    </View>
-  );
-}
-
-function LayerChip({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      style={[styles.lchip, active && styles.lchipActive]}
-      onPress={onPress}
-      accessibilityRole="switch"
-      accessibilityState={{ checked: active }}
-      accessibilityLabel={`${label}レイヤーの表示切替`}>
-      <AppText style={[styles.lchipText, active && styles.lchipTextActive]}>{label}</AppText>
-    </Pressable>
-  );
-}
-
-/** 重ねるレイヤーの選択と、選択中レイヤーの凡例をまとめたパネル。凡例はたためる */
-function HazardPanel({
-  active,
-  onToggle,
-  legendOpen,
-  onToggleLegend,
-}: {
-  active: HazardLayerKey[];
-  onToggle: (key: HazardLayerKey) => void;
-  legendOpen: boolean;
-  onToggleLegend: () => void;
-}) {
-  const copy = useCopy();
-  const easy = useEasyJapanese();
-  return (
-    <View style={styles.legend}>
-      <View style={styles.hazardChips}>
-        {HAZARD_LAYERS.map((layer) => {
-          const on = active.includes(layer.key);
-          return (
-            <Pressable
-              key={layer.key}
-              style={[styles.hazardChip, on && styles.hazardChipActive]}
-              onPress={() => onToggle(layer.key)}
-              hitSlop={6}
-              accessibilityRole="switch"
-              accessibilityState={{ checked: on }}
-              accessibilityLabel={`${layer.title}の表示切替`}>
-              {/* 地図上のパネルは面積が限られ、特大だとチップが画面を覆って
-                  押せなくなるため、拡大は標準相当までに抑える */}
-              <AppText
-                maxScale={PANEL_MAX_SCALE}
-                style={[styles.hazardChipText, on && styles.hazardChipTextActive]}>
-                {easy ? layer.labelEasy : layer.label}
-              </AppText>
-            </Pressable>
-          );
-        })}
-        <Pressable
-          style={styles.legendToggle}
-          onPress={onToggleLegend}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityState={{ expanded: legendOpen }}
-          accessibilityLabel={legendOpen ? copy.a11yLegendCollapse : copy.a11yLegendExpand}>
-          <AppText maxScale={PANEL_MAX_SCALE} style={styles.legendToggleText}>
-            {copy.legendLabel}
-          </AppText>
-          <AppText maxScale={PANEL_MAX_SCALE} style={styles.legendChevron}>
-            {legendOpen ? '▾' : '▸'}
-          </AppText>
-        </Pressable>
-      </View>
-
-      {legendOpen
-        ? HAZARD_LAYERS.filter((l) => active.includes(l.key)).map((layer) => (
-            <View key={layer.key} style={styles.legendSection}>
-              <AppText maxScale={PANEL_MAX_SCALE} style={styles.legendTitle}>
-                {layer.title}
-              </AppText>
-              <View style={styles.legendRows}>
-                {layer.legend.map((item) => (
-                  <View key={item.color} style={styles.legendRow}>
-                    <View style={[styles.legendSwatch, { backgroundColor: item.color }]} />
-                    <AppText maxScale={PANEL_MAX_SCALE} style={styles.legendLabel}>
-                      {item.label}
-                    </AppText>
-                  </View>
-                ))}
-              </View>
-            </View>
-          ))
-        : null}
-      {/* 出典表記は要件(F-07 / NF-06)のため、たたんでいる間も出し続ける */}
-      <AppText maxScale={PANEL_MAX_SCALE} style={styles.legendSource}>
-        {FLOOD_ATTRIBUTION}
-      </AppText>
-    </View>
-  );
-}
-
-/** ハザードパネル内テキストの拡大上限。文字サイズ「標準」の倍率に合わせる */
-const PANEL_MAX_SCALE = 1.2;
-
-type SummaryProps = {
+type HomeData = {
   shelters: Shelter[] | null;
   waterLevels: WaterLevel[] | null;
   damageReports: DamageReport[] | null;
   trafficRegulations: TrafficRegulation[] | null;
-  hasError: boolean;
-  /** 表示中データの取得時刻。取得失敗時に古さを明示する(NF-04) */
-  cachedAt: number | null;
-  onRetry: () => void;
-  showArLink: boolean;
-  /** 折りたたみ状態。カードは詳細シートと入れ替わるため親が保持する */
-  open: boolean;
-  onToggle: () => void;
 };
 
-function SummaryCard({
-  shelters,
-  waterLevels,
-  damageReports,
-  trafficRegulations,
-  hasError,
-  cachedAt,
-  onRetry,
-  showArLink,
-  open,
-  onToggle,
-}: SummaryProps) {
-  const router = useRouter();
-  const copy = useCopy();
-  const easy = useEasyJapanese();
-  // 取得に失敗したソース(null)は行ごと出さない。「なし」「平常」との混同を防ぐ
-  const water = useMemo(() => {
-    if (!waterLevels) return null;
+type Summary = {
+  water: { text: string; color: string } | null;
+  openCount: number | null;
+  damageReports: DamageReport[] | null;
+  trafficRegulations: TrafficRegulation[] | null;
+  nearest: { shelter: Shelter; meters: number } | null;
+  loading: boolean;
+};
+
+/**
+ * 要約に出す値を先に確定させる。peek(1行)と要約(全行)の両方が同じ値を使うため、
+ * 表示側で計算を重複させない。
+ * 取得に失敗したソース(null)は行ごと出さない。「なし」「平常」との混同を防ぐ
+ */
+function summarize(data: HomeData | null, homePin: LatLng | null): Summary {
+  const waterLevels = data?.waterLevels ?? null;
+  let water: Summary['water'] = null;
+  if (waterLevels) {
     const statuses = waterLevels.map((w) => waterStatus(w.levelCm, w.alertLevelCm));
     const danger = statuses.filter((s) => s === 'danger').length;
     const caution = statuses.filter((s) => s === 'caution').length;
     const unknown = statuses.filter((s) => s === 'unknown').length;
     if (danger > 0) {
-      return { text: `水位 ${danger}地点で警戒超過`, color: AppColors.danger };
+      water = { text: `水位 ${danger}地点で警戒超過`, color: AppColors.danger };
+    } else if (caution > 0) {
+      water = { text: `水位 ${caution}地点で注意`, color: AppColors.caution };
+    } else if (unknown > 0) {
+      water = { text: `水位 ${unknown}地点で観測値なし`, color: AppColors.none };
+    } else {
+      water = { text: `水位 全${statuses.length}地点 平常`, color: AppColors.ok };
     }
-    if (caution > 0) {
-      return { text: `水位 ${caution}地点で注意`, color: AppColors.caution };
-    }
-    if (unknown > 0) {
-      return { text: `水位 ${unknown}地点で観測値なし`, color: AppColors.none };
-    }
-    return { text: `水位 全${statuses.length}地点 平常`, color: AppColors.ok };
-  }, [waterLevels]);
+  }
 
-  const openCount = useMemo(
-    () => (shelters ? shelters.filter((s) => isShelterOpen(s.opening)).length : null),
-    [shelters],
-  );
+  const shelters = data?.shelters ?? null;
+  const openCount = shelters ? shelters.filter((s) => isShelterOpen(s.opening)).length : null;
 
   // 自宅ピン設定時の最寄り避難所(F-12)。開設有無は問わず平常時の備えとして出す
-  const homePin = useHomePin();
-  const nearest = useMemo(() => {
-    if (!homePin || !shelters || shelters.length === 0) return null;
+  let nearest: Summary['nearest'] = null;
+  if (homePin && shelters && shelters.length > 0) {
     let best: Shelter = shelters[0];
     let bestMeters = haversineMeters(homePin, best.coord);
     for (const s of shelters) {
@@ -781,57 +620,113 @@ function SummaryCard({
         bestMeters = meters;
       }
     }
-    return { shelter: best, meters: bestMeters };
-  }, [homePin, shelters]);
+    nearest = { shelter: best, meters: bestMeters };
+  }
 
-  const loading = !hasError && water == null && openCount == null;
+  return {
+    water,
+    openCount,
+    damageReports: data?.damageReports ?? null,
+    trafficRegulations: data?.trafficRegulations ?? null,
+    nearest,
+    loading: data == null,
+  };
+}
 
+type SummaryStatusProps = {
+  summary: Summary;
+  hasError: boolean;
+  /** 表示中データの取得時刻。取得失敗時に古さを明示する(NF-04) */
+  cachedAt: number | null;
+  onRetry: () => void;
+};
+
+/** 取得失敗の警告と再試行。たたんでいても隠さない(古いデータへの注意のため) */
+function SummaryError({ hasError, cachedAt, onRetry }: Omit<SummaryStatusProps, 'summary'>) {
+  const copy = useCopy();
+  const easy = useEasyJapanese();
+  if (!hasError) return null;
   return (
-    <View style={styles.card}>
-      <Pressable
-        style={styles.summaryHeader}
-        onPress={onToggle}
-        hitSlop={10}
-        accessibilityRole="button"
-        accessibilityState={{ expanded: open }}
-        accessibilityLabel={open ? copy.a11ySummaryCollapse : copy.a11ySummaryExpand}>
-        <AppText style={styles.summaryTitle}>{copy.summaryTitle}</AppText>
-        <AppText style={styles.summaryChevron}>{open ? '▾' : '▸'}</AppText>
+    <>
+      <Pressable onPress={onRetry} style={styles.row}>
+        <Dot color={AppColors.caution} />
+        <AppText style={[styles.rowText, styles.rowTextShrink]}>{copy.summaryPartialError}</AppText>
       </Pressable>
-
-      {/* 取得失敗の警告と再試行は、たたんでいても隠さない(古いデータへの注意のため) */}
-      {hasError ? (
-        <Pressable onPress={onRetry} style={styles.row}>
-          <Dot color={AppColors.caution} />
-          <AppText style={[styles.rowText, styles.rowTextShrink]}>
-            {copy.summaryPartialError}
-          </AppText>
-        </Pressable>
-      ) : null}
-      {hasError && cachedAt != null ? (
+      {cachedAt != null ? (
         <AppText style={styles.cachedAt}>
           {formatJstMoment(cachedAt, easy)}
           {copy.cachedAsOf}
         </AppText>
       ) : null}
+    </>
+  );
+}
 
-      {open && water ? (
+/** ボトムシートの peek に出す1行。水位の状態と開設中の避難所数だけに絞る(平常時の主目的) */
+function SummaryPeek({ summary, hasError, cachedAt, onRetry }: SummaryStatusProps) {
+  const copy = useCopy();
+  return (
+    <View>
+      <View style={styles.peekLine}>
+        {summary.water ? (
+          <View style={styles.peekItem}>
+            <Dot color={summary.water.color} />
+            <AppText style={styles.rowText}>{summary.water.text}</AppText>
+          </View>
+        ) : null}
+        {summary.openCount != null ? (
+          <View style={styles.peekItem}>
+            <Dot color={summary.openCount > 0 ? AppColors.ok : AppColors.none} />
+            <AppText style={styles.rowText}>{shelterCountText(summary.openCount)}</AppText>
+          </View>
+        ) : null}
+        {summary.loading && !hasError ? (
+          <View style={styles.peekItem}>
+            <Dot color={AppColors.none} />
+            <AppText style={styles.rowText}>{copy.loading}</AppText>
+          </View>
+        ) : null}
+      </View>
+      <SummaryError hasError={hasError} cachedAt={cachedAt} onRetry={onRetry} />
+    </View>
+  );
+}
+
+function shelterCountText(openCount: number): string {
+  return openCount > 0 ? `避難所 ${openCount}箇所 開設中` : '開設中の避難所 なし';
+}
+
+/** ボトムシートの要約に出す全行。peek の2項目に被害、規制、最寄り、導線を足す */
+function SummaryRows({
+  summary,
+  hasError,
+  cachedAt,
+  onRetry,
+  showArLink,
+}: SummaryStatusProps & { showArLink: boolean }) {
+  const router = useRouter();
+  const copy = useCopy();
+  const { water, openCount, damageReports, trafficRegulations, nearest, loading } = summary;
+
+  return (
+    <View>
+      <SummaryError hasError={hasError} cachedAt={cachedAt} onRetry={onRetry} />
+
+      {water ? (
         <View style={styles.row}>
           <Dot color={water.color} />
           <AppText style={styles.rowText}>{water.text}</AppText>
         </View>
       ) : null}
 
-      {open && openCount != null ? (
+      {openCount != null ? (
         <View style={styles.row}>
           <Dot color={openCount > 0 ? AppColors.ok : AppColors.none} />
-          <AppText style={styles.rowText}>
-            {openCount > 0 ? `避難所 ${openCount}箇所 開設中` : '開設中の避難所 なし'}
-          </AppText>
+          <AppText style={styles.rowText}>{shelterCountText(openCount)}</AppText>
         </View>
       ) : null}
 
-      {open && damageReports ? (
+      {damageReports ? (
         <View style={styles.row}>
           <Dot color={damageReports.length > 0 ? AppColors.caution : AppColors.none} />
           <AppText style={[styles.rowText, styles.rowTextShrink]} numberOfLines={1}>
@@ -842,7 +737,7 @@ function SummaryCard({
         </View>
       ) : null}
 
-      {open && trafficRegulations ? (
+      {trafficRegulations ? (
         <View style={styles.row}>
           <Dot color={trafficRegulations.length > 0 ? AppColors.danger : AppColors.none} />
           <AppText style={[styles.rowText, styles.rowTextShrink]} numberOfLines={1}>
@@ -853,7 +748,7 @@ function SummaryCard({
         </View>
       ) : null}
 
-      {open && nearest ? (
+      {nearest ? (
         <View style={styles.row}>
           <Dot color={SHELTER_OPENING_COLOR[nearest.shelter.opening]} />
           <AppText style={[styles.rowText, styles.rowTextShrink]} numberOfLines={1}>
@@ -863,7 +758,7 @@ function SummaryCard({
         </View>
       ) : null}
 
-      {open && loading ? (
+      {loading && !hasError ? (
         <View style={styles.row}>
           <Dot color={AppColors.none} />
           <AppText style={styles.rowText}>{copy.loading}</AppText>
@@ -915,47 +810,10 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
-  layerChips: {
+  topLeft: {
     position: 'absolute',
     top: 10,
     left: 10,
-    // 右端の丸ボタン(幅46+右余白10)に重ならない位置で折り返す
-    right: 68,
-    gap: 6,
-  },
-  layerChipRow: {
-    flexDirection: 'row',
-    // 文字サイズを大きくしたときに地図ボタンへ重ならないよう、段内でも折り返しを許す
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  lchip: {
-    backgroundColor: 'rgba(255,255,255,0.94)',
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 },
-  },
-  lchipActive: {
-    backgroundColor: AppColors.primary,
-  },
-  lchipText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: AppColors.inkSub,
-  },
-  lchipTextActive: {
-    color: '#fff',
-  },
-  bottomArea: {
-    position: 'absolute',
-    left: 12,
-    right: 12,
-    bottom: 0,
-    gap: 8,
   },
   mapButtons: {
     position: 'absolute',
@@ -987,122 +845,6 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-45deg' }],
     marginTop: 2,
   },
-  legend: {
-    backgroundColor: 'rgba(255,255,255,0.94)',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    alignSelf: 'flex-start',
-  },
-  hazardChips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 6,
-  },
-  hazardChip: {
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    backgroundColor: AppColors.paper,
-    borderWidth: 1,
-    borderColor: AppColors.line,
-  },
-  hazardChipActive: {
-    backgroundColor: AppColors.primary,
-    borderColor: AppColors.primary,
-  },
-  hazardChipText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: AppColors.inkSub,
-  },
-  hazardChipTextActive: {
-    color: '#fff',
-  },
-  legendToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  legendToggleText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: AppColors.primary,
-  },
-  legendChevron: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: AppColors.primary,
-  },
-  legendSection: {
-    marginBottom: 4,
-  },
-  legendTitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: AppColors.ink,
-    marginBottom: 4,
-  },
-  legendRows: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    rowGap: 3,
-    maxWidth: 250,
-  },
-  legendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  legendSwatch: {
-    width: 11,
-    height: 11,
-    borderRadius: 2,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(0,0,0,0.2)',
-  },
-  legendLabel: {
-    fontSize: 9.5,
-    color: AppColors.ink,
-    fontVariant: ['tabular-nums'],
-  },
-  legendSource: {
-    fontSize: 8.5,
-    color: AppColors.inkSub,
-    marginTop: 4,
-  },
-  card: {
-    backgroundColor: AppColors.surface,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    shadowColor: '#14283C',
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
-  },
-  summaryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingBottom: 2,
-  },
-  summaryTitle: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: AppColors.inkSub,
-    letterSpacing: 0.5,
-  },
-  summaryChevron: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: AppColors.primary,
-  },
   cachedAt: {
     fontSize: 10,
     color: AppColors.inkSub,
@@ -1115,6 +857,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     paddingVertical: 4,
+  },
+  // 文字サイズが大きいときは項目ごとに折り返し、1項目の途中で切れないようにする
+  peekLine: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    columnGap: 14,
+    rowGap: 2,
+  },
+  peekItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 2,
   },
   rowText: {
     fontSize: 13,
