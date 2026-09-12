@@ -1,5 +1,6 @@
 import type { LatLng } from 'react-native-maps';
 
+import { AppColors } from '@/constants/tokens';
 import type { MeshSize } from '@/utils/mesh-code';
 
 import quakeMesh from './quake-mesh.json';
@@ -117,12 +118,23 @@ export const FUKUCHIYAMA_FAULT = {
   top: [
     { latitude: 33.936, longitude: 130.726 },
     { latitude: 33.65734, longitude: 130.81558 },
-  ] as readonly LatLng[],
+  ] as LatLng[],
   depthKm: 3,
   magnitude: 'M7.2程度',
   probability: '30年以内 ほぼ0〜3%',
   attribution: '出典: 地震調査研究推進本部 長期評価',
 } as const;
+
+/**
+ * 断層線の見た目。地図と凡例の見本で共有する。
+ * 破線にするのは、地表に見える線(道路、川、規制線)と区別し、モデル上の位置だと示すため。
+ * 塗りの赤茶と同系色にすると面の縁と紛れるため、墨色にする
+ */
+export const QUAKE_FAULT_LINE: { color: string; width: number; dashPattern: number[] } = {
+  color: AppColors.ink,
+  width: 2,
+  dashPattern: [6, 4],
+};
 
 /**
  * 微地形区分の名称に添える読み(やさしい日本語モード用)。名称は J-SHIS の原文のまま出し、

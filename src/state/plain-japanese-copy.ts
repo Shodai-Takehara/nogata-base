@@ -137,6 +137,14 @@ export const PLAIN_JAPANESE_COPY = {
     standard: '川があふれたとき、どこがどれくらい沈むか',
     easy: '川(かわ)が あふれたとき、どこが どのくらい しずむか',
   },
+  fillQuake: {
+    standard: '地震のリスク',
+    easy: '地震(じしん)の きけん',
+  },
+  fillQuakeDesc: {
+    standard: '今後30年に強い揺れに見舞われる確率と地盤',
+    easy: 'これから 30年(ねん)で 強(つよ)く ゆれる かのうせいと、地面(じめん)の かたさ',
+  },
   fillPopulation: {
     standard: '人口',
     easy: '人(ひと)の 数(かず)',
@@ -179,6 +187,55 @@ export const PLAIN_JAPANESE_COPY = {
   populationLegendTitle: {
     standard: '人口(500mごと)',
     easy: 'すんで いる 人(ひと)の 数(かず)',
+  },
+  quakeSheetTitle: {
+    standard: 'この場所の地震のリスク',
+    easy: 'この ばしょの 地震(じしん)の きけん',
+  },
+  // 「以上」は境界の値を含むため、「より強い」に言い換えず読みを添える(65歳以上と同じ扱い)
+  quakeP55Label: {
+    standard: '今後30年に震度6弱以上',
+    easy: 'これから 30年(ねん)で 震度(しんど)6弱(じゃく)いじょう',
+  },
+  quakeP50Label: {
+    standard: '震度5強以上',
+    easy: '震度(しんど)5強(きょう)いじょう',
+  },
+  quakeP60Label: {
+    standard: '震度6強以上',
+    easy: '震度(しんど)6強(きょう)いじょう',
+  },
+  quakeGroundLabel: {
+    standard: '地盤',
+    easy: '地盤(じばん)',
+  },
+  quakeAmpLabel: {
+    standard: '揺れの増幅',
+    easy: 'ゆれの 大(おお)きさ',
+  },
+  quakeUnitTimes: {
+    standard: '倍',
+    easy: '倍(ばい)',
+  },
+  // 地震本部の解説に合わせた注意書き。確率の低さを安全と読ませない
+  quakeNote: {
+    standard: '確率は相対的な目安で、安全度ではなく危険度を示します',
+    easy: 'この 数字(すうじ)は めやすです。安全(あんぜん)を しめす ものでは ありません',
+  },
+  quakeMeshNote: {
+    standard: '250m四方ごとの値(2024年版)です。',
+    easy: '250m しかくごとの 数字(すうじ)(2024年版)です。',
+  },
+  // 凡例の見出しと断層の説明は正式名称と専門語なので、平易版でも変えない
+  quakeLegendTitle: {
+    standard: '今後30年に震度6弱以上の確率',
+  },
+  quakeFaultLegend: {
+    standard: '福智山断層帯(断層モデルの上端、深さ3km)',
+  },
+  summaryHomeQuake: {
+    standard: '自宅の地点',
+    easy: 'じぶんの いえの ばしょ',
   },
   a11yShowWholeCity: {
     standard: '直方市全体を表示',

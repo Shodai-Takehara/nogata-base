@@ -1,5 +1,6 @@
 import { FLOOD_ATTRIBUTION, FLOOD_LEGEND } from '@/constants/hazard-map';
 import { POPULATION_ATTRIBUTION } from '@/constants/population-map';
+import { FUKUCHIYAMA_FAULT, QUAKE_ATTRIBUTION, QUAKE_BUCKETS } from '@/constants/quake-map';
 import { INITIAL_MAP_LAYERS, mapLayersReducer, type MapLayerState } from '@/state/map-layers';
 import { legendAttributions, legendBlocks } from '@/state/map-legend';
 import { PLAIN_JAPANESE_COPY, type CopyKey } from '@/state/plain-japanese-copy';
@@ -29,6 +30,26 @@ describe('凡例のまとまり', () => {
     expect(block.title).toBe(copy.populationLegendTitle);
     expect(block.attribution).toBe(POPULATION_ATTRIBUTION);
     expect(block.entries).toHaveLength(4);
+  });
+
+  it('地震の塗りは5段階の帯に、断層線の見本と注意書きを添える(F-15 の受入条件)', () => {
+    const [block] = legendBlocks(withFill('quake'), copy, false);
+    expect(block.scale).toBe(true);
+    expect(block.title).toBe(copy.quakeLegendTitle);
+    expect(block.entries.map((e) => e.label)).toEqual(QUAKE_BUCKETS.map((b) => b.label));
+    expect(block.attribution).toBe(QUAKE_ATTRIBUTION);
+    expect(block.line?.label).toBe(copy.quakeFaultLegend);
+    expect(block.line?.detail).toContain(FUKUCHIYAMA_FAULT.magnitude);
+    expect(block.line?.detailAttribution).toBe(FUKUCHIYAMA_FAULT.attribution);
+    expect(block.note).toBe(copy.quakeNote);
+  });
+
+  it('断層線の見本と注意書きは地震の塗りにだけ付く', () => {
+    for (const fill of ['flood', 'population'] as const) {
+      const [block] = legendBlocks(withFill(fill), copy, false);
+      expect(block.line).toBeUndefined();
+      expect(block.note).toBeUndefined();
+    }
   });
 
   it('土砂災害の区域は土石流と急傾斜地の2つに分かれ、それぞれ警戒と特別警戒を持つ', () => {

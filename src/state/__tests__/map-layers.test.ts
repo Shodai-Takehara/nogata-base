@@ -28,9 +28,15 @@ describe('地図レイヤーの状態', () => {
   it('塗りを選ぶと前の塗りが外れる(同時に1つしか読めないため)', () => {
     const flood = mapLayersReducer(INITIAL_MAP_LAYERS, { type: 'setFill', fill: 'flood' });
     expect(flood.fill).toBe('flood');
-    const population = mapLayersReducer(flood, { type: 'setFill', fill: 'population' });
+    const quake = mapLayersReducer(flood, { type: 'setFill', fill: 'quake' });
+    expect(quake.fill).toBe('quake');
+    const population = mapLayersReducer(quake, { type: 'setFill', fill: 'population' });
     expect(population.fill).toBe('population');
     expect(mapLayersReducer(population, { type: 'setFill', fill: 'none' }).fill).toBe('none');
+  });
+
+  it('塗りの一覧は なし、洪水、地震、人口 の順(選択シートの並び)', () => {
+    expect([...FILL_KEYS]).toEqual(['none', 'flood', 'quake', 'population']);
   });
 
   it('同じ塗りを選び直しても状態オブジェクトは変わらない(再描画を起こさない)', () => {
