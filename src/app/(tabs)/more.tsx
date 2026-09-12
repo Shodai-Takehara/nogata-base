@@ -121,6 +121,11 @@ export default function MoreScreen() {
             地域名: 国勢調査 小地域境界データ(政府統計の総合窓口(e-Stat))を加工して作成
           </AppText>
           <Separator />
+          <AppText style={styles.legal}>
+            地震ハザード: J-SHIS 地震ハザードステーション(防災科学技術研究所)2024年基準
+            NIED作成版を加工して作成
+          </AppText>
+          <Separator />
           <AppText style={styles.legal}>{copy.disclaimerNotOfficial}</AppText>
         </View>
       </ScrollView>

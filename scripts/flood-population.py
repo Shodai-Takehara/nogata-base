@@ -63,9 +63,13 @@ RANK_LABEL = {
 }
 
 
-def fetch():
+def fetch(only=None):
+    """データセットを取得して展開する。only に名前の集合を渡すとそれだけ取る
+    (行政区域しか要らない別スクリプトが、浸水想定や人口まで落とさずに済むように)。"""
     os.makedirs(DATA_DIR, exist_ok=True)
     for url, name in DATASETS:
+        if only is not None and name not in only:
+            continue
         out = os.path.join(DATA_DIR, name)
         if os.path.isdir(out):
             continue
