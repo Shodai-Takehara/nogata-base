@@ -6,11 +6,11 @@ const copy = Object.fromEntries(
   Object.entries(PLAIN_JAPANESE_COPY).map(([key, entry]) => [key, entry.standard]),
 ) as Record<CopyKey, string>;
 
-/** 市役所付近のセル(5030458834)の値 */
+/** 市役所付近のセル(5030458834)の値。API が 2026-09-12 に返したもの */
 const CELL: QuakeCell = {
-  p50: 0.394,
-  p55: 0.095,
-  p60: 0.021,
+  p50: 0.389915,
+  p55: 0.095169,
+  p60: 0.020773,
   si: 5.8,
   arv: 1.84,
   jcode: 12,
@@ -18,11 +18,18 @@ const CELL: QuakeCell = {
 };
 
 describe('地震ハザードの詳細に出す値', () => {
-  it('確率は小数1桁の百分率にする(生成時に小数3桁へ丸めた値より細かい桁を出さない)', () => {
-    expect(formatProbability(0.095)).toBe('9.5%');
-    expect(formatProbability(0.394)).toBe('39.4%');
-    expect(formatProbability(0.005)).toBe('0.5%');
+  it('確率は百分率の小数1桁にする(四捨五入)', () => {
+    expect(formatProbability(0.095169)).toBe('9.5%');
+    expect(formatProbability(0.389915)).toBe('39.0%');
+    expect(formatProbability(0.005144)).toBe('0.5%');
+    expect(formatProbability(0.02995)).toBe('3.0%');
     expect(formatProbability(0)).toBe('0.0%');
+  });
+
+  it('区分は丸める前の値で決める(2.9956% は 3.0% と出ても 0.1〜3% の区分)', () => {
+    const detail = quakeDetail({ ...CELL, p55: 0.029956 }, copy, false);
+    expect(detail.main.value).toBe('3.0%');
+    expect(detail.main.bucket).toBe('0.1〜3%');
   });
 
   it('主値には区分名と凡例と同じ色を添える', () => {
@@ -38,7 +45,7 @@ describe('地震ハザードの詳細に出す値', () => {
   it('副値は震度5強以上、6強以上の順で、地盤と増幅率が続く', () => {
     const detail = quakeDetail(CELL, copy, false);
     expect(detail.subs).toEqual([
-      { label: copy.quakeP50Label, value: '39.4%' },
+      { label: copy.quakeP50Label, value: '39.0%' },
       { label: copy.quakeP60Label, value: '2.1%' },
     ]);
     expect(detail.ground).toBe('自然堤防');

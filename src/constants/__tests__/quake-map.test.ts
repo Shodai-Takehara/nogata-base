@@ -50,10 +50,21 @@ describe('地震ハザードのメッシュデータ', () => {
     }
   });
 
-  it('調査した市中心のセル(市役所付近)は自然堤防で、震度6弱以上が約 9.5%', () => {
+  it('調査した市中心のセル(市役所付近)は自然堤防で、震度6弱以上が 9.5%(API の値のまま)', () => {
     const cell = QUAKE_CELLS['5030458834'];
     expect(cell.jname).toBe('自然堤防');
-    expect(cell.p55).toBeCloseTo(0.095, 3);
+    // API が 2026-09-12 に返した値。丸めずに持つ(scripts/verify-quake-hazard.py で全セルを照合できる)
+    expect(cell.p55).toBe(0.095169);
+    expect(cell.p50).toBe(0.389915);
+    expect(cell.arv).toBe(1.84);
+  });
+
+  it('区分の境界のすぐ下のセルは J-SHIS と同じ下の区分に入る(小数3桁に丸めると1段上がる)', () => {
+    // 2.9956% と 5.9988%。API の値そのままで区分するので、J-SHIS の地図と同じ色になる
+    expect(QUAKE_CELLS['5030458712'].p55).toBe(0.029956);
+    expect(quakeBucket(QUAKE_CELLS['5030458712'].p55)).toBe(1);
+    expect(QUAKE_CELLS['5030552813'].p55).toBe(0.059988);
+    expect(quakeBucket(QUAKE_CELLS['5030552813'].p55)).toBe(2);
   });
 
   it('融合面は区分ごとに1件で、外周と穴のリングは3点以上の座標からなり市域内にある', () => {

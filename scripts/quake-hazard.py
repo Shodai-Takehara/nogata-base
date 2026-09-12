@@ -66,9 +66,6 @@ BUCKET_EDGES = [0.001, 0.03, 0.06, 0.26]
 # 塗りは区分ごとに融合するので、座標は約1m の精度(5桁)で足りる
 COORD_DIGITS = 5
 
-# アプリ側で区分を引き直しても塗りと食い違わないよう、確率はこの桁で丸めてから区分する
-VALUE_DIGITS = 3
-
 
 def load_population_script():
     """行政区域の取得と読み込みは人口レイヤーのスクリプトと同じ手順を使う(同じキャッシュを共有する)。"""
@@ -295,13 +292,6 @@ def fetched_on(from_api):
     return date.today()
 
 
-def round_values(values):
-    return {
-        key: round(value, VALUE_DIGITS) if isinstance(value, float) else value
-        for key, value in values.items()
-    }
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--mesh', type=int, choices=[250, 500], default=250)
@@ -336,11 +326,9 @@ def main():
         cells = aggregate_500m(cells)
         print(f'500m に集約: {len(cells)} 枚')
 
-    # 区分は丸めた確率で決める。アプリは丸めた値から区分を引き直すので、生の値で区分すると
-    # 境界近くのセルで塗りと詳細の区分が食い違う
-    for cell in cells.values():
-        cell['values'] = round_values(cell['values'])
-
+    # 値は API の精度(確率は小数6桁)のまま持ち、区分もその値で決める。小数3桁に丸めてから
+    # 区分すると、境界のすぐ下のセル(2.9956% など)が J-SHIS の地図より1段濃い区分に入る。
+    # アプリは同じ値から同じ境界で区分を引くので、丸めなくても塗りと詳細は食い違わない
     by_bucket = defaultdict(list)
     for cell in cells.values():
         by_bucket[bucket_of(cell['values']['p55'])].append(cell['clipped'])
