@@ -80,33 +80,84 @@ export const PLAIN_JAPANESE_COPY = {
   },
 
   // ---- ホーム(地図) ----
+  // レイヤー選択シートの項目名。チップだったときの短縮形(「車中泊」「被害」「規制」)は
+  // 一覧に並べると何の情報か分からないため、正式な呼び名に戻している
   layerShelters: {
     standard: '避難所',
-    easy: 'にげるところ',
+    easy: 'にげる ところ',
   },
   layerCarShelters: {
-    standard: '車中泊',
-    easy: 'くるまで とまる',
+    standard: '車中泊避難所',
+    easy: 'くるまで とまれる にげる ところ',
   },
   layerWater: {
     standard: '水位',
-    easy: 'みず',
+    easy: '水(みず)の 高(たか)さ',
   },
   layerDamage: {
-    standard: '被害',
-    easy: '被害(ひがい)',
+    standard: '被害報告',
+    easy: '被害(ひがい)の ほうこく',
   },
   layerTraffic: {
-    standard: '規制',
-    easy: '規制(きせい)',
+    standard: '交通規制',
+    easy: '交通規制(こうつうきせい)',
   },
-  layerHazard: {
-    standard: 'ハザード',
-    easy: 'きけんマップ',
+  // 「レイヤー」は外来語のまま。地図アプリで定着した呼び名で、言い換えると逆に伝わらない
+  layersButton: {
+    standard: 'レイヤー',
   },
-  layerPopulation: {
+  a11yLayersButton: {
+    standard: '地図に出すものを選ぶ',
+    easy: '地図(ちず)に 出(だ)す ものを えらぶ',
+  },
+  layerSheetTitle: {
+    standard: '地図に出すもの',
+    easy: '地図(ちず)に 出(だ)す もの',
+  },
+  layerSectionNow: {
+    standard: 'いまの状況',
+    easy: 'いまの ようす',
+  },
+  layerSectionFill: {
+    standard: '塗り(1つ選ぶ)',
+    easy: '色(いろ)を ぬる(1つ えらぶ)',
+  },
+  layerSectionAreas: {
+    standard: '重ねる区域',
+    easy: 'かさねる ところ',
+  },
+  fillNone: {
+    standard: 'なし',
+  },
+  fillFlood: {
+    standard: '洪水の浸水想定',
+    easy: '洪水(こうずい)で 水(みず)が くる ところ',
+  },
+  fillFloodDesc: {
+    standard: '川があふれたとき、どこがどれくらい沈むか',
+    easy: '川(かわ)が あふれたとき、どこが どのくらい しずむか',
+  },
+  fillPopulation: {
     standard: '人口',
-    easy: 'すんでいる人(ひと)',
+    easy: '人(ひと)の 数(かず)',
+  },
+  fillPopulationDesc: {
+    standard: '500mごとの推計人口',
+    // 「推計」を落とすと実数に読めるため、「だいたいの」で見積もりだと分かるようにする
+    easy: '500m ごとの だいたいの 人(ひと)の 数(かず)',
+  },
+  areaLandslide: {
+    standard: '土砂災害の区域',
+    easy: '土砂(どしゃ)災害(さいがい)の ところ',
+  },
+  areaHouseCollapse: {
+    standard: '家屋倒壊の区域',
+    // 「想定区域」なので、必ず壊れると読まれないよう「かもしれない」を入れる
+    easy: '家(いえ)が こわれる かもしれない ところ',
+  },
+  legendExpand: {
+    standard: '凡例を見る',
+    easy: '色(いろ)の いみを 見(み)る',
   },
   populationSheetTitle: {
     standard: 'このあたりに住む人',
@@ -128,19 +179,6 @@ export const PLAIN_JAPANESE_COPY = {
   populationLegendTitle: {
     standard: '人口(500mごと)',
     easy: 'すんで いる 人(ひと)の 数(かず)',
-  },
-  // 開閉の矢印は文言に含めない(サイズを文字と独立に調整するため表示側で付ける)
-  legendLabel: {
-    standard: '凡例',
-    easy: 'いろの いみ',
-  },
-  a11yLegendCollapse: {
-    standard: '凡例をたたむ',
-    easy: 'いろの いみを とじる',
-  },
-  a11yLegendExpand: {
-    standard: '凡例をひらく',
-    easy: 'いろの いみを ひらく',
   },
   a11yShowWholeCity: {
     standard: '直方市全体を表示',
