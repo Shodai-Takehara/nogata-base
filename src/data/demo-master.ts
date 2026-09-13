@@ -3,7 +3,7 @@ import type { LatLng, Shelter, WaterKind } from '@/domain/models';
 /**
  * 直方市の公開データから取り込んだ施設マスタ(取得日: 2026-07-16)。
  * scripts/generate-demo-master.js で再生成する。手で編集しない。
- * 開設状況・水位などの「状態」はシナリオ(demo.ts)が与える。
+ * 開設状況・水位などの「状態」はシナリオ(demo-rain.ts)が与える。
  */
 export type ShelterMaster = Pick<
   Shelter,

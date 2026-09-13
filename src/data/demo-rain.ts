@@ -1,44 +1,22 @@
-import { SHELTER_MASTER, WATER_MASTER } from '@/data/demo-master';
+import {
+  minutesAgo,
+  sheltersWith,
+  waterLevelsWith,
+  type OpenShelterState,
+} from '@/data/demo-scenario';
 import type { DataSource } from '@/data/types';
-import type { EvacueeCount, Shelter, ShelterOpening } from '@/domain/models';
 
 /**
- * デモモード: 2023年7月豪雨を参考にした「大雨災害時の直方市」の模擬シナリオ。
- * 施設名・座標・警戒水位は実データの取り込み(demo-master.ts)で、開設状況・水位・
- * 被害・規制の「状態」だけをここで与える。通信を一切行わないため、会場が圏外でも
- * デモが成立する。
- *
+ * デモモードの大雨シナリオ: 2023年7月豪雨を参考にした「大雨災害時の直方市」。
  * 避難者数・被害内容・規制区間は架空。実在の被災事実を示すものではない。
  */
 
-/** 計測時刻が常に「数分前」に見えるよう、呼び出し時点から相対で作る */
-const minutesAgo = (min: number) => Date.now() - min * 60_000;
-
-/** 年齢内訳の合計が refugees と一致するように作る(デモの信憑性のため) */
-const evacuees = (
-  counts: [number, number, number, number, number, number, number, number],
-): EvacueeCount[] => [
-  { bracket: '0-3', male: counts[0], female: counts[1] },
-  { bracket: '3-18', male: counts[2], female: counts[3] },
-  { bracket: '18-65', male: counts[4], female: counts[5] },
-  { bracket: '65+', male: counts[6], female: counts[7] },
-];
-
 /**
- * 開設する避難所(マスタの OBJECTID で指定)。
+ * 開設する避難所。
  * 遠賀川・彦山川沿いの低地(下境・感田・中泉)を中心に開く 2023年7月の実際の
  * 開設パターンを参考にしつつ、混雑度3段階が一度に見えるよう構成している。
  */
-const OPEN_SHELTERS: Record<
-  number,
-  {
-    opening: Exclude<ShelterOpening, '0'>;
-    families: number;
-    refugees: number;
-    breakdown: [number, number, number, number, number, number, number, number];
-    updatedMinutesAgo: number;
-  }
-> = {
+const OPEN_SHELTERS: Record<number, OpenShelterState> = {
   // 直方市体育館: 大規模拠点。やや混雑
   4: {
     opening: '2',
@@ -97,10 +75,7 @@ const OPEN_SHELTERS: Record<
   },
 };
 
-/**
- * 観測点ごとの「警戒水位に対する比率」。名指しした地点で危険・注意を作り、
- * 残りは平常域に散らす。知古・感田は 2023年7月に冠水が報じられた地区。
- */
+/** 危険・注意にする観測点。知古・感田は 2023年7月に冠水が報じられた地区 */
 const WATER_RATIO_BY_NAME: Record<string, number> = {
   知古: 1.2,
   感田マンホール: 1.16,
@@ -112,48 +87,16 @@ const WATER_RATIO_BY_NAME: Record<string, number> = {
   知古駐車場前: 0.78,
 };
 
-/** 平常域の比率。ID から決めて毎回同じ画面になるようにする(乱数は使わない) */
-const calmRatio = (id: string) => 0.2 + ((id.length + id.charCodeAt(id.length - 1)) % 5) * 0.07;
-
-export const demoDataSource: DataSource = {
+export const demoRainSource: DataSource = {
   async fetchShelters() {
-    return SHELTER_MASTER.map((master): Shelter => {
-      const state = OPEN_SHELTERS[master.id];
-      if (!state) {
-        return {
-          ...master,
-          opening: '0',
-          families: 0,
-          refugees: 0,
-          evacuees: evacuees([0, 0, 0, 0, 0, 0, 0, 0]),
-          updatedAt: minutesAgo(180),
-        };
-      }
-      return {
-        ...master,
-        opening: state.opening,
-        families: state.families,
-        refugees: state.refugees,
-        evacuees: evacuees(state.breakdown),
-        updatedAt: minutesAgo(state.updatedMinutesAgo),
-      };
-    });
+    return sheltersWith(OPEN_SHELTERS);
   },
 
   async fetchWaterLevels() {
-    return WATER_MASTER.map((master, i) => {
-      const ratio = WATER_RATIO_BY_NAME[master.name] ?? calmRatio(master.id);
-      return {
-        ...master,
-        levelCm:
-          master.alertLevelCm != null ? Math.max(0, Math.round(master.alertLevelCm * ratio)) : null,
-        measuredAt: minutesAgo(2 + (i % 5)),
-      };
-    });
+    return waterLevelsWith(WATER_RATIO_BY_NAME);
   },
 
   async fetchDamageReports() {
-    // 種別は実データのドメイン値(docs/api-spec.md §2.5 field_2)から使う
     return [
       {
         id: 1,
@@ -216,7 +159,6 @@ export const demoDataSource: DataSource = {
   },
 
   async fetchTrafficRegulations() {
-    // status は実データのドメイン値(全角括弧)に合わせる(docs/api-spec.md §2.4)
     return [
       {
         id: 1,

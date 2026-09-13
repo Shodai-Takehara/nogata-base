@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
-import { demoDataSource } from '@/data/demo';
+import { demoRainSource } from '@/data/demo-rain';
 import { liveDataSource } from '@/data/live';
 import { withMinInterval } from '@/data/throttle';
 import type { DataSource } from '@/data/types';
@@ -16,7 +16,7 @@ const DataSourceContext = createContext<DataSource>(throttledLiveSource);
 export function DataSourceProvider({ children }: { children: ReactNode }) {
   const { settings, ready } = useSettings();
   const dataSource = useMemo(
-    () => (settings.demoMode ? demoDataSource : throttledLiveSource),
+    () => (settings.demoMode ? demoRainSource : throttledLiveSource),
     [settings.demoMode],
   );
   // 保存済み設定の読み込み前に画面を出すと、デモモード保存中でも一瞬ライブ API を
