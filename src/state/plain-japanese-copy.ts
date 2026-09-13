@@ -572,17 +572,34 @@ export const PLAIN_JAPANESE_COPY = {
   rowDemoMode: {
     standard: 'デモモード',
   },
+  rowDemoScenario: {
+    standard: 'シナリオ',
+    easy: 'さいがいの しゅるい',
+  },
+  demoScenarioRain: {
+    standard: '大雨',
+    easy: '大雨(おおあめ)',
+  },
+  demoScenarioQuake: {
+    standard: '地震',
+    easy: '地震(じしん)',
+  },
   lifeNote: {
     standard: '防災のつぎは、毎日の暮らしへ。',
     easy: 'ぼうさいの つぎは、まいにちの くらしへ。',
   },
   demoNote: {
-    standard: '大雨災害の再現シナリオを表示します。通信は行いません。',
-    easy: '大雨(おおあめ)の さいがいを れんしゅうで 見(み)せます。インターネットは つかいません。',
+    standard: '災害時の直方市を想定したデータを表示します。通信は行いません。',
+    easy: 'さいがいの ときの 直方市(のおがたし)を れんしゅうで 見(み)せます。インターネットは つかいません。',
   },
-  demoBanner: {
-    standard: 'デモモード — 大雨災害の再現シナリオを表示中',
-    easy: 'デモモード — これは れんしゅうようの じょうほうです',
+  // 「再現」でなく「想定」。地震は市で起きた出来事でなく架空の想定で、実在の被災事実に見せない
+  demoBannerRain: {
+    standard: 'デモモード — 大雨災害の想定シナリオを表示中',
+    easy: 'デモモード — 大雨(おおあめ)の れんしゅうです',
+  },
+  demoBannerQuake: {
+    standard: 'デモモード — 地震災害の想定シナリオを表示中',
+    easy: 'デモモード — 地震(じしん)の れんしゅうです',
   },
   disclaimerNotOfficial: {
     standard:

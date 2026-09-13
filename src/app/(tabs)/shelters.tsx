@@ -7,7 +7,7 @@ import { DemoBanner } from '@/components/demo-banner';
 import { ShelterDetailSheet } from '@/components/shelter-detail-sheet';
 import { StatusChip } from '@/components/status-chip';
 import { AppColors, TAB_BAR_SPACE } from '@/constants/tokens';
-import { useDataSource } from '@/data/data-source-context';
+import type { DataSource } from '@/data/types';
 import type { Shelter } from '@/domain/models';
 import { shelterDistances, sortSheltersForList } from '@/domain/shelter-order';
 import {
@@ -23,8 +23,9 @@ import { useCopy, useStatusLabels } from '@/state/plain-japanese';
 import { useEasyJapanese, useHomePin } from '@/state/settings';
 import { formatJstMoment } from '@/utils/datetime';
 
+const loadShelters = (source: DataSource) => source.fetchShelters();
+
 export default function SheltersScreen() {
-  const dataSource = useDataSource();
   const insets = useSafeAreaInsets();
   const copy = useCopy();
   const labels = useStatusLabels();
@@ -33,7 +34,6 @@ export default function SheltersScreen() {
   // 選択は id で保持し、表示は最新データから解決する(更新でシートが古くならないように)
   const [selectedShelterId, setSelectedShelterId] = useState<number | null>(null);
 
-  const loadShelters = useCallback(() => dataSource.fetchShelters(), [dataSource]);
   const { data, loading, error, refresh, fetchedAt } = useRemoteData(loadShelters, 'shelters');
 
   const toggleHazard = useCallback((hazard: HazardType) => {

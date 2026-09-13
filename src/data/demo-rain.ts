@@ -15,6 +15,8 @@ import type { DataSource } from '@/data/types';
  * 開設する避難所。
  * 遠賀川・彦山川沿いの低地(下境・感田・中泉)を中心に開く 2023年7月の実際の
  * 開設パターンを参考にしつつ、混雑度3段階が一度に見えるよう構成している。
+ * 年齢内訳は 65 歳以上を 3 割前後にする(市の高齢化率に合わせる。地震シナリオと見比べたとき
+ * 理由のない差を作らない)
  */
 const OPEN_SHELTERS: Record<number, OpenShelterState> = {
   // 直方市体育館: 大規模拠点。やや混雑
@@ -22,7 +24,7 @@ const OPEN_SHELTERS: Record<number, OpenShelterState> = {
     opening: '2',
     families: 96,
     refugees: 267,
-    breakdown: [6, 7, 28, 31, 86, 92, 8, 9],
+    breakdown: [5, 6, 22, 24, 64, 70, 36, 40],
     updatedMinutesAgo: 12,
   },
   // 直方市男女共同参画センター: 市街地中心(中央公民館はマスタ上の属性が空のため避ける)
@@ -30,7 +32,7 @@ const OPEN_SHELTERS: Record<number, OpenShelterState> = {
     opening: '1',
     families: 14,
     refugees: 38,
-    breakdown: [1, 1, 4, 5, 12, 11, 2, 2],
+    breakdown: [1, 1, 3, 4, 10, 9, 5, 5],
     updatedMinutesAgo: 25,
   },
   // 直方歳時館: 小規模施設が定員近くまで埋まる例
@@ -38,7 +40,7 @@ const OPEN_SHELTERS: Record<number, OpenShelterState> = {
     opening: '3',
     families: 21,
     refugees: 58,
-    breakdown: [1, 2, 5, 6, 18, 17, 4, 5],
+    breakdown: [1, 1, 4, 5, 15, 14, 9, 9],
     updatedMinutesAgo: 8,
   },
   // 感田小学校: 感田交差点の冠水を受けた北部の受け皿
@@ -46,7 +48,7 @@ const OPEN_SHELTERS: Record<number, OpenShelterState> = {
     opening: '1',
     families: 22,
     refugees: 61,
-    breakdown: [2, 2, 7, 8, 19, 17, 3, 3],
+    breakdown: [2, 2, 6, 6, 16, 15, 7, 7],
     updatedMinutesAgo: 31,
   },
   // 中泉小学校: 南部アンダーパス冠水地区
@@ -54,7 +56,7 @@ const OPEN_SHELTERS: Record<number, OpenShelterState> = {
     opening: '1',
     families: 9,
     refugees: 24,
-    breakdown: [0, 1, 3, 2, 8, 7, 1, 2],
+    breakdown: [0, 1, 2, 2, 6, 6, 3, 4],
     updatedMinutesAgo: 47,
   },
   // 下境小学校: 遠賀川沿い低地。やや混雑
@@ -62,7 +64,7 @@ const OPEN_SHELTERS: Record<number, OpenShelterState> = {
     opening: '2',
     families: 41,
     refugees: 118,
-    breakdown: [3, 4, 13, 14, 38, 36, 5, 5],
+    breakdown: [3, 3, 10, 11, 30, 29, 16, 16],
     updatedMinutesAgo: 18,
   },
   // 直方北小学校
@@ -70,8 +72,24 @@ const OPEN_SHELTERS: Record<number, OpenShelterState> = {
     opening: '1',
     families: 11,
     refugees: 30,
-    breakdown: [1, 1, 3, 3, 10, 9, 1, 2],
+    breakdown: [1, 1, 3, 3, 8, 7, 3, 4],
     updatedMinutesAgo: 39,
+  },
+  // 直方自動車学校(南部の赤地)と代行寺(北部の植木): 水害には対応するが地震には対応しない施設。
+  // 地震シナリオへ切り替えたとき、この2か所だけが閉じて「地震で使えない避難所」が比較で見える
+  9: {
+    opening: '1',
+    families: 8,
+    refugees: 21,
+    breakdown: [1, 1, 2, 2, 5, 4, 3, 3],
+    updatedMinutesAgo: 52,
+  },
+  42: {
+    opening: '1',
+    families: 6,
+    refugees: 15,
+    breakdown: [0, 1, 2, 1, 4, 3, 2, 2],
+    updatedMinutesAgo: 58,
   },
 };
 

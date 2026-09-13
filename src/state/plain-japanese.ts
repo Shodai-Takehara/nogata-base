@@ -17,7 +17,16 @@ import {
 } from '@/domain/status';
 
 import { PLAIN_JAPANESE_COPY, type CopyEntry, type CopyKey } from './plain-japanese-copy';
-import { isEasyJapanese, useEasyJapanese } from './settings';
+import { isEasyJapanese, useEasyJapanese, type DemoScenario } from './settings';
+
+/**
+ * デモシナリオごとの文言のキー。選択肢名(設定のセグメント)とバナーの文を、
+ * シナリオを足したとき片方だけ忘れないよう1か所で対応づける
+ */
+export const DEMO_SCENARIO_COPY: Record<DemoScenario, { label: CopyKey; banner: CopyKey }> = {
+  rain: { label: 'demoScenarioRain', banner: 'demoBannerRain' },
+  quake: { label: 'demoScenarioQuake', banner: 'demoBannerQuake' },
+};
 
 /**
  * React の外(Alert を出すユーティリティ等)で使う版。フックが使えないため、

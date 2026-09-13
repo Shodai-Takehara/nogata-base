@@ -8,8 +8,8 @@ import { InfoTooltip } from '@/components/info-tooltip';
 import { FLOOD_SOURCE, LANDFORM_SOURCE } from '@/constants/hazard-map';
 import { LORE_SOURCE } from '@/constants/lore-monuments';
 import { AppColors, TAB_BAR_SPACE } from '@/constants/tokens';
-import { useCopy } from '@/state/plain-japanese';
-import { TEXT_SIZES, useSettings, type TextSize } from '@/state/settings';
+import { DEMO_SCENARIO_COPY, useCopy } from '@/state/plain-japanese';
+import { DEMO_SCENARIOS, TEXT_SIZES, useSettings, type TextSize } from '@/state/settings';
 
 export default function MoreScreen() {
   const insets = useSafeAreaInsets();
@@ -74,13 +74,14 @@ export default function MoreScreen() {
 
         <AppText style={styles.caption}>{copy.captionApp}</AppText>
         <View style={styles.card}>
-          <View style={styles.rowBetween}>
+          <View style={styles.segmentRow}>
             <AppText style={styles.rowTitle}>{copy.rowTextSize}</AppText>
             <View style={styles.segment}>
               {TEXT_SIZES.map((size) => (
                 <SegmentButton
                   key={size}
                   label={textSizeLabel(size, copy)}
+                  accessibilityLabel={`${copy.rowTextSize}: ${textSizeLabel(size, copy)}`}
                   active={settings.textSize === size}
                   onPress={() => update({ textSize: size })}
                 />
@@ -106,6 +107,26 @@ export default function MoreScreen() {
               trackColor={{ true: AppColors.demo }}
             />
           </View>
+          {/* デモモードが切のときは意味を持たない選択なので、行ごと出さない */}
+          {settings.demoMode ? (
+            <>
+              <Separator />
+              <View style={styles.segmentRow}>
+                <AppText style={styles.rowTitle}>{copy.rowDemoScenario}</AppText>
+                <View style={styles.segment}>
+                  {DEMO_SCENARIOS.map((scenario) => (
+                    <SegmentButton
+                      key={scenario}
+                      label={copy[DEMO_SCENARIO_COPY[scenario].label]}
+                      accessibilityLabel={`${copy.rowDemoScenario}: ${copy[DEMO_SCENARIO_COPY[scenario].label]}`}
+                      active={settings.demoScenario === scenario}
+                      onPress={() => update({ demoScenario: scenario })}
+                    />
+                  ))}
+                </View>
+              </View>
+            </>
+          ) : null}
         </View>
         <AppText style={styles.note}>{copy.demoNote}</AppText>
 
@@ -175,10 +196,13 @@ function Row({ title, badge }: { title: string; badge?: string }) {
 
 function SegmentButton({
   label,
+  accessibilityLabel,
   active,
   onPress,
 }: {
   label: string;
+  /** 読み上げでは選択肢名だけだと何の設定か分からないため、設定名を含めて渡す(平易版も文言カタログから組む) */
+  accessibilityLabel: string;
   active: boolean;
   onPress: () => void;
 }) {
@@ -188,7 +212,7 @@ function SegmentButton({
       onPress={onPress}
       accessibilityRole="radio"
       accessibilityState={{ checked: active }}
-      accessibilityLabel={`文字サイズを${label}にする`}>
+      accessibilityLabel={accessibilityLabel}>
       <AppText style={[styles.segmentText, active && styles.segmentTextActive]}>{label}</AppText>
     </Pressable>
   );
@@ -270,11 +294,22 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     backgroundColor: AppColors.line,
   },
+  // 特大文字ややさしい日本語で題と選択肢が1行に収まらないとき、選択肢を次の行へ落とす
+  // (カードの右へはみ出して押せなくなるより良い)。落ちた行でも右寄せにする
+  segmentRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    rowGap: 8,
+    paddingVertical: 12,
+  },
   segment: {
     flexDirection: 'row',
     backgroundColor: AppColors.paper,
     borderRadius: 999,
     padding: 3,
+    marginLeft: 'auto',
   },
   segmentItem: {
     borderRadius: 999,

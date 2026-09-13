@@ -7,7 +7,7 @@
  * src/data/demo-master.ts に書き出す。デモの模擬データを実在の施設名・座標・
  * 警戒水位の上に組み立てるため(実データと同様のシナリオにする要件)。
  *
- * 開設状況・避難者数・水位の「状態」は含めない(シナリオ側 demo-rain.ts が与える)。
+ * 開設状況・避難者数・水位の「状態」は含めない(シナリオ側 demo-rain.ts、demo-quake.ts が与える)。
  * 取得フィールドはホワイトリスト(src/data/arcgis/layers.ts)の
  * 範囲内に限る。個人情報フィールド(input_p 等)は指定しないこと。
  */
@@ -103,7 +103,7 @@ async function main() {
 /**
  * 直方市の公開データから取り込んだ施設マスタ(取得日: ${now})。
  * scripts/generate-demo-master.js で再生成する。手で編集しない。
- * 開設状況・水位などの「状態」はシナリオ(demo-rain.ts)が与える。
+ * 開設状況・水位などの「状態」はシナリオ(demo-rain.ts、demo-quake.ts)が与える。
  */
 export type ShelterMaster = Pick<
   Shelter,
