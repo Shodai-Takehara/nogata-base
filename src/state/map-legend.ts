@@ -1,9 +1,4 @@
-import {
-  AREA_LAYERS,
-  FLOOD_ATTRIBUTION,
-  hazardLayer,
-  type HazardLegendEntry,
-} from '@/constants/hazard-map';
+import { AREA_LAYERS, hazardLayer, type HazardLegendEntry } from '@/constants/hazard-map';
 import { POPULATION_ATTRIBUTION, POPULATION_BUCKETS } from '@/constants/population-map';
 import {
   FUKUCHIYAMA_FAULT,
@@ -36,6 +31,11 @@ export type LegendBlock = {
   line?: LegendLine;
   /** 読み方の注意。シートの凡例にだけ出す */
   note?: string;
+  /**
+   * 帯では色見本だけ並べ、区分名はシートで読ませる。地形分類のように区分が9つあると
+   * 名前まで並べた帯が3行になり、地図を隠すため
+   */
+  compact?: boolean;
 };
 
 export type LegendLine = {
@@ -54,16 +54,19 @@ export function fillLegend(fill: FillKey, copy: Copy, easy: boolean): LegendBloc
   switch (fill) {
     case 'none':
       return null;
-    case 'flood': {
-      const layer = hazardLayer('flood');
-      return {
-        key: 'flood',
+    case 'flood':
+    case 'landform': {
+      const layer = hazardLayer(fill);
+      const block = {
+        key: fill,
         title: layer.title,
         short: easy ? layer.labelEasy : layer.label,
         entries: layer.legend,
-        attribution: FLOOD_ATTRIBUTION,
-        scale: true,
+        attribution: layer.attribution,
       };
+      return fill === 'flood'
+        ? { ...block, scale: true }
+        : { ...block, scale: false, compact: true, note: copy.landformNote };
     }
     case 'quake':
       return {
@@ -107,7 +110,7 @@ export function areaLegend(area: AreaKey, easy: boolean): LegendBlock[] {
       title: layer.title,
       short: easy ? layer.labelEasy : layer.label,
       entries: layer.legend,
-      attribution: FLOOD_ATTRIBUTION,
+      attribution: layer.attribution,
       scale: false,
     };
   });

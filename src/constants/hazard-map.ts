@@ -6,7 +6,7 @@
 export const FLOOD_TILE_URL_TEMPLATE =
   'https://disaportaldata.gsi.go.jp/raster/01_flood_l2_shinsuishin_data/{z}/{x}/{y}.png';
 
-/** ズーム範囲・透過度はハザードマップポータルの全レイヤーで共通に使う */
+/** ハザードマップポータルの全タイルで共通の配信ズーム範囲。他の配信元はレイヤー側で上書きする */
 export const HAZARD_TILE_MIN_Z = 2;
 export const HAZARD_TILE_MAX_Z = 17;
 
@@ -28,9 +28,54 @@ export const FLOOD_LEGEND = [
   { color: '#DC7ADC', label: '20m〜' },
 ] as const;
 
-export type HazardLegendEntry = { color: string; label: string };
+export type HazardLegendEntry = {
+  color: string;
+  label: string;
+  /** 縞模様で描かれる区分の縞の色。地の色(color)の上に横縞で重ねて見本にする */
+  stripe?: string;
+};
 
-export type HazardLayerKey = 'flood' | 'debrisFlow' | 'steepSlope' | 'houseCollapse';
+/**
+ * 治水地形分類図(更新版)の地理院タイル。土地の成り立ちから「川と関係なく水が
+ * 溜まりやすい土地」を示す。配信範囲は一級水系の氾濫平野とその周辺で、直方市では
+ * 福智山側の山地にタイルが無く(404)、図郭の外は白い基図だけが描かれる。
+ * 出典表記が利用条件(地理院タイル一覧)。
+ * https://maps.gsi.go.jp/development/ichiran.html#lcmfc2
+ */
+export const LANDFORM_TILE_URL_TEMPLATE =
+  'https://cyberjapandata.gsi.go.jp/xyz/lcmfc2/{z}/{x}/{y}.png';
+
+/** 出典カードにも同じ名前で載せるため、「出典: 」を除いた形を分けて持つ */
+export const LANDFORM_SOURCE = '国土地理院(治水地形分類図)';
+export const LANDFORM_ATTRIBUTION = `出典: ${LANDFORM_SOURCE}`;
+
+/**
+ * 治水地形分類図は面をベタ塗りするので、ポータルのタイルと同じ 0.7 では下の地名が
+ * 読めない。0.5 は候補で、実機で読めなければ下げる
+ */
+export const LANDFORM_TILE_OPACITY = 0.5;
+
+/**
+ * 公式の凡例は約40項目あるが、直方市域に現れて防災上の意味を持つ区分に絞る。
+ * 色はタイルの実画素から抽出(2026-09-13、市域の z16 タイル 481 枚)。公式の凡例画像の色
+ * より白寄りなのは、タイルが分類の面を基図の上に透かして描いているため。
+ * 切土地は設計時の8分類に無かったが、市域の画素の 6.5% を占め(丘陵の造成地と
+ * ゴルフ場)、凡例に無いと灰色の大きな面の意味が分からないため加えた。
+ * 旧河道と盛土地は縞模様で描かれるので、地の色と縞の色を分けて持つ
+ */
+export const LANDFORM_LEGEND: readonly HazardLegendEntry[] = [
+  { color: '#FFE3AC', label: '山地' },
+  { color: '#FFC85A', label: '段丘面' },
+  { color: '#E3FFD5', label: '氾濫平野' },
+  { color: '#9CDFC9', label: '後背湿地' },
+  { color: '#FFFF5A', label: '微高地(自然堤防)' },
+  { color: '#CADDFA', stripe: '#5A96EF', label: '旧河道' },
+  { color: '#F5FF4B', stripe: '#F4924B', label: '盛土地・埋立地' },
+  { color: '#DED4C1', label: '切土地' },
+  { color: '#A5D8F7', label: '現河道・水面' },
+];
+
+export type HazardLayerKey = 'flood' | 'debrisFlow' | 'steepSlope' | 'houseCollapse' | 'landform';
 
 export type HazardLayer = {
   key: HazardLayerKey;
@@ -45,13 +90,19 @@ export type HazardLayer = {
   title: string;
   urlTemplate: string;
   legend: readonly HazardLegendEntry[];
+  attribution: string;
+  /** 配信元が持つズーム範囲。省略時はハザードマップポータルの共通値 */
+  minZ?: number;
+  maxZ?: number;
+  /** 省略時はポータルのタイルと同じ透け具合 */
+  opacity?: number;
 };
 
 /**
- * 地図に重ねられるハザードレイヤー。市の Web 版ハザードマップと同じ構成
- * (洪水・土石流・急傾斜地・家屋倒壊)。地すべり警戒区域は直方市周辺に
- * タイルが存在しない(市の指定なし)ため載せない。
- * 凡例色はいずれも直方市周辺の実タイルから抽出(2026-07-15)。
+ * 地図に重ねられるタイルのレイヤー。市の Web 版ハザードマップと同じ構成
+ * (洪水・土石流・急傾斜地・家屋倒壊)に、国土地理院の治水地形分類図を足したもの。
+ * 地すべり警戒区域は直方市周辺にタイルが存在しない(市の指定なし)ため載せない。
+ * 凡例色はいずれも直方市周辺の実タイルから抽出(ポータル分は 2026-07-15)。
  */
 export const HAZARD_LAYERS: readonly HazardLayer[] = [
   {
@@ -61,6 +112,7 @@ export const HAZARD_LAYERS: readonly HazardLayer[] = [
     title: '洪水浸水想定(想定最大)',
     urlTemplate: FLOOD_TILE_URL_TEMPLATE,
     legend: FLOOD_LEGEND,
+    attribution: FLOOD_ATTRIBUTION,
   },
   {
     key: 'debrisFlow',
@@ -72,6 +124,7 @@ export const HAZARD_LAYERS: readonly HazardLayer[] = [
       { color: '#E6C832', label: '警戒区域' },
       { color: '#A50021', label: '特別警戒区域' },
     ],
+    attribution: FLOOD_ATTRIBUTION,
   },
   {
     key: 'steepSlope',
@@ -83,6 +136,7 @@ export const HAZARD_LAYERS: readonly HazardLayer[] = [
       { color: '#FAE600', label: '警戒区域' },
       { color: '#FA2800', label: '特別警戒区域' },
     ],
+    attribution: FLOOD_ATTRIBUTION,
   },
   {
     key: 'houseCollapse',
@@ -92,6 +146,19 @@ export const HAZARD_LAYERS: readonly HazardLayer[] = [
     urlTemplate:
       'https://disaportaldata.gsi.go.jp/raster/01_flood_l2_kaokutoukai_hanran_data/{z}/{x}/{y}.png',
     legend: [{ color: '#FF0000', label: '区域内' }],
+    attribution: FLOOD_ATTRIBUTION,
+  },
+  {
+    key: 'landform',
+    label: '地形',
+    labelEasy: '地形(ちけい)',
+    title: '治水地形分類図',
+    urlTemplate: LANDFORM_TILE_URL_TEMPLATE,
+    legend: LANDFORM_LEGEND,
+    attribution: LANDFORM_ATTRIBUTION,
+    minZ: 11,
+    maxZ: 16,
+    opacity: LANDFORM_TILE_OPACITY,
   },
 ];
 
@@ -112,4 +179,23 @@ export function hazardLayer(key: HazardLayerKey): HazardLayer {
   const layer = HAZARD_LAYERS.find((l) => l.key === key);
   if (!layer) throw new Error(`ハザードレイヤー ${key} が定義にありません`);
   return layer;
+}
+
+/**
+ * 配信の上限ズームは maximumZ ではなく maximumNativeZ で渡す。maximumZ にすると
+ * それより拡大したとき(自宅へ移動した直後や街区の拡大)に塗りが消えて、凡例だけが残る。
+ * maximumNativeZ なら上限のタイルを切り出して拡大して描く
+ */
+export function tileOptions(layer: HazardLayer): {
+  urlTemplate: string;
+  minimumZ: number;
+  maximumNativeZ: number;
+  opacity: number;
+} {
+  return {
+    urlTemplate: layer.urlTemplate,
+    minimumZ: layer.minZ ?? HAZARD_TILE_MIN_Z,
+    maximumNativeZ: layer.maxZ ?? HAZARD_TILE_MAX_Z,
+    opacity: layer.opacity ?? HAZARD_TILE_OPACITY,
+  };
 }

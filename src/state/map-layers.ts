@@ -1,4 +1,9 @@
-import { AREA_LAYERS, type AreaLayerKey } from '@/constants/hazard-map';
+import {
+  AREA_LAYERS,
+  hazardLayer,
+  type AreaLayerKey,
+  type HazardLayer,
+} from '@/constants/hazard-map';
 
 /**
  * ホーム画面の地図に何を出すかの状態。
@@ -6,7 +11,8 @@ import { AREA_LAYERS, type AreaLayerKey } from '@/constants/hazard-map';
  * 塗りを排他にするのは、複数の面を重ねると色の意味が読めなくなるため。
  * 人口は塗りに含めず、浸水タイルや区域タイルと重ねられるようにする。浸水域に
  * 何人住むかを読むのが人口レイヤーの主な使い方で、塗りと二者択一にすると成り立たない。
- * ただし地震のリスクとは同時に出さない。どちらも半透明の面で、重ねると両方の段階が読めない。
+ * ただし市域全体を半透明の面で覆う塗り(FACE_FILLS)とは同時に出さない。重ねると
+ * 人口の青が半分の濃さになったうえに塗りの色と混ざり、どちらの段階も見本と合わせられない。
  * 選択はセッション内でだけ保つ(端末に保存すると、災害時に前回の塗りが残ったまま
  * 開いてしまい、平常時の主目的である避難所と水位の確認を妨げる)。
  *
@@ -17,8 +23,19 @@ import { AREA_LAYERS, type AreaLayerKey } from '@/constants/hazard-map';
 export const PIN_KEYS = ['shelters', 'carShelters', 'water', 'damage', 'traffic'] as const;
 export type PinLayerKey = (typeof PIN_KEYS)[number];
 
-export const FILL_KEYS = ['none', 'flood', 'quake'] as const;
+export const FILL_KEYS = ['none', 'flood', 'quake', 'landform'] as const;
 export type FillKey = (typeof FILL_KEYS)[number];
+
+/** タイルで描く塗り。地震は同梱データの面で描くので含まない */
+export function fillTileLayer(fill: FillKey): HazardLayer | null {
+  return fill === 'flood' || fill === 'landform' ? hazardLayer(fill) : null;
+}
+
+/**
+ * 市域全体を半透明の面で覆う塗り。洪水は浸水域だけに色が付き、他は透明なので含まない
+ * (治水地形分類図は図郭の内側が白い基図まで不透明に描かれる)
+ */
+const FACE_FILLS: readonly FillKey[] = ['quake', 'landform'];
 
 /** 区域は hazard-map.ts の AREA_LAYERS が正で、その定義順に並べる */
 export const AREA_KEYS = Object.keys(AREA_LAYERS) as readonly AreaLayerKey[];
@@ -60,13 +77,17 @@ export function mapLayersReducer(state: MapLayerState, action: MapLayerAction): 
       return {
         ...state,
         fill: action.fill,
-        population: action.fill === 'quake' ? false : state.population,
+        population: FACE_FILLS.includes(action.fill) ? false : state.population,
       };
     case 'toggleArea':
       return { ...state, areas: { ...state.areas, [action.key]: !state.areas[action.key] } };
     case 'togglePopulation':
       if (state.population) return { ...state, population: false };
-      return { ...state, population: true, fill: state.fill === 'quake' ? 'none' : state.fill };
+      return {
+        ...state,
+        population: true,
+        fill: FACE_FILLS.includes(state.fill) ? 'none' : state.fill,
+      };
     case 'applyDeepLink':
       return mapLayersReducer(state, { type: 'setFill', fill: 'flood' });
   }

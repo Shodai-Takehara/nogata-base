@@ -25,14 +25,7 @@ import { ShelterDetailSheet } from '@/components/shelter-detail-sheet';
 import { TrafficDetailSheet } from '@/components/traffic-detail-sheet';
 import { WaterDetailSheet } from '@/components/water-detail-sheet';
 import { CAR_SHELTERS, type CarShelter } from '@/constants/car-shelters';
-import {
-  AREA_LAYERS,
-  FLOOD_TILE_URL_TEMPLATE,
-  HAZARD_TILE_MAX_Z,
-  HAZARD_TILE_MIN_Z,
-  HAZARD_TILE_OPACITY,
-  hazardLayer,
-} from '@/constants/hazard-map';
+import { AREA_LAYERS, hazardLayer, tileOptions } from '@/constants/hazard-map';
 import { RIVER_INFO_URL } from '@/constants/links';
 import {
   POPULATION_CELLS,
@@ -74,7 +67,13 @@ import {
   type WaterStatus,
 } from '@/domain/status';
 import { useRemoteData } from '@/hooks/use-remote-data';
-import { AREA_KEYS, INITIAL_MAP_LAYERS, mapLayersReducer, overlayCount } from '@/state/map-layers';
+import {
+  AREA_KEYS,
+  fillTileLayer,
+  INITIAL_MAP_LAYERS,
+  mapLayersReducer,
+  overlayCount,
+} from '@/state/map-layers';
 import { legendBlocks } from '@/state/map-legend';
 import { useCopy } from '@/state/plain-japanese';
 import { quakeDetail } from '@/state/quake-detail';
@@ -316,6 +315,7 @@ export default function HomeScreen() {
 
   const summary = summarize(data ?? null, homePin);
   const showArLink = layers.fill === 'flood';
+  const fillTile = fillTileLayer(layers.fill);
   const detail = selectedShelter ? (
     <ShelterDetailSheet shelter={selectedShelter} onClose={closeSelection} />
   ) : selectedWater ? (
@@ -366,25 +366,12 @@ export default function HomeScreen() {
             {layers.fill === 'quake' ? (
               <QuakeLayer selectedCode={selection?.kind === 'quake' ? selection.code : null} />
             ) : null}
-            {layers.fill === 'flood' ? (
-              <UrlTile
-                urlTemplate={FLOOD_TILE_URL_TEMPLATE}
-                minimumZ={HAZARD_TILE_MIN_Z}
-                maximumZ={HAZARD_TILE_MAX_Z}
-                opacity={HAZARD_TILE_OPACITY}
-              />
-            ) : null}
+            {fillTile ? <UrlTile key={fillTile.key} {...tileOptions(fillTile)} /> : null}
             <Fragment key={`above-fill-${layers.fill}`}>
               {AREA_KEYS.filter((area) => layers.areas[area])
                 .flatMap((area) => AREA_LAYERS[area])
                 .map((key) => (
-                  <UrlTile
-                    key={key}
-                    urlTemplate={hazardLayer(key).urlTemplate}
-                    minimumZ={HAZARD_TILE_MIN_Z}
-                    maximumZ={HAZARD_TILE_MAX_Z}
-                    opacity={HAZARD_TILE_OPACITY}
-                  />
+                  <UrlTile key={key} {...tileOptions(hazardLayer(key))} />
                 ))}
             </Fragment>
           </Fragment>

@@ -1,5 +1,6 @@
 import {
   AREA_LAYERS,
+  FLOOD_ATTRIBUTION,
   FLOOD_LEGEND,
   FLOOD_TILE_URL_TEMPLATE,
   HAZARD_LAYERS,
@@ -7,7 +8,12 @@ import {
   HAZARD_TILE_MAX_Z,
   HAZARD_TILE_MIN_Z,
   HAZARD_TILE_OPACITY,
+  LANDFORM_ATTRIBUTION,
+  LANDFORM_LEGEND,
+  LANDFORM_TILE_OPACITY,
+  tileOptions,
 } from '@/constants/hazard-map';
+import { FILL_KEYS } from '@/state/map-layers';
 
 describe('ハザードマップタイル定義', () => {
   it('URL が確認済みの配信エンドポイントと一致する(変更時はタイル仕様の再確認が必要)', () => {
@@ -41,7 +47,58 @@ describe('ハザードマップタイル定義', () => {
         'houseCollapse',
         'https://disaportaldata.gsi.go.jp/raster/01_flood_l2_kaokutoukai_hanran_data/{z}/{x}/{y}.png',
       ],
+      ['landform', 'https://cyberjapandata.gsi.go.jp/xyz/lcmfc2/{z}/{x}/{y}.png'],
     ]);
+  });
+
+  it('全レイヤーが出典を持ち、ポータルのタイルは同じ出典、地形分類は国土地理院', () => {
+    for (const layer of HAZARD_LAYERS) {
+      expect(layer.attribution).toBe(
+        layer.key === 'landform' ? LANDFORM_ATTRIBUTION : FLOOD_ATTRIBUTION,
+      );
+    }
+    expect(LANDFORM_ATTRIBUTION).toContain('国土地理院');
+  });
+
+  it('タイルの設定はレイヤーの値を優先し、省略した項目はポータルの共通値で埋める', () => {
+    expect(tileOptions(hazardLayer('flood'))).toEqual({
+      urlTemplate: FLOOD_TILE_URL_TEMPLATE,
+      minimumZ: HAZARD_TILE_MIN_Z,
+      maximumNativeZ: HAZARD_TILE_MAX_Z,
+      opacity: HAZARD_TILE_OPACITY,
+    });
+    // 地理院タイル一覧の配信ズーム 11〜16。16 より拡大したときは 16 のタイルを拡大して描く
+    expect(tileOptions(hazardLayer('landform'))).toMatchObject({
+      minimumZ: 11,
+      maximumNativeZ: 16,
+      opacity: LANDFORM_TILE_OPACITY,
+    });
+    expect(LANDFORM_TILE_OPACITY).toBeLessThan(HAZARD_TILE_OPACITY);
+  });
+
+  it('上限ズームは maximumZ として渡さない(渡すとそれより拡大したとき塗りが消える)', () => {
+    for (const layer of HAZARD_LAYERS) expect(tileOptions(layer)).not.toHaveProperty('maximumZ');
+  });
+
+  it('地形分類の凡例は市域に現れる9区分で、縞の区分は縞の色を持つ', () => {
+    expect(LANDFORM_LEGEND.map((e) => e.label)).toEqual([
+      '山地',
+      '段丘面',
+      '氾濫平野',
+      '後背湿地',
+      '微高地(自然堤防)',
+      '旧河道',
+      '盛土地・埋立地',
+      '切土地',
+      '現河道・水面',
+    ]);
+    const striped = LANDFORM_LEGEND.filter((e) => e.stripe).map((e) => e.label);
+    expect(striped).toEqual(['旧河道', '盛土地・埋立地']);
+    for (const { stripe } of LANDFORM_LEGEND) {
+      if (stripe) expect(stripe).toMatch(/^#[0-9A-F]{6}$/);
+    }
+    const colors = LANDFORM_LEGEND.map((e) => e.color);
+    expect(new Set(colors).size).toBe(colors.length);
   });
 
   it('各レイヤーの凡例は色・ラベルがそろっている', () => {
@@ -71,12 +128,14 @@ describe('ハザードマップタイル定義', () => {
     }
   });
 
-  it('区域の切替は定義済みのタイルだけを指し、洪水(塗り)は含まない', () => {
+  it('区域の切替は定義済みのタイルだけを指し、塗り(洪水、地形分類)は含まない', () => {
     const keys = HAZARD_LAYERS.map((l) => l.key);
+    const fills: readonly string[] = FILL_KEYS;
     for (const tiles of Object.values(AREA_LAYERS)) {
       for (const key of tiles) {
         expect(keys).toContain(key);
-        expect(key).not.toBe('flood');
+        // 塗りと区域の両方に入れると同じタイルが二重に描かれ、透過度が重なって濃く見える
+        expect(fills).not.toContain(key);
       }
     }
   });
