@@ -18,6 +18,7 @@ import { DemoBanner } from '@/components/demo-banner';
 import { LayerPicker } from '@/components/layer-picker';
 import { LayersButton } from '@/components/layers-button';
 import { LegendStrip } from '@/components/legend-strip';
+import { LoreDetailSheet } from '@/components/lore-detail-sheet';
 import { MapBottomSheet, type SheetMode } from '@/components/map-bottom-sheet';
 import { PopulationDetailSheet } from '@/components/population-detail-sheet';
 import { QuakeDetailSheet } from '@/components/quake-detail-sheet';
@@ -27,6 +28,7 @@ import { WaterDetailSheet } from '@/components/water-detail-sheet';
 import { CAR_SHELTERS, type CarShelter } from '@/constants/car-shelters';
 import { AREA_LAYERS, hazardLayer, tileOptions } from '@/constants/hazard-map';
 import { RIVER_INFO_URL } from '@/constants/links';
+import { LORE_MONUMENTS, type LoreMonument } from '@/constants/lore-monuments';
 import {
   POPULATION_CELLS,
   POPULATION_SELECTED_STROKE,
@@ -109,6 +111,7 @@ const WATER_PIN_IMAGE: Record<WaterStatus, number> = {
 
 const CAR_PIN_IMAGE = require('../../../assets/map-pins/car-shelter.png');
 const DAMAGE_PIN_IMAGE = require('../../../assets/map-pins/damage-report.png');
+const LORE_PIN_IMAGE = require('../../../assets/map-pins/lore-monument.png');
 
 /**
  * 重なった対象(ピン、規制線、塗り)のタップの譲り合い。1回のタップがそれぞれに届き、
@@ -130,6 +133,7 @@ type MapSelection =
   | { kind: 'car'; id: number }
   | { kind: 'damage'; id: number }
   | { kind: 'traffic'; id: number }
+  | { kind: 'lore'; id: string }
   | { kind: 'population'; index: number }
   /** 地震ハザードはセル単位の面を持たないので、タップ地点から求めたメッシュコードで持つ */
   | { kind: 'quake'; code: string };
@@ -221,6 +225,10 @@ export default function HomeScreen() {
     selection?.kind === 'traffic' && layers.pins.traffic
       ? (data?.trafficRegulations?.find((t) => t.id === selection.id) ?? null)
       : null;
+  const selectedLore =
+    selection?.kind === 'lore' && layers.lore
+      ? (LORE_MONUMENTS.find((m) => m.id === selection.id) ?? null)
+      : null;
   const selectedPopulation =
     selection?.kind === 'population' && layers.population
       ? (POPULATION_CELLS[selection.index] ?? null)
@@ -257,6 +265,10 @@ export default function HomeScreen() {
   const selectDamage = useCallback((id: number) => {
     stampMarkerPress();
     setSelection({ kind: 'damage', id });
+  }, []);
+  const selectLore = useCallback((id: string) => {
+    stampMarkerPress();
+    setSelection({ kind: 'lore', id });
   }, []);
   // 規制線の押下時刻。線の上をタップすると下の塗りも発火するため、塗り側が線に譲る判定に使う
   const linePressedAt = useRef(0);
@@ -322,6 +334,8 @@ export default function HomeScreen() {
     <WaterDetailSheet waterLevel={selectedWater} onClose={closeSelection} />
   ) : selectedCar ? (
     <CarShelterDetailSheet shelter={selectedCar} onClose={closeSelection} />
+  ) : selectedLore ? (
+    <LoreDetailSheet monument={selectedLore} onClose={closeSelection} />
   ) : selectedDamage ? (
     <DamageDetailSheet report={selectedDamage} onClose={closeSelection} />
   ) : selectedTraffic ? (
@@ -375,6 +389,11 @@ export default function HomeScreen() {
                 ))}
             </Fragment>
           </Fragment>
+          {layers.lore
+            ? LORE_MONUMENTS.map((m) => (
+                <LoreMarker key={`lore-${m.id}`} monument={m} onSelect={selectLore} />
+              ))
+            : null}
           {layers.pins.shelters
             ? data?.shelters?.map((s) => (
                 <ShelterMarker
@@ -517,6 +536,30 @@ const CarShelterMarker = memo(function CarShelterMarker({
       onPress={() => onSelect(shelter.id)}
       accessibilityLabel={`車中泊避難所 ${shelter.name}`}>
       <Image source={CAR_PIN_IMAGE} />
+    </Marker>
+  );
+});
+
+/**
+ * 伝承碑のピンは過去の記録なので、重なったらいまの状況のピン(zIndex 未指定 = 0)を上にする。
+ * Apple Maps はマウント順ではピンの重なりを決めないため、zIndex で下げる
+ */
+const LORE_MARKER_Z_INDEX = -1;
+
+const LoreMarker = memo(function LoreMarker({
+  monument,
+  onSelect,
+}: {
+  monument: LoreMonument;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <Marker
+      coordinate={monument.coord}
+      zIndex={LORE_MARKER_Z_INDEX}
+      onPress={() => onSelect(monument.id)}
+      accessibilityLabel={`自然災害伝承碑 ${monument.name}`}>
+      <Image source={LORE_PIN_IMAGE} />
     </Marker>
   );
 });

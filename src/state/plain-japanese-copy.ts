@@ -175,6 +175,42 @@ export const PLAIN_JAPANESE_COPY = {
     // 「推計」を落とすと実数に読めるため、「だいたいの」で見積もりだと分かるようにする
     easy: '500m ごとの だいたいの 人(ひと)の 数(かず)。地震(じしん)の きけんや 地形(ちけい)の 種類(しゅるい)とは いっしょには 出(だ)せません',
   },
+  layerSectionMemory: {
+    standard: '記憶',
+    easy: 'むかしの こと',
+  },
+  layerLore: {
+    standard: '自然災害伝承碑',
+    easy: '自然(しぜん)災害(さいがい)伝承碑(でんしょうひ)',
+  },
+  layerLoreDesc: {
+    standard: '過去の水害を伝える石碑。タップで碑文の内容が読めます',
+    easy: '昔(むかし)の 水害(すいがい)を つたえる 石(いし)の 碑(ひ)。おすと 内容(ないよう)が 読(よ)めます',
+  },
+  loreSheetTitle: {
+    standard: '自然災害伝承碑',
+    easy: '自然(しぜん)災害(さいがい)伝承碑(でんしょうひ)',
+  },
+  loreBuiltYear: {
+    standard: '建立年',
+    easy: '建(た)てた 年(とし)',
+  },
+  loreDisaster: {
+    standard: '災害名',
+    easy: '災害(さいがい)の 名前(なまえ)',
+  },
+  loreStory: {
+    standard: '伝承内容',
+    easy: 'つたえて いる こと',
+  },
+  loreStoryNote: {
+    standard: '内容は直方市が国土地理院に登録した文のままです',
+    easy: '文(ぶん)は 直方市(のおがたし)が 登録(とうろく)した ままです',
+  },
+  loreRouteButton: {
+    standard: '碑の場所を地図アプリで見る ↗',
+    easy: '碑(ひ)の ばしょを ちずアプリで みる ↗',
+  },
   legendExpand: {
     standard: '凡例を見る',
     easy: '色(いろ)の いみを 見(み)る',
