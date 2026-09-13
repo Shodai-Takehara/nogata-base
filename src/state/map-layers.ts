@@ -1,6 +1,6 @@
 import {
   AREA_LAYERS,
-  hazardLayer,
+  HAZARD_LAYERS,
   type AreaLayerKey,
   type HazardLayer,
 } from '@/constants/hazard-map';
@@ -26,9 +26,9 @@ export type PinLayerKey = (typeof PIN_KEYS)[number];
 export const FILL_KEYS = ['none', 'flood', 'quake', 'landform'] as const;
 export type FillKey = (typeof FILL_KEYS)[number];
 
-/** タイルで描く塗り。地震は同梱データの面で描くので含まない */
+/** タイルで描く塗り。地震は同梱データの面で描くのでタイルの定義に無く null */
 export function fillTileLayer(fill: FillKey): HazardLayer | null {
-  return fill === 'flood' || fill === 'landform' ? hazardLayer(fill) : null;
+  return HAZARD_LAYERS.find((layer) => layer.key === fill) ?? null;
 }
 
 /**
