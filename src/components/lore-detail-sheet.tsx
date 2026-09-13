@@ -12,7 +12,10 @@ type Props = {
   onClose: () => void;
 };
 
-/** 碑文が画面高に占める上限。長い碑文でも地図を半分以上残す */
+/**
+ * 伝承内容が画面高に占める上限。要約(0.4)より低くし、碑名・災害名・ボタンを足しても
+ * シート全体が要約を開いたときと同じ程度の高さに収まるようにする
+ */
 const STORY_HEIGHT_RATIO = 0.28;
 
 /**
@@ -67,7 +70,7 @@ export function LoreDetailSheet({ monument, onClose }: Props) {
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <View style={styles.fact}>
+    <View style={styles.fact} accessible accessibilityLabel={`${label}: ${value}`}>
       <AppText style={styles.factLabel}>{label}</AppText>
       <AppText style={styles.factValue}>{value}</AppText>
     </View>
@@ -105,6 +108,8 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 2,
+    // 平易版の見出し(読み付きで長い)が特大文字で折り返しても、✕ を行の外へ押し出さない
+    flexShrink: 1,
   },
   badgeText: {
     color: '#fff',

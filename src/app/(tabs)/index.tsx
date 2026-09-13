@@ -541,8 +541,9 @@ const CarShelterMarker = memo(function CarShelterMarker({
 });
 
 /**
- * 伝承碑のピンは過去の記録なので、重なったらいまの状況のピン(zIndex 未指定 = 0)を上にする。
- * Apple Maps はマウント順ではピンの重なりを決めないため、zIndex で下げる
+ * 伝承碑のピンは過去の記録なので、重なったときの描画をいまの状況のピン(zIndex 未指定 = 0)の
+ * 下にする。Apple Maps はマウント順では重なりを決めないため zIndex で下げる。
+ * タップがどちらに届くかまでは決められない(UIKit の subview 順で決まる)
  */
 const LORE_MARKER_Z_INDEX = -1;
 
