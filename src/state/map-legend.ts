@@ -15,7 +15,7 @@ export type LegendEntry = {
   color: string;
   label: string;
   stripe?: string;
-  /** シートの凡例で区分名の下に添える一言。地図上の帯には載せない */
+  /** シートの凡例で区分名の横の ⓘ から出す一言。地図上の帯には載せない */
   note?: string;
 };
 
