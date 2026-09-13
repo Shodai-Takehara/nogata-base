@@ -13,7 +13,9 @@ export const HAZARD_TILE_MAX_Z = 17;
 /** ポータルサイトの表示と同程度の透け具合。背景の地名が読める濃さにする */
 export const HAZARD_TILE_OPACITY = 0.7;
 
-export const FLOOD_ATTRIBUTION = '出典: ハザードマップポータルサイト(国土交通省)';
+/** 出典カードにも同じ名前で載せるため、「出典: 」を除いた形を分けて持つ */
+export const FLOOD_SOURCE = 'ハザードマップポータルサイト(国土交通省)';
+export const FLOOD_ATTRIBUTION = `出典: ${FLOOD_SOURCE}`;
 
 /**
  * 浸水深ランクの凡例。水防法準拠の6段階。
@@ -45,7 +47,6 @@ export type HazardLegendEntry = {
 export const LANDFORM_TILE_URL_TEMPLATE =
   'https://cyberjapandata.gsi.go.jp/xyz/lcmfc2/{z}/{x}/{y}.png';
 
-/** 出典カードにも同じ名前で載せるため、「出典: 」を除いた形を分けて持つ */
 export const LANDFORM_SOURCE = '国土地理院(治水地形分類図)';
 export const LANDFORM_ATTRIBUTION = `出典: ${LANDFORM_SOURCE}`;
 

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/app-text';
 import { DemoBanner } from '@/components/demo-banner';
 import { InfoTooltip } from '@/components/info-tooltip';
-import { LANDFORM_SOURCE } from '@/constants/hazard-map';
+import { FLOOD_SOURCE, LANDFORM_SOURCE } from '@/constants/hazard-map';
 import { AppColors, TAB_BAR_SPACE } from '@/constants/tokens';
 import { useCopy } from '@/state/plain-japanese';
 import { TEXT_SIZES, useSettings, type TextSize } from '@/state/settings';
@@ -112,6 +112,10 @@ export default function MoreScreen() {
         <View style={styles.card}>
           <AppText style={styles.legal}>
             避難所・水位・被害・交通規制のデータ: 直方市 災害時情報共有PF(公開用)
+          </AppText>
+          <Separator />
+          <AppText style={styles.legal}>
+            浸水想定・土砂災害・家屋倒壊のハザードマップ: {FLOOD_SOURCE}
           </AppText>
           <Separator />
           <AppText style={styles.legal}>
