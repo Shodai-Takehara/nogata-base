@@ -2,6 +2,8 @@ import type { Dispatch } from 'react';
 import { Pressable, StyleSheet, Switch, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
+import { InfoTooltip } from '@/components/info-tooltip';
+import { LegendSwatch, type SwatchEntry } from '@/components/legend-swatch';
 import { AppColors } from '@/constants/tokens';
 import {
   AREA_KEYS,
@@ -39,8 +41,6 @@ const PIN_COLOR: Record<PinLayerKey, string> = {
   traffic: AppColors.danger,
 };
 
-type Swatch = { color: string };
-
 /**
  * レイヤー選択シートの中身。ピンと区域は切替、塗りは1つ選ぶラジオにして、
  * 排他を UI の形で伝える。選ばれている塗りと有効な区域の下には凡例の全文を出し、
@@ -60,6 +60,7 @@ export function LayerPicker({ state, dispatch, onOpenAr }: Props) {
     none: { label: copy.fillNone },
     flood: { label: copy.fillFlood, desc: copy.fillFloodDesc },
     quake: { label: copy.fillQuake, desc: copy.fillQuakeDesc },
+    landform: { label: copy.fillLandform, desc: copy.fillLandformDesc },
   };
   const areaLabel: Record<AreaKey, string> = {
     landslide: copy.areaLandslide,
@@ -162,8 +163,7 @@ function ToggleRow({
   desc?: string;
   on: boolean;
   onToggle: () => void;
-  swatches: readonly Swatch[];
-  /** ピンの見本は丸、区域の見本は四角にして、点と面の違いを見せる */
+  swatches: readonly SwatchEntry[];
   round?: boolean;
 }) {
   return (
@@ -193,20 +193,21 @@ function ToggleRow({
   );
 }
 
-function Swatches({ entries, round }: { entries: readonly Swatch[]; round?: boolean }) {
+function Swatches({ entries, round }: { entries: readonly SwatchEntry[]; round?: boolean }) {
   return (
     <View style={styles.swatches}>
       {entries.map((entry) => (
-        <View
-          key={entry.color}
-          style={[styles.swatch, round && styles.swatchRound, { backgroundColor: entry.color }]}
-        />
+        <LegendSwatch key={entry.color} entry={entry} round={round} />
       ))}
     </View>
   );
 }
 
-/** 凡例の全文。見出しは正式名称なので、やさしい日本語モードでも変えない */
+/**
+ * 凡例の全文。見出しは正式名称なので、やさしい日本語モードでも変えない。
+ * 区分の一言は区分名の下に並べず ⓘ の吹き出しで出す。9 区分ぶんを並べると
+ * シートの縦幅を取りすぎて、他の項目に届かない
+ */
 function LegendDetail({ block }: { block: LegendBlock }) {
   return (
     <View style={styles.legend}>
@@ -214,8 +215,9 @@ function LegendDetail({ block }: { block: LegendBlock }) {
       <View style={styles.legendRows}>
         {block.entries.map((entry) => (
           <View key={entry.color} style={styles.legendRow}>
-            <View style={[styles.swatch, { backgroundColor: entry.color }]} />
+            <LegendSwatch entry={entry} />
             <AppText style={styles.legendLabel}>{entry.label}</AppText>
+            {entry.note ? <InfoTooltip text={entry.note} /> : null}
           </View>
         ))}
       </View>
@@ -315,17 +317,8 @@ const styles = StyleSheet.create({
   },
   swatches: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 2,
-  },
-  swatch: {
-    width: 12,
-    height: 12,
-    borderRadius: 2,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(0,0,0,0.2)',
-  },
-  swatchRound: {
-    borderRadius: 6,
   },
   arLink: {
     paddingVertical: 8,

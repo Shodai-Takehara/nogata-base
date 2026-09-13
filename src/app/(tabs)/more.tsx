@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/app-text';
 import { DemoBanner } from '@/components/demo-banner';
 import { InfoTooltip } from '@/components/info-tooltip';
+import { FLOOD_SOURCE, LANDFORM_SOURCE } from '@/constants/hazard-map';
 import { AppColors, TAB_BAR_SPACE } from '@/constants/tokens';
 import { useCopy } from '@/state/plain-japanese';
 import { TEXT_SIZES, useSettings, type TextSize } from '@/state/settings';
@@ -114,6 +115,10 @@ export default function MoreScreen() {
           </AppText>
           <Separator />
           <AppText style={styles.legal}>
+            浸水想定・土砂災害・家屋倒壊のハザードマップ: {FLOOD_SOURCE}
+          </AppText>
+          <Separator />
+          <AppText style={styles.legal}>
             人口データ: 国土数値情報 500mメッシュ別将来推計人口(国土交通省)を加工して作成
           </AppText>
           <Separator />
@@ -129,6 +134,8 @@ export default function MoreScreen() {
           <AppText style={styles.legal}>
             福智山断層帯の規模と発生確率: 地震調査研究推進本部 長期評価
           </AppText>
+          <Separator />
+          <AppText style={styles.legal}>地形の分類: {LANDFORM_SOURCE}</AppText>
           <Separator />
           <AppText style={styles.legal}>{copy.disclaimerNotOfficial}</AppText>
         </View>

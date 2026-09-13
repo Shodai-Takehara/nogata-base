@@ -1,7 +1,17 @@
-import { FLOOD_ATTRIBUTION, FLOOD_LEGEND } from '@/constants/hazard-map';
+import {
+  FLOOD_ATTRIBUTION,
+  FLOOD_LEGEND,
+  LANDFORM_ATTRIBUTION,
+  LANDFORM_LEGEND,
+} from '@/constants/hazard-map';
 import { POPULATION_ATTRIBUTION } from '@/constants/population-map';
 import { FUKUCHIYAMA_FAULT, QUAKE_ATTRIBUTION, QUAKE_BUCKETS } from '@/constants/quake-map';
-import { INITIAL_MAP_LAYERS, mapLayersReducer, type MapLayerState } from '@/state/map-layers';
+import {
+  FILL_KEYS,
+  INITIAL_MAP_LAYERS,
+  mapLayersReducer,
+  type MapLayerState,
+} from '@/state/map-layers';
 import { legendAttributions, legendBlocks } from '@/state/map-legend';
 import { PLAIN_JAPANESE_COPY, type CopyKey } from '@/state/plain-japanese-copy';
 
@@ -43,6 +53,50 @@ describe('凡例のまとまり', () => {
     expect(block.line?.detail).toContain(FUKUCHIYAMA_FAULT.magnitude);
     expect(block.line?.detailAttribution).toBe(FUKUCHIYAMA_FAULT.attribution);
     expect(block.note).toBe(copy.quakeNote);
+  });
+
+  it('地形分類は9区分の見本だけを帯に出し、範囲外の注意書きと国土地理院の出典を持つ', () => {
+    const [block] = legendBlocks(withFill('landform'), copy, false);
+    expect(block.scale).toBe(false);
+    expect(block.compact).toBe(true);
+    expect(block.title).toBe('治水地形分類図');
+    expect(block.short).toBe('地形');
+    expect(block.entries.map((e) => [e.color, e.stripe, e.label])).toEqual(
+      LANDFORM_LEGEND.map((e) => [e.color, e.stripe, e.label]),
+    );
+    expect(block.attribution).toBe(LANDFORM_ATTRIBUTION);
+    expect(block.note).toBe(copy.landformNote);
+    expect(block.line).toBeUndefined();
+    expect(legendBlocks(withFill('landform'), copy, true)[0].short).toBe('地形(ちけい)');
+  });
+
+  it('地形分類の各区分には一言が付き、やさしい日本語モードでは平易版になる', () => {
+    const [standard] = legendBlocks(withFill('landform'), copy, false);
+    const [easy] = legendBlocks(withFill('landform'), copy, true);
+    expect(standard.entries.map((e) => e.label)).toEqual(LANDFORM_LEGEND.map((e) => e.label));
+    standard.entries.forEach((entry, i) => {
+      expect(entry.note).toBe(LANDFORM_LEGEND[i].note?.standard);
+      expect(easy.entries[i].note).toBe(LANDFORM_LEGEND[i].note?.easy);
+    });
+    // 洪水と区域の凡例は区分名で足りる(浸水深や警戒区域は名前が意味を持つ)
+    for (const block of legendBlocks(withFill('flood'), copy, false)) {
+      for (const entry of block.entries) expect(entry.note).toBeUndefined();
+    }
+  });
+
+  it('見本だけの帯は地形分類にだけ使う(洪水、人口、区域は区分名か両端のラベルが要る)', () => {
+    let state = withFill('flood');
+    state = mapLayersReducer(state, { type: 'toggleArea', key: 'landslide' });
+    state = mapLayersReducer(state, { type: 'togglePopulation' });
+    for (const block of legendBlocks(state, copy, false)) expect(block.compact).toBeUndefined();
+  });
+
+  it('見本だけの帯は区分ごとの凡例にしか使わない(段階の帯は両端のラベルで読ませる)', () => {
+    for (const fill of FILL_KEYS) {
+      for (const block of legendBlocks(withFill(fill), copy, false)) {
+        if (block.compact) expect(block.scale).toBe(false);
+      }
+    }
   });
 
   it('断層線の見本と注意書きは地震の塗りにだけ付く', () => {
@@ -99,6 +153,13 @@ describe('凡例のまとまり', () => {
     state = mapLayersReducer(state, { type: 'togglePopulation' });
     expect(legendAttributions(legendBlocks(state, copy, false))).toEqual([
       POPULATION_ATTRIBUTION,
+      FLOOD_ATTRIBUTION,
+    ]);
+
+    // 地形分類に切り替えると国土地理院が加わり、区域のぶんのポータルは残る(人口は外れる)
+    state = mapLayersReducer(state, { type: 'setFill', fill: 'landform' });
+    expect(legendAttributions(legendBlocks(state, copy, false))).toEqual([
+      LANDFORM_ATTRIBUTION,
       FLOOD_ATTRIBUTION,
     ]);
   });

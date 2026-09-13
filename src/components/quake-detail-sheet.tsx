@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { InfoTooltip } from '@/components/info-tooltip';
+import { LegendSwatch } from '@/components/legend-swatch';
 import { QUAKE_ATTRIBUTION, type QuakeCell } from '@/constants/quake-map';
 import { AppColors } from '@/constants/tokens';
 import { useCopy } from '@/state/plain-japanese';
@@ -40,7 +41,7 @@ export function QuakeDetailSheet({ cell, onClose }: Props) {
       <View style={styles.mainLine}>
         <AppText style={styles.value}>{detail.main.value}</AppText>
         <View style={styles.bucket}>
-          <View style={[styles.swatch, { backgroundColor: detail.main.color }]} />
+          <LegendSwatch entry={{ color: detail.main.color }} />
           <AppText style={styles.bucketLabel}>{detail.main.bucket}</AppText>
         </View>
       </View>
@@ -127,13 +128,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-  },
-  swatch: {
-    width: 12,
-    height: 12,
-    borderRadius: 2,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(0,0,0,0.2)',
   },
   bucketLabel: {
     fontSize: 12,

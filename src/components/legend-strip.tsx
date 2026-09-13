@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
+import { LegendSwatch } from '@/components/legend-swatch';
 import { AppColors } from '@/constants/tokens';
 import { legendAttributions, type LegendBlock } from '@/state/map-legend';
 import { useCopy } from '@/state/plain-japanese';
@@ -74,7 +75,10 @@ function ScaleLegend({ block }: { block: LegendBlock }) {
   );
 }
 
-/** 区分ごとに色が独立している凡例は、短い名前の後ろに見本ごとの区分名を添える */
+/**
+ * 区分ごとに色が独立している凡例は、短い名前の後ろに見本ごとの区分名を添える。
+ * compact の凡例は見本だけ並べる(区分名はシートで読ませる)
+ */
 function ClassLegend({ block }: { block: LegendBlock }) {
   return (
     <View
@@ -86,10 +90,12 @@ function ClassLegend({ block }: { block: LegendBlock }) {
       </AppText>
       {block.entries.map((entry) => (
         <View key={entry.color} style={styles.classItem}>
-          <View style={[styles.swatch, { backgroundColor: entry.color }]} />
-          <AppText maxScale={STRIP_MAX_SCALE} style={styles.label}>
-            {entry.label}
-          </AppText>
+          <LegendSwatch entry={entry} size={SWATCH_SIZE} />
+          {block.compact ? null : (
+            <AppText maxScale={STRIP_MAX_SCALE} style={styles.label}>
+              {entry.label}
+            </AppText>
+          )}
         </View>
       ))}
     </View>
@@ -98,6 +104,9 @@ function ClassLegend({ block }: { block: LegendBlock }) {
 
 /** 地図上の帯は面積が限られるため、文字の拡大は標準相当までに抑える */
 const STRIP_MAX_SCALE = 1.2;
+
+/** 色見本は帯の文字(9.5pt)の高さに合わせる */
+const SWATCH_SIZE = 11;
 
 const styles = StyleSheet.create({
   strip: {
@@ -138,13 +147,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-  },
-  swatch: {
-    width: 11,
-    height: 11,
-    borderRadius: 2,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(0,0,0,0.2)',
   },
   label: {
     fontSize: 9.5,

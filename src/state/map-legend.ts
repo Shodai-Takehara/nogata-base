@@ -1,9 +1,4 @@
-import {
-  AREA_LAYERS,
-  FLOOD_ATTRIBUTION,
-  hazardLayer,
-  type HazardLegendEntry,
-} from '@/constants/hazard-map';
+import { AREA_LAYERS, hazardLayer, type HazardLegendEntry } from '@/constants/hazard-map';
 import { POPULATION_ATTRIBUTION, POPULATION_BUCKETS } from '@/constants/population-map';
 import {
   FUKUCHIYAMA_FAULT,
@@ -15,6 +10,15 @@ import {
 import { AREA_KEYS, type AreaKey, type FillKey, type MapLayerState } from './map-layers';
 import type { CopyKey } from './plain-japanese-copy';
 
+/** 凡例の項目。一言は表示モードに合わせて選んだあとの文 */
+export type LegendEntry = {
+  color: string;
+  label: string;
+  stripe?: string;
+  /** シートの凡例で区分名の横の ⓘ から出す一言。地図上の帯には載せない */
+  note?: string;
+};
+
 /** 凡例の1まとまり(レイヤー1つぶん)。凡例ストリップとレイヤー選択シートの両方が使う */
 export type LegendBlock = {
   key: string;
@@ -22,7 +26,7 @@ export type LegendBlock = {
   title: string;
   /** 1行の帯で色見本の前に置く短い名前。同じ区分名(警戒区域)を持つ区域を見分けるため */
   short: string;
-  entries: readonly HazardLegendEntry[];
+  entries: readonly LegendEntry[];
   attribution: string;
   /**
    * 色が連続した段階(浸水深、人数)なら true。ストリップでは色見本を帯にして
@@ -36,6 +40,11 @@ export type LegendBlock = {
   line?: LegendLine;
   /** 読み方の注意。シートの凡例にだけ出す */
   note?: string;
+  /**
+   * 帯では色見本だけ並べ、区分名はシートで読ませる。地形分類のように区分が9つあると
+   * 名前まで並べた帯が3行になり、地図を隠すため
+   */
+  compact?: boolean;
 };
 
 export type LegendLine = {
@@ -50,20 +59,32 @@ export type LegendLine = {
 
 type Copy = Record<CopyKey, string>;
 
+function legendEntries(entries: readonly HazardLegendEntry[], easy: boolean): LegendEntry[] {
+  return entries.map(({ color, label, stripe, note }) => ({
+    color,
+    label,
+    stripe,
+    note: note && (easy ? note.easy : note.standard),
+  }));
+}
+
 export function fillLegend(fill: FillKey, copy: Copy, easy: boolean): LegendBlock | null {
   switch (fill) {
     case 'none':
       return null;
-    case 'flood': {
-      const layer = hazardLayer('flood');
-      return {
-        key: 'flood',
+    case 'flood':
+    case 'landform': {
+      const layer = hazardLayer(fill);
+      const block = {
+        key: fill,
         title: layer.title,
         short: easy ? layer.labelEasy : layer.label,
-        entries: layer.legend,
-        attribution: FLOOD_ATTRIBUTION,
-        scale: true,
+        entries: legendEntries(layer.legend, easy),
+        attribution: layer.attribution,
       };
+      return fill === 'flood'
+        ? { ...block, scale: true }
+        : { ...block, scale: false, compact: true, note: copy.landformNote };
     }
     case 'quake':
       return {
@@ -106,8 +127,8 @@ export function areaLegend(area: AreaKey, easy: boolean): LegendBlock[] {
       key,
       title: layer.title,
       short: easy ? layer.labelEasy : layer.label,
-      entries: layer.legend,
-      attribution: FLOOD_ATTRIBUTION,
+      entries: legendEntries(layer.legend, easy),
+      attribution: layer.attribution,
       scale: false,
     };
   });

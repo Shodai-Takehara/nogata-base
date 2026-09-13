@@ -2,6 +2,7 @@ import { AREA_LAYERS } from '@/constants/hazard-map';
 import {
   AREA_KEYS,
   FILL_KEYS,
+  fillTileLayer,
   INITIAL_MAP_LAYERS,
   mapLayersReducer,
   overlayCount,
@@ -34,8 +35,23 @@ describe('地図レイヤーの状態', () => {
     expect(mapLayersReducer(quake, { type: 'setFill', fill: 'none' }).fill).toBe('none');
   });
 
-  it('塗りの一覧は なし、洪水、地震 の順(選択シートの並び)。人口は塗りに含めない', () => {
-    expect([...FILL_KEYS]).toEqual(['none', 'flood', 'quake']);
+  it('塗りの一覧は なし、洪水、地震、地形 の順(選択シートの並び)。人口は塗りに含めない', () => {
+    expect([...FILL_KEYS]).toEqual(['none', 'flood', 'quake', 'landform']);
+  });
+
+  it('タイルで描く塗りは洪水と地形分類で、なしと地震(同梱データの面)は null', () => {
+    expect(fillTileLayer('flood')?.key).toBe('flood');
+    expect(fillTileLayer('landform')?.key).toBe('landform');
+    expect(fillTileLayer('none')).toBeNull();
+    expect(fillTileLayer('quake')).toBeNull();
+  });
+
+  it('地形分類も人口と同時に出さない(図郭の内側は不透明で、人口の青が半分の濃さになる)', () => {
+    let state = mapLayersReducer(INITIAL_MAP_LAYERS, { type: 'togglePopulation' });
+    state = mapLayersReducer(state, { type: 'setFill', fill: 'landform' });
+    expect(state).toMatchObject({ fill: 'landform', population: false });
+    state = mapLayersReducer(state, { type: 'togglePopulation' });
+    expect(state).toMatchObject({ fill: 'none', population: true });
   });
 
   it('人口は洪水の塗りと重ねられる(浸水域に何人住むかを読むため)', () => {
