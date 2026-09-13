@@ -11,13 +11,16 @@ import {
   QUAKE_META,
   quakeBucket,
 } from '@/constants/quake-map';
+import { CITY_BOUNDS } from '@/test-utils/city-bounds';
 import { meshBounds } from '@/utils/mesh-code';
 
-/**
- * 直方市の行政区域の外接矩形(国土数値情報 N03 2025: 緯度 33.700〜33.796、経度 130.680〜130.806)に、
- * 市境に掛かるメッシュがはみ出すぶん(1枚 = 緯度 1/480°、経度 1/320°)の余裕を持たせたもの
- */
-const CITY_BOUNDS = { minLat: 33.697, maxLat: 33.799, minLng: 130.676, maxLng: 130.809 };
+/** 市域の外接矩形に、市境に掛かるメッシュがはみ出すぶん(1枚 = 緯度 1/480°、経度 1/320°)の余裕を持たせたもの */
+const MESH_BOUNDS = {
+  minLat: CITY_BOUNDS.minLat - 1 / 480,
+  maxLat: CITY_BOUNDS.maxLat + 1 / 480,
+  minLng: CITY_BOUNDS.minLng - 1 / 320,
+  maxLng: CITY_BOUNDS.maxLng + 1 / 320,
+};
 
 describe('地震ハザードのメッシュデータ', () => {
   const codes = Object.keys(QUAKE_CELLS);
@@ -44,10 +47,10 @@ describe('地震ハザードのメッシュデータ', () => {
   it('全コードから復元した矩形が市域の外接矩形の中にある', () => {
     for (const code of codes) {
       const { southWest, northEast } = meshBounds(code);
-      expect(southWest.latitude).toBeGreaterThanOrEqual(CITY_BOUNDS.minLat);
-      expect(northEast.latitude).toBeLessThanOrEqual(CITY_BOUNDS.maxLat);
-      expect(southWest.longitude).toBeGreaterThanOrEqual(CITY_BOUNDS.minLng);
-      expect(northEast.longitude).toBeLessThanOrEqual(CITY_BOUNDS.maxLng);
+      expect(southWest.latitude).toBeGreaterThanOrEqual(MESH_BOUNDS.minLat);
+      expect(northEast.latitude).toBeLessThanOrEqual(MESH_BOUNDS.maxLat);
+      expect(southWest.longitude).toBeGreaterThanOrEqual(MESH_BOUNDS.minLng);
+      expect(northEast.longitude).toBeLessThanOrEqual(MESH_BOUNDS.maxLng);
     }
   });
 
@@ -80,10 +83,10 @@ describe('地震ハザードのメッシュデータ', () => {
         for (const ring of [poly.outer, ...poly.holes]) {
           expect(ring.length).toBeGreaterThanOrEqual(3);
           for (const { latitude, longitude } of ring) {
-            expect(latitude).toBeGreaterThanOrEqual(CITY_BOUNDS.minLat);
-            expect(latitude).toBeLessThanOrEqual(CITY_BOUNDS.maxLat);
-            expect(longitude).toBeGreaterThanOrEqual(CITY_BOUNDS.minLng);
-            expect(longitude).toBeLessThanOrEqual(CITY_BOUNDS.maxLng);
+            expect(latitude).toBeGreaterThanOrEqual(MESH_BOUNDS.minLat);
+            expect(latitude).toBeLessThanOrEqual(MESH_BOUNDS.maxLat);
+            expect(longitude).toBeGreaterThanOrEqual(MESH_BOUNDS.minLng);
+            expect(longitude).toBeLessThanOrEqual(MESH_BOUNDS.maxLng);
           }
         }
       }
