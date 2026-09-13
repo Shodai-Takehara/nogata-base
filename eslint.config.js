@@ -15,6 +15,13 @@ module.exports = defineConfig([
     },
   },
   {
+    // テストの前準備はテストファイルの命名に当たらないので、jest のグローバルを別に足す
+    files: ['jest.setup.js'],
+    languageOptions: {
+      globals: require('globals').jest,
+    },
+  },
+  {
     rules: {
       // 外部モジュール → エイリアス(@/) → 相対 の順に、グループ間は空行で区切る。
       // 整形は Prettier、並び順はこのルールが持つ(pre-commit で --fix される前提)
