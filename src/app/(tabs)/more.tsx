@@ -6,6 +6,7 @@ import { AppText } from '@/components/app-text';
 import { DemoBanner } from '@/components/demo-banner';
 import { InfoTooltip } from '@/components/info-tooltip';
 import { FLOOD_SOURCE, LANDFORM_SOURCE } from '@/constants/hazard-map';
+import { LORE_SOURCE } from '@/constants/lore-monuments';
 import { AppColors, TAB_BAR_SPACE } from '@/constants/tokens';
 import { useCopy } from '@/state/plain-japanese';
 import { TEXT_SIZES, useSettings, type TextSize } from '@/state/settings';
@@ -136,6 +137,8 @@ export default function MoreScreen() {
           </AppText>
           <Separator />
           <AppText style={styles.legal}>地形の分類: {LANDFORM_SOURCE}</AppText>
+          <Separator />
+          <AppText style={styles.legal}>自然災害伝承碑: {LORE_SOURCE}</AppText>
           <Separator />
           <AppText style={styles.legal}>{copy.disclaimerNotOfficial}</AppText>
         </View>

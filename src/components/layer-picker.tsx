@@ -40,9 +40,11 @@ const PIN_COLOR: Record<PinLayerKey, string> = {
   damage: AppColors.caution,
   traffic: AppColors.danger,
 };
+/** 伝承碑のピンの地色(scripts/generate-map-pins.js の primaryDeep) */
+const LORE_PIN_COLOR = AppColors.primaryDeep;
 
 /**
- * レイヤー選択シートの中身。ピンと区域は切替、塗りは1つ選ぶラジオにして、
+ * レイヤー選択シートの中身。ピンと区域と記憶(伝承碑)は切替、塗りは1つ選ぶラジオにして、
  * 排他を UI の形で伝える。選ばれている塗りと有効な区域の下には凡例の全文を出し、
  * 地図に戻ったあと凡例ストリップの色見本と対応が取れるようにする
  */
@@ -143,6 +145,16 @@ export function LayerPicker({ state, dispatch, onOpenAr }: Props) {
         swatches={population.entries}
       />
       {state.population ? <LegendDetail block={population} /> : null}
+
+      <SectionTitle title={copy.layerSectionMemory} />
+      <ToggleRow
+        label={copy.layerLore}
+        desc={copy.layerLoreDesc}
+        on={state.lore}
+        onToggle={() => dispatch({ type: 'toggleLore' })}
+        swatches={[{ color: LORE_PIN_COLOR }]}
+        round
+      />
     </View>
   );
 }

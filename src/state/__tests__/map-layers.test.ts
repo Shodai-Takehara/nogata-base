@@ -11,13 +11,24 @@ import {
 } from '@/state/map-layers';
 
 describe('地図レイヤーの状態', () => {
-  it('既定はピンが表示、塗りと区域と人口が非表示', () => {
+  it('既定はピンと伝承碑が表示、塗りと区域と人口が非表示', () => {
     expect(INITIAL_MAP_LAYERS).toEqual({
       pins: { shelters: true, carShelters: true, water: true, damage: true, traffic: true },
       fill: 'none',
       areas: { landslide: false, houseCollapse: false },
       population: false,
+      lore: true,
     });
+  });
+
+  it('伝承碑の切替は他のレイヤーに影響せず、バッジの数にも入らない(既定で表示のため)', () => {
+    let state = mapLayersReducer(INITIAL_MAP_LAYERS, { type: 'toggleLore' });
+    expect(state).toEqual({ ...INITIAL_MAP_LAYERS, lore: false });
+    expect(overlayCount(state)).toBe(0);
+    state = mapLayersReducer(state, { type: 'setFill', fill: 'quake' });
+    state = mapLayersReducer(state, { type: 'togglePopulation' });
+    expect(state.lore).toBe(false);
+    expect(mapLayersReducer(state, { type: 'toggleLore' }).lore).toBe(true);
   });
 
   it('一覧の順番を決める配列が、状態のキーと区域の定義を漏れなく持つ', () => {
@@ -90,6 +101,7 @@ describe('地図レイヤーの状態', () => {
       fill: 'none',
       areas: { landslide: true, houseCollapse: false },
       population: false,
+      lore: true,
     });
     // 塗りを選んでも区域とピンはそのまま残る
     state = mapLayersReducer(state, { type: 'setFill', fill: 'quake' });

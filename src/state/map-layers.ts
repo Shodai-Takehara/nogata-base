@@ -17,8 +17,8 @@ import {
  * 開いてしまい、平常時の主目的である避難所と水位の確認を妨げる)。
  *
  * ピン、塗り、区域は一覧に出す順番をここの配列で決め、型はそこから導く。レイヤーを足すときに
- * 配列へ加えれば、選択シートの行と描画の両方に漏れなく現れる。人口だけは1つの真偽値で、
- * 選択シートと描画に直接書いてある
+ * 配列へ加えれば、選択シートの行と描画の両方に漏れなく現れる。人口と伝承碑は1つずつの
+ * 真偽値で、選択シートと描画に直接書いてある
  */
 export const PIN_KEYS = ['shelters', 'carShelters', 'water', 'damage', 'traffic'] as const;
 export type PinLayerKey = (typeof PIN_KEYS)[number];
@@ -46,6 +46,8 @@ export type MapLayerState = {
   fill: FillKey;
   areas: Record<AreaKey, boolean>;
   population: boolean;
+  /** 自然災害伝承碑。ピンだが PIN_KEYS に入れない(選択シートで「いまの状況」でなく「記憶」に置く) */
+  lore: boolean;
 };
 
 export type MapLayerAction =
@@ -53,19 +55,22 @@ export type MapLayerAction =
   | { type: 'setFill'; fill: FillKey }
   | { type: 'toggleArea'; key: AreaKey }
   | { type: 'togglePopulation' }
+  | { type: 'toggleLore' }
   /** その他タブの「ハザードマップを重ねる」からの遷移 */
   | { type: 'applyDeepLink'; link: 'hazard' };
 
 /**
  * 既定値。ピンは平常時の主目的(避難所と水位の確認)なのですべて表示し、
  * 塗りと区域は非公式アプリが想定浸水域を常時表示するより利用者に明示的に
- * 出させる方が誤解が少ないため非表示にする。人口も同じく非表示
+ * 出させる方が誤解が少ないため非表示にする。人口も同じく非表示。
+ * 伝承碑は表示にする。市内に2基しかなく地図を汚さず、平時にアプリを開く理由になる
  */
 export const INITIAL_MAP_LAYERS: MapLayerState = {
   pins: { shelters: true, carShelters: true, water: true, damage: true, traffic: true },
   fill: 'none',
   areas: { landslide: false, houseCollapse: false },
   population: false,
+  lore: true,
 };
 
 export function mapLayersReducer(state: MapLayerState, action: MapLayerAction): MapLayerState {
@@ -88,6 +93,8 @@ export function mapLayersReducer(state: MapLayerState, action: MapLayerAction): 
         population: true,
         fill: FACE_FILLS.includes(state.fill) ? 'none' : state.fill,
       };
+    case 'toggleLore':
+      return { ...state, lore: !state.lore };
     case 'applyDeepLink':
       return mapLayersReducer(state, { type: 'setFill', fill: 'flood' });
   }
@@ -95,7 +102,7 @@ export function mapLayersReducer(state: MapLayerState, action: MapLayerAction): 
 
 /**
  * レイヤーボタンのバッジに出す数。塗り(選んでいれば1)、有効な区域、人口の数。
- * ピンは既定で表示なので数えない(数えると初期状態から数字が出て、
+ * ピンと伝承碑は既定で表示なので数えない(数えると初期状態から数字が出て、
  * 何かを選んだように見える)
  */
 export function overlayCount(state: MapLayerState): number {

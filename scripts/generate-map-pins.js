@@ -23,6 +23,7 @@ const COLORS = {
   none: '#B8BDC2',
   waterCalm: '#3D9BCF',
   primary: '#1E4E79',
+  primaryDeep: '#16324F',
 };
 
 const TEMPLATE_DIR = path.join(__dirname, '..', 'assets', 'map-pins', 'templates');
@@ -65,6 +66,13 @@ const JOBS = [
     out: 'damage-report',
     template: 'damage-pin.svg',
     vars: { color: COLORS.caution },
+    widthPt: 22,
+  },
+  // 自然災害伝承碑: 過去の記録なので、いまの状況のピンより暗い川藍と小さめの幅で一段引かせる
+  {
+    out: 'lore-monument',
+    template: 'lore-pin.svg',
+    vars: { color: COLORS.primaryDeep },
     widthPt: 22,
   },
 ];
