@@ -202,16 +202,27 @@ function Swatches({ entries, round }: { entries: readonly SwatchEntry[]; round?:
   );
 }
 
-/** 凡例の全文。見出しは正式名称なので、やさしい日本語モードでも変えない */
+/**
+ * 凡例の全文。見出しは正式名称なので、やさしい日本語モードでも変えない。
+ * 一言の付いた凡例(地形分類)は1区分1行にする。横に流すと一言が区分名から離れて
+ * どの区分の説明か追えない
+ */
 function LegendDetail({ block }: { block: LegendBlock }) {
+  const annotated = block.entries.some((entry) => entry.note);
   return (
     <View style={styles.legend}>
       <AppText style={styles.legendTitle}>{block.title}</AppText>
-      <View style={styles.legendRows}>
+      <View style={annotated ? styles.legendList : styles.legendRows}>
         {block.entries.map((entry) => (
-          <View key={entry.color} style={styles.legendRow}>
-            <LegendSwatch entry={entry} />
-            <AppText style={styles.legendLabel}>{entry.label}</AppText>
+          <View key={entry.color} style={annotated ? styles.legendListRow : styles.legendRow}>
+            {/* 1行にした区分は文が折り返すので、見本を1行目の文字の高さに合わせて上に寄せる */}
+            <View style={annotated && styles.legendSwatchTop}>
+              <LegendSwatch entry={entry} />
+            </View>
+            <View style={styles.legendText}>
+              <AppText style={styles.legendLabel}>{entry.label}</AppText>
+              {entry.note ? <AppText style={styles.legendEntryNote}>{entry.note}</AppText> : null}
+            </View>
           </View>
         ))}
       </View>
@@ -347,10 +358,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
+  legendList: {
+    gap: 6,
+  },
+  legendListRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+  },
+  legendSwatchTop: {
+    paddingTop: 2,
+  },
+  legendText: {
+    flexShrink: 1,
+  },
   legendLabel: {
     fontSize: 11,
     color: AppColors.ink,
     fontVariant: ['tabular-nums'],
+  },
+  legendEntryNote: {
+    fontSize: 10.5,
+    color: AppColors.inkSub,
+    marginTop: 1,
   },
   legendLine: {
     flexDirection: 'row',

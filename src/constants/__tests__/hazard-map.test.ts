@@ -101,6 +101,20 @@ describe('ハザードマップタイル定義', () => {
     expect(new Set(colors).size).toBe(colors.length);
   });
 
+  it('地形分類の各区分は一言を持ち、水が溜まりやすい区分はそう読める(名前だけでは分からない)', () => {
+    for (const { note } of LANDFORM_LEGEND) {
+      expect(note?.standard.length).toBeGreaterThan(0);
+      expect(note?.easy.length).toBeGreaterThan(0);
+      expect(note?.easy).not.toBe(note?.standard);
+    }
+    const noteOf = (label: string) => LANDFORM_LEGEND.find((e) => e.label === label)?.note;
+    for (const label of ['後背湿地', '旧河道']) {
+      expect(noteOf(label)?.standard).toContain('浸水しやすく');
+      expect(noteOf(label)?.easy).toContain('水(みず)が つきやすく');
+    }
+    expect(noteOf('氾濫平野')?.standard).toContain('内水氾濫');
+  });
+
   it('各レイヤーの凡例は色・ラベルがそろっている', () => {
     for (const layer of HAZARD_LAYERS) {
       expect(layer.legend.length).toBeGreaterThan(0);

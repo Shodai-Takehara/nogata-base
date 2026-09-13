@@ -61,11 +61,27 @@ describe('凡例のまとまり', () => {
     expect(block.compact).toBe(true);
     expect(block.title).toBe('治水地形分類図');
     expect(block.short).toBe('地形');
-    expect(block.entries).toEqual(LANDFORM_LEGEND);
+    expect(block.entries.map((e) => [e.color, e.stripe, e.label])).toEqual(
+      LANDFORM_LEGEND.map((e) => [e.color, e.stripe, e.label]),
+    );
     expect(block.attribution).toBe(LANDFORM_ATTRIBUTION);
     expect(block.note).toBe(copy.landformNote);
     expect(block.line).toBeUndefined();
     expect(legendBlocks(withFill('landform'), copy, true)[0].short).toBe('地形(ちけい)');
+  });
+
+  it('地形分類の各区分には一言が付き、やさしい日本語モードでは平易版になる', () => {
+    const [standard] = legendBlocks(withFill('landform'), copy, false);
+    const [easy] = legendBlocks(withFill('landform'), copy, true);
+    expect(standard.entries.map((e) => e.label)).toEqual(LANDFORM_LEGEND.map((e) => e.label));
+    standard.entries.forEach((entry, i) => {
+      expect(entry.note).toBe(LANDFORM_LEGEND[i].note?.standard);
+      expect(easy.entries[i].note).toBe(LANDFORM_LEGEND[i].note?.easy);
+    });
+    // 洪水と区域の凡例は区分名で足りる(浸水深や警戒区域は名前が意味を持つ)
+    for (const block of legendBlocks(withFill('flood'), copy, false)) {
+      for (const entry of block.entries) expect(entry.note).toBeUndefined();
+    }
   });
 
   it('見本だけの帯は地形分類にだけ使う(洪水、人口、区域は区分名か両端のラベルが要る)', () => {

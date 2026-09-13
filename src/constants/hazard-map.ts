@@ -35,6 +35,11 @@ export type HazardLegendEntry = {
   label: string;
   /** 縞模様で描かれる区分の縞の色。地の色(color)の上に横縞で重ねて見本にする */
   stripe?: string;
+  /**
+   * 区分名の下に添える一言。区分名だけでは、どの土地に水が溜まりやすいのか
+   * 読めないため(後背湿地や旧河道が危ない土地だとは名前から分からない)
+   */
+  note?: { standard: string; easy: string };
 };
 
 /**
@@ -62,18 +67,83 @@ export const LANDFORM_TILE_OPACITY = 0.5;
  * より白寄りなのは、タイルが分類の面を基図の上に透かして描いているため。
  * 切土地は設計時の8分類に無かったが、市域の画素の 6.5% を占め(丘陵の造成地と
  * ゴルフ場)、凡例に無いと灰色の大きな面の意味が分からないため加えた。
- * 旧河道と盛土地は縞模様で描かれるので、地の色と縞の色を分けて持つ
+ * 旧河道と盛土地は縞模様で描かれるので、地の色と縞の色を分けて持つ。
+ * 一言は国土地理院「治水地形分類図の内容」の各区分の「防災上の留意点」から起こした
+ * (https://www.gsi.go.jp/bousaichiri/bousaichiri41051.html)。現河道・水面は基図の
+ * 水部そのもので留意点が無い
  */
 export const LANDFORM_LEGEND: readonly HazardLegendEntry[] = [
-  { color: '#FFE3AC', label: '山地' },
-  { color: '#FFC85A', label: '段丘面' },
-  { color: '#E3FFD5', label: '氾濫平野' },
-  { color: '#9CDFC9', label: '後背湿地' },
-  { color: '#FFFF5A', label: '微高地(自然堤防)' },
-  { color: '#CADDFA', stripe: '#5A96EF', label: '旧河道' },
-  { color: '#F5FF4B', stripe: '#F4924B', label: '盛土地・埋立地' },
-  { color: '#DED4C1', label: '切土地' },
-  { color: '#A5D8F7', label: '現河道・水面' },
+  {
+    color: '#FFE3AC',
+    label: '山地',
+    note: {
+      standard: '洪水の影響は少ない。豪雨や地震で土砂災害のおそれ',
+      easy: '洪水(こうずい)は 少(すく)ない。大雨(おおあめ)や 地震(じしん)で 土砂(どしゃ)が くずれる ことが ある',
+    },
+  },
+  {
+    color: '#FFC85A',
+    label: '段丘面',
+    note: {
+      standard: '低地より高く、浸水しても浅く短い',
+      easy: '低(ひく)い 土地(とち)より 高(たか)い。水(みず)が きても 浅(あさ)く、すぐ ひく',
+    },
+  },
+  {
+    color: '#E3FFD5',
+    label: '氾濫平野',
+    note: {
+      standard: '内水氾濫が起きやすい。軟弱な地盤では液状化も',
+      easy: '雨(あめ)の 水(みず)が たまりやすい。地面(じめん)が やわらかい ところは 液状化(えきじょうか)も',
+    },
+  },
+  {
+    color: '#9CDFC9',
+    label: '後背湿地',
+    note: {
+      standard: 'わずかな雨でも浸水しやすく、深く長く続く。揺れにも弱い',
+      easy: '少(すこ)しの 雨(あめ)でも 水(みず)が つきやすく、深(ふか)く 長(なが)く 残(のこ)る。ゆれにも 弱(よわ)い',
+    },
+  },
+  {
+    color: '#FFFF5A',
+    label: '微高地(自然堤防)',
+    note: {
+      standard: '周囲より少し高く比較的安全。大規模な洪水では冠水',
+      easy: 'まわりより 少(すこ)し 高(たか)い。大(おお)きな 洪水(こうずい)では 水(みず)が つく',
+    },
+  },
+  {
+    color: '#CADDFA',
+    stripe: '#5A96EF',
+    label: '旧河道',
+    note: {
+      standard: '昔の川筋。わずかな雨でも浸水しやすく、液状化しやすい',
+      easy: '昔(むかし) 川(かわ)だった ところ。少(すこ)しの 雨(あめ)でも 水(みず)が つきやすく、液状化(えきじょうか)しやすい',
+    },
+  },
+  {
+    color: '#F5FF4B',
+    stripe: '#F4924B',
+    label: '盛土地・埋立地',
+    note: {
+      standard: '冠水しにくいが、地震で液状化や沈下のおそれ',
+      easy: '水(みず)は つきにくいが、地震(じしん)で 液状化(えきじょうか)や 地面(じめん)の 沈(しず)みが ある',
+    },
+  },
+  {
+    color: '#DED4C1',
+    label: '切土地',
+    note: {
+      standard: '浸水しにくいが、豪雨や地震で斜面が崩れるおそれ',
+      easy: '水(みず)は つきにくいが、大雨(おおあめ)や 地震(じしん)で 斜面(しゃめん)が くずれる ことが ある',
+    },
+  },
+  {
+    color: '#A5D8F7',
+    label: '現河道・水面',
+    note: { standard: '川や池そのもの', easy: '川(かわ)や 池(いけ)' },
+  },
 ];
 
 export type HazardLayerKey = 'flood' | 'debrisFlow' | 'steepSlope' | 'houseCollapse' | 'landform';
