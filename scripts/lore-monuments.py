@@ -14,6 +14,8 @@ zip は .cache/lore-monuments/ に保存し、再実行ではダウンロード�
 ZIP_URL を変え、キャッシュを消してから実行する。
 
   --zip PATH  ダウンロード済みの zip を使う(配布 URL が変わったときの逃げ道)
+  --url URL   配布 URL。ZIP_URL の代わりにダウンロードし、生成物の meta.source にも書く。
+              --zip と組で使わないと、生成物の出典 URL が古いままになる
 """
 
 import argparse
@@ -31,18 +33,20 @@ CACHE_DIR = os.path.join(HERE, '..', '.cache', 'lore-monuments')
 
 ZIP_URL = 'https://www.gsi.go.jp/common/000250767.zip'
 CITY_PREFIX = '福岡県直方市'
+# 直方市の市区町村コード。ID は「コード-連番」
+CITY_CODE = '40204'
 
 
-def load_zip(path):
+def load_zip(path, url):
     if path:
         with open(path, 'rb') as f:
             return f.read()
     os.makedirs(CACHE_DIR, exist_ok=True)
-    cached = os.path.join(CACHE_DIR, os.path.basename(ZIP_URL))
+    cached = os.path.join(CACHE_DIR, os.path.basename(url))
     if os.path.exists(cached):
         with open(cached, 'rb') as f:
             return f.read()
-    with urllib.request.urlopen(ZIP_URL, timeout=60) as res:
+    with urllib.request.urlopen(url, timeout=60) as res:
         data = res.read()
     with open(cached, 'wb') as f:
         f.write(data)
@@ -51,14 +55,18 @@ def load_zip(path):
 
 def read_geojson(zip_bytes):
     with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
-        names = [n for n in zf.namelist() if n.endswith('.geojson')]
+        # macOS で作り直した zip は __MACOSX/._*.geojson を含むので除く
+        names = [
+            n for n in zf.namelist() if n.endswith('.geojson') and not n.startswith('__MACOSX/')
+        ]
         if len(names) != 1:
             sys.exit(f'geojson が 1 つでない: {names}')
         m = re.search(r'(\d{4})(\d{2})(\d{2})_GeoJSON/', names[0])
         if not m:
             sys.exit(f'フォルダ名から版が取れない: {names[0]}')
         version = '-'.join(m.groups())
-        return version, json.loads(zf.read(names[0]).decode('utf-8'))
+        # Windows 由来の配布物なので、BOM が付いても読めるようにしておく
+        return version, json.loads(zf.read(names[0]).decode('utf-8-sig'))
 
 
 def to_monument(feature):
@@ -84,17 +92,30 @@ def to_monument(feature):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--zip')
+    parser.add_argument('--url', default=ZIP_URL)
     args = parser.parse_args()
 
-    version, geojson = read_geojson(load_zip(args.zip))
+    version, geojson = read_geojson(load_zip(args.zip, args.url))
+    # 全国分には所在地の前後に空白が入った地物がある(松本市など)ので、除いてから比べる
     features = [
-        f for f in geojson['features'] if f['properties']['所在地'].startswith(CITY_PREFIX)
+        f
+        for f in geojson['features']
+        if f['properties']['所在地'].strip().startswith(CITY_PREFIX)
     ]
+    # 所在地の表記と ID(市区町村コード 40204)のどちらが揺れても気付けるよう、両方で引いて突き合わせる
+    by_code = {
+        f['properties']['ID']
+        for f in geojson['features']
+        if f['properties']['ID'].startswith(CITY_CODE + '-')
+    }
+    by_address = {f['properties']['ID'] for f in features}
+    if by_code != by_address:
+        sys.exit(f'所在地と ID で選んだ碑が食い違う: ID={sorted(by_code)} 所在地={sorted(by_address)}')
     if not features:
         sys.exit('直方市の碑が 1 件も無い。所在地の表記が変わっていないか確かめる')
     monuments = sorted((to_monument(f) for f in features), key=lambda m: m['id'])
 
-    out = {'meta': {'version': version, 'source': ZIP_URL}, 'monuments': monuments}
+    out = {'meta': {'version': version, 'source': args.url}, 'monuments': monuments}
     with open(OUT_PATH, 'w', encoding='utf-8') as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
         f.write('\n')
