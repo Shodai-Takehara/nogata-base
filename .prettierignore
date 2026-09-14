@@ -7,3 +7,5 @@ coverage
 assets
 docs/design
 package-lock.json
+# 生成物(1 行の差分の整数)。整形すると 5,000 行に膨らみ差分が読めない
+src/constants/walk-graph.json

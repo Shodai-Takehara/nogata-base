@@ -41,10 +41,18 @@ describe('shelterDistances', () => {
     expect(shelterDistances([near, far], null)).toBeNull();
   });
 
-  it('自宅設定時は全避難所の距離を id 引きで返す', () => {
+  it('自宅設定時は全避難所の距離を避難所引きで返し、市内なら道のりで測る', () => {
     const distances = shelterDistances([near, far], home);
     expect(distances?.size).toBe(2);
-    expect(distances?.get(near.id)).toBeLessThan(distances?.get(far.id) ?? 0);
+    expect(distances?.get(near)?.measured).toBe('road');
+    expect(distances?.get(near)?.meters).toBeLessThan(distances?.get(far)?.meters ?? 0);
+  });
+
+  it('自宅が道に落とせない(市域の外)ときは直線で補う', () => {
+    const tokyo = { latitude: 35.68, longitude: 139.76 };
+    const distances = shelterDistances([near], tokyo);
+    expect(distances?.get(near)?.measured).toBe('straight');
+    expect(distances?.get(near)?.meters).toBeGreaterThan(800_000);
   });
 });
 
@@ -104,21 +112,22 @@ describe('nearestShelterFor', () => {
     { earthquake: true },
   );
   const all = [quakeOnlyFar, bothMid, floodOnlyNear];
+  const distances = shelterDistances(all, home)!;
 
   it('指定の種別に対応する避難所の中で最も近いものを返す(開設の有無は問わない)', () => {
-    expect(nearestShelterFor(all, home, 'flood')?.shelter.id).toBe(1);
-    expect(nearestShelterFor(all, home, 'earthquake')?.shelter.id).toBe(2);
+    expect(nearestShelterFor(all, distances, 'flood')?.shelter.id).toBe(1);
+    expect(nearestShelterFor(all, distances, 'earthquake')?.shelter.id).toBe(2);
   });
 
   it('対応する避難所が無ければ null', () => {
-    expect(nearestShelterFor(all, home, 'landslide')).toBeNull();
-    expect(nearestShelterFor([], home, 'flood')).toBeNull();
+    expect(nearestShelterFor(all, distances, 'landslide')).toBeNull();
+    expect(nearestShelterFor([], distances, 'flood')).toBeNull();
   });
 
-  it('距離は自宅からの直線距離(m)', () => {
-    const meters = nearestShelterFor(all, home, 'flood')?.meters ?? 0;
-    expect(meters).toBeGreaterThan(100);
-    expect(meters).toBeLessThan(120);
+  it('距離は道のりなので直線(約 111m)より長い', () => {
+    const meters = nearestShelterFor(all, distances, 'flood')?.distance.meters ?? 0;
+    expect(meters).toBeGreaterThan(111);
+    expect(meters).toBeLessThan(600);
   });
 });
 
@@ -168,7 +177,7 @@ describe('nearestSheltersForHome', () => {
     expect(entries.map((e) => [e.scope, e.shelter.id])).toEqual([['both', 1]]);
   });
 
-  it('id が重なる別の施設はまとめない(取り込みで OBJECTID を欠くと id が 0 で重なる)', () => {
+  it('id が重なる別の施設はまとめず、距離もそれぞれの施設のもの(取り込みで OBJECTID を欠くと id が 0 で重なる)', () => {
     const floodA = shelter(
       0,
       '水害のみ',
@@ -188,6 +197,7 @@ describe('nearestSheltersForHome', () => {
       ['flood', '水害のみ'],
       ['earthquake', '地震のみ'],
     ]);
+    expect(entries[0].distance.meters).toBeLessThan(entries[1].distance.meters);
   });
 
   it('片方の種別に対応する避難所が無ければ、ある方だけ', () => {

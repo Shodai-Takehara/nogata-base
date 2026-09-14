@@ -326,9 +326,25 @@ export const PLAIN_JAPANESE_COPY = {
     standard: '水害・地震とも',
     easy: '水害(すいがい)も 地震(じしん)も',
   },
+  // 距離は道のり(歩ける道の最短経路)が基本。自宅を道に落とせない、道がつながらない、
+  // のときだけ直線で、どちらかを必ず添える
+  distanceRoad: {
+    standard: '道のり',
+    easy: '道(みち)のり',
+  },
+  distanceStraight: {
+    standard: '直線距離',
+    easy: 'まっすぐ はかって',
+  },
   walkPrefix: {
     standard: '徒歩',
     easy: 'あるいて',
+  },
+  // 分数は最短経路を速めの歩き(geo.ts の分速)で割った下限。坂、夜、通行止めで必ず長くなる。
+  // 平易版は「以上」を避けて文で言う
+  walkAtLeast: {
+    standard: '以上',
+    easy: 'より 長(なが)く かかります',
   },
   // 「分」の読みは数で変わる(3分は「ぷん」)ので、単位の「人」と同じく読みを添えない
   unitMinutes: {

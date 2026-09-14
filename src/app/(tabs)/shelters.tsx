@@ -10,7 +10,11 @@ import { StatusChip } from '@/components/status-chip';
 import { AppColors, TAB_BAR_SPACE } from '@/constants/tokens';
 import type { DataSource } from '@/data/types';
 import type { Shelter } from '@/domain/models';
-import { shelterDistances, sortSheltersForList } from '@/domain/shelter-order';
+import {
+  shelterDistances,
+  sortSheltersForList,
+  type ShelterDistance,
+} from '@/domain/shelter-order';
 import {
   filterSheltersByHazards,
   HAZARD_TYPE_LABEL,
@@ -21,7 +25,7 @@ import {
   type HazardType,
 } from '@/domain/status';
 import { useRemoteData } from '@/hooks/use-remote-data';
-import { distanceWithWalk } from '@/state/distance-text';
+import { DISTANCE_COPY_KEYS, distanceWithWalk, type DistanceCopy } from '@/state/distance-text';
 import { hazardNoteKeys, spokenCopy, useCopy, useStatusLabels } from '@/state/plain-japanese';
 import { useEasyJapanese, useHomePin } from '@/state/settings';
 import { formatJstMoment } from '@/utils/datetime';
@@ -52,15 +56,12 @@ export default function SheltersScreen() {
   const selectedShelter = data?.find((s) => s.id === selectedShelterId) ?? null;
 
   const homePin = useHomePin();
-  const distanceById = useMemo(
-    () => (data ? shelterDistances(data, homePin) : null),
-    [data, homePin],
-  );
+  const distances = useMemo(() => (data ? shelterDistances(data, homePin) : null), [data, homePin]);
 
   const shown = useMemo(() => {
     if (!data) return [];
-    return sortSheltersForList(filterSheltersByHazards(data, selectedHazards), distanceById);
-  }, [data, selectedHazards, distanceById]);
+    return sortSheltersForList(filterSheltersByHazards(data, selectedHazards), distances);
+  }, [data, selectedHazards, distances]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -89,7 +90,7 @@ export default function SheltersScreen() {
         renderItem={({ item }) => (
           <ShelterRow
             item={item}
-            meters={distanceById?.get(item.id) ?? null}
+            distance={distances?.get(item) ?? null}
             onSelect={selectShelter}
           />
         )}
@@ -105,7 +106,7 @@ export default function SheltersScreen() {
                 {selectedHazards.length > 0
                   ? `${selectedHazards.map((h) => HAZARD_TYPE_LABEL[h]).join('・')}に対応 ${shown.length}箇所`
                   : `市内の避難所 ${data.length}箇所`}
-                {distanceById ? copy.sortedByHomeSuffix : ''}
+                {distances ? copy.sortedByHomeSuffix : ''}
               </AppText>
             ) : null}
             {error ? <AppText style={styles.error}>{copy.listLoadError}</AppText> : null}
@@ -164,34 +165,32 @@ function FilterChip({
 }
 
 /** 読み上げ用の距離の語。設定(平易版)に依存しないのでフックの外で組む */
-const SPOKEN_DISTANCE_COPY = {
-  approxPrefix: spokenCopy('approxPrefix'),
-  walkPrefix: spokenCopy('walkPrefix'),
-  unitMinutes: spokenCopy('unitMinutes'),
-};
+const SPOKEN_DISTANCE_COPY = Object.fromEntries(
+  DISTANCE_COPY_KEYS.map((key) => [key, spokenCopy(key)]),
+) as DistanceCopy;
 
 const ShelterRow = memo(function ShelterRow({
   item,
-  meters,
+  distance,
   onSelect,
 }: {
   item: Shelter;
-  /** 自宅からの直線距離(m)。自宅未設定は null */
-  meters: number | null;
+  /** 自宅からの距離。自宅未設定は null */
+  distance: ShelterDistance | null;
   onSelect: (id: number) => void;
 }) {
   const labels = useStatusLabels();
   const copy = useCopy();
   const open = isShelterOpen(item.opening);
-  const distance = meters != null ? distanceWithWalk(meters, copy) : null;
+  const distanceText = distance ? distanceWithWalk(distance, copy) : null;
   // 行は1つの読み上げ単位で子の文字は読まれないため、開設状況、距離、タグの灰色では
   // 伝わらない「使えない災害」を文で含める。平易版の読み(括弧)を二重に読ませないよう標準の文を使い、
   // 「・」は読み方が環境で揺れるので読点にする
   const spoken = [
     item.name,
     SHELTER_OPENING_LABEL[item.opening],
-    ...(meters != null
-      ? [`自宅から${distanceWithWalk(meters, SPOKEN_DISTANCE_COPY).replace('・', '、')}`]
+    ...(distance
+      ? [`自宅から${distanceWithWalk(distance, SPOKEN_DISTANCE_COPY).replace('・', '、')}`]
       : []),
     ...hazardNoteKeys(item.hazards).map(spokenCopy),
   ].join('。');
@@ -213,7 +212,7 @@ const ShelterRow = memo(function ShelterRow({
         <AppText style={styles.rowArrow}>›</AppText>
       </View>
       {item.address ? <AppText style={styles.address}>{item.address}</AppText> : null}
-      {distance ? <AppText style={styles.distance}>{distance}</AppText> : null}
+      {distanceText ? <AppText style={styles.distance}>{distanceText}</AppText> : null}
       {open ? (
         <AppText style={styles.stats}>
           {/* 欠損は 0(誰もいない)と区別して — で示す */}

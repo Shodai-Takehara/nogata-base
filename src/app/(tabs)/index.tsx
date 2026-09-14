@@ -895,7 +895,7 @@ function SummaryRows({
             <AppText style={styles.rowText}>
               {copy[NEAREST_SCOPE_COPY[entry.scope]]}: {entry.shelter.name}
             </AppText>
-            <AppText style={styles.rowSubText}>{distanceWithWalk(entry.meters, copy)}</AppText>
+            <AppText style={styles.rowSubText}>{distanceWithWalk(entry.distance, copy)}</AppText>
           </View>
         </View>
       ))}
