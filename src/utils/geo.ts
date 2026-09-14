@@ -23,15 +23,18 @@ export function haversineMeters(a: LatLng, b: LatLng): number {
  */
 const WALK_METERS_PER_MINUTE = 80;
 
+/** 表示する分数の上限。これを超える避難所は歩いて向かう先ではなく、「112 分以上」は判断に使えない */
+const WALK_MINUTES_MAX = 90;
+
 /**
  * 距離(m)から徒歩の分数の下限を求める。「◯分以上」と出すので切り捨てる(切り上げると
  * 8.2 分の道に「9 分以上」と言ってしまう)。ただし 80m 未満でも家を出て着くまでに
- * 1 分は掛かるとみて 1 を下限にする(「0 分以上」は意味を持たない)。
+ * 1 分は掛かるとみて 1 を下限にする(「0 分以上」は意味を持たない)。90 分で頭打ち。
  * 壊れた距離(非数、負値)は距離の整形と同じく表示側で「—」にするため null を返す
  */
 export function walkingMinutes(meters: number): number | null {
   if (!Number.isFinite(meters) || meters < 0) return null;
-  return Math.max(1, Math.floor(meters / WALK_METERS_PER_MINUTE));
+  return Math.min(WALK_MINUTES_MAX, Math.max(1, Math.floor(meters / WALK_METERS_PER_MINUTE)));
 }
 
 /**

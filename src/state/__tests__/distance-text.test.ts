@@ -21,6 +21,9 @@ describe('distanceWithWalk', () => {
     expect(distanceWithWalk({ meters: 1240, measured: 'road' }, copy)).toBe(
       '道のり 約 1.2km・徒歩 15分以上',
     );
+    expect(distanceWithWalk({ meters: 9000, measured: 'road' }, copy)).toBe(
+      '道のり 約 9.0km・徒歩 90分以上',
+    );
   });
 
   it('道に落とせず直線で補ったときは「直線」と添える', () => {
