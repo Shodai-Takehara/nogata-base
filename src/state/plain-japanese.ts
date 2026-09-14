@@ -1,11 +1,13 @@
 import { useMemo } from 'react';
 
-import type { AgeBracket, ShelterOpening, WaterKind } from '@/domain/models';
+import type { AgeBracket, Shelter, ShelterOpening, WaterKind } from '@/domain/models';
+import type { NearestScope } from '@/domain/shelter-order';
 import {
   AGE_BRACKET_LABEL,
   AGE_BRACKET_LABEL_EASY,
   HAZARD_TYPE_LABEL,
   HAZARD_TYPE_LABEL_EASY,
+  partitionHazards,
   SHELTER_OPENING_LABEL,
   SHELTER_OPENING_LABEL_EASY,
   WATER_KIND_LABEL,
@@ -27,6 +29,40 @@ export const DEMO_SCENARIO_COPY: Record<DemoScenario, { label: CopyKey; banner: 
   rain: { label: 'demoScenarioRain', banner: 'demoBannerRain' },
   quake: { label: 'demoScenarioQuake', banner: 'demoBannerQuake' },
 };
+
+/** 避難所が対応しない災害種別を伝える1行の文言のキー */
+export const HAZARD_UNUSABLE_COPY: Record<HazardType, CopyKey> = {
+  flood: 'shelterUnusableFlood',
+  landslide: 'shelterUnusableLandslide',
+  earthquake: 'shelterUnusableQuake',
+  other: 'shelterUnusableOther',
+};
+
+/**
+ * 避難所の対応災害について添える文のキー。対応しない種別ごとに1文。
+ * 4種別すべて非対応の施設は元データの属性が空の記録なので、「使えない」と言い切らず
+ * 「情報がない」の1文にする
+ */
+export function hazardNoteKeys(hazards: Shelter['hazards']): CopyKey[] {
+  const { supported, unsupported } = partitionHazards(hazards);
+  if (supported.length === 0) return ['shelterHazardsUnknown'];
+  return unsupported.map((h) => HAZARD_UNUSABLE_COPY[h]);
+}
+
+/** 要約の最寄り避難所の行の見出しのキー */
+export const NEAREST_SCOPE_COPY: Record<NearestScope, CopyKey> = {
+  flood: 'nearestForFlood',
+  earthquake: 'nearestForQuake',
+  both: 'nearestForBoth',
+};
+
+/**
+ * 読み上げ用の文言。平易版は読みを括弧で添えるため、読み上げに使うと読みが二重になる。
+ * 読み上げは漢字のままでも正しく読まれるので、モードに関わらず標準の文を使う
+ */
+export function spokenCopy(key: CopyKey): string {
+  return PLAIN_JAPANESE_COPY[key].standard;
+}
 
 /**
  * React の外(Alert を出すユーティリティ等)で使う版。フックが使えないため、

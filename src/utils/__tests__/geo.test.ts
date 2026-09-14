@@ -1,4 +1,28 @@
-import { formatDistanceMeters, haversineMeters } from '@/utils/geo';
+import { formatDistanceMeters, haversineMeters, walkingMinutes } from '@/utils/geo';
+
+describe('walkingMinutes', () => {
+  it('80m/分で切り捨てた下限。80m 未満は 1 分', () => {
+    expect(walkingMinutes(0)).toBe(1);
+    expect(walkingMinutes(79)).toBe(1);
+    expect(walkingMinutes(80)).toBe(1);
+    expect(walkingMinutes(159)).toBe(1);
+    expect(walkingMinutes(160)).toBe(2);
+    expect(walkingMinutes(652)).toBe(8);
+    expect(walkingMinutes(1240)).toBe(15);
+  });
+
+  it('90 分で頭打ち(「以上」なので上限を超えても嘘にならない)', () => {
+    expect(walkingMinutes(7200)).toBe(90);
+    expect(walkingMinutes(7280)).toBe(90);
+    expect(walkingMinutes(20000)).toBe(90);
+  });
+
+  it('負値・非数は null(距離の整形の「—」と同じ扱い)', () => {
+    expect(walkingMinutes(-5)).toBeNull();
+    expect(walkingMinutes(NaN)).toBeNull();
+    expect(walkingMinutes(Infinity)).toBeNull();
+  });
+});
 
 describe('haversineMeters', () => {
   it('同一地点は 0m', () => {
