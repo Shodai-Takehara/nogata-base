@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/app-text';
 import { DemoBanner } from '@/components/demo-banner';
+import { HazardTags } from '@/components/hazard-tags';
 import { ShelterDetailSheet } from '@/components/shelter-detail-sheet';
 import { StatusChip } from '@/components/status-chip';
 import { AppColors, TAB_BAR_SPACE } from '@/constants/tokens';
@@ -16,10 +17,12 @@ import {
   HAZARD_TYPES,
   isShelterOpen,
   SHELTER_OPENING_COLOR,
+  SHELTER_OPENING_LABEL,
   type HazardType,
 } from '@/domain/status';
 import { useRemoteData } from '@/hooks/use-remote-data';
-import { useCopy, useStatusLabels } from '@/state/plain-japanese';
+import { distanceWithWalk } from '@/state/distance-text';
+import { hazardNoteKeys, spokenCopy, useCopy, useStatusLabels } from '@/state/plain-japanese';
 import { useEasyJapanese, useHomePin } from '@/state/settings';
 import { formatJstMoment } from '@/utils/datetime';
 
@@ -83,7 +86,13 @@ export default function SheltersScreen() {
       <FlatList
         data={shown}
         keyExtractor={(item) => String(item.id)}
-        renderItem={({ item }) => <ShelterRow item={item} onSelect={selectShelter} />}
+        renderItem={({ item }) => (
+          <ShelterRow
+            item={item}
+            meters={distanceById?.get(item.id) ?? null}
+            onSelect={selectShelter}
+          />
+        )}
         contentContainerStyle={[
           styles.listContent,
           { paddingBottom: insets.bottom + TAB_BAR_SPACE },
@@ -154,21 +163,45 @@ function FilterChip({
   );
 }
 
+/** 読み上げ用の距離の語。設定(平易版)に依存しないのでフックの外で組む */
+const SPOKEN_DISTANCE_COPY = {
+  approxPrefix: spokenCopy('approxPrefix'),
+  walkPrefix: spokenCopy('walkPrefix'),
+  unitMinutes: spokenCopy('unitMinutes'),
+};
+
 const ShelterRow = memo(function ShelterRow({
   item,
+  meters,
   onSelect,
 }: {
   item: Shelter;
+  /** 自宅からの直線距離(m)。自宅未設定は null */
+  meters: number | null;
   onSelect: (id: number) => void;
 }) {
   const labels = useStatusLabels();
+  const copy = useCopy();
   const open = isShelterOpen(item.opening);
+  const distance = meters != null ? distanceWithWalk(meters, copy) : null;
+  // 行は1つの読み上げ単位で子の文字は読まれないため、開設状況、距離、タグの灰色では
+  // 伝わらない「使えない災害」を文で含める。平易版の読み(括弧)を二重に読ませないよう標準の文を使い、
+  // 「・」は読み方が環境で揺れるので読点にする
+  const spoken = [
+    item.name,
+    SHELTER_OPENING_LABEL[item.opening],
+    ...(meters != null
+      ? [`自宅から${distanceWithWalk(meters, SPOKEN_DISTANCE_COPY).replace('・', '、')}`]
+      : []),
+    ...hazardNoteKeys(item.hazards).map(spokenCopy),
+  ].join('。');
   return (
     <Pressable
       style={[styles.row, !open && styles.rowClosed]}
       onPress={() => onSelect(item.id)}
       accessibilityRole="button"
-      accessibilityLabel={`${item.name}の詳細を見る`}>
+      accessibilityLabel={spoken}
+      accessibilityHint="詳細を見る">
       <View style={styles.rowTop}>
         <AppText style={[styles.name, !open && styles.nameClosed]} numberOfLines={1}>
           {item.name}
@@ -180,6 +213,7 @@ const ShelterRow = memo(function ShelterRow({
         <AppText style={styles.rowArrow}>›</AppText>
       </View>
       {item.address ? <AppText style={styles.address}>{item.address}</AppText> : null}
+      {distance ? <AppText style={styles.distance}>{distance}</AppText> : null}
       {open ? (
         <AppText style={styles.stats}>
           {/* 欠損は 0(誰もいない)と区別して — で示す */}
@@ -191,22 +225,11 @@ const ShelterRow = memo(function ShelterRow({
         <AppText style={styles.stats}>収容目安 {item.capacity}人</AppText>
       ) : null}
       <View style={styles.tags}>
-        {item.hazards.flood ? <HazardTag label={labels.hazardType.flood} /> : null}
-        {item.hazards.landslide ? <HazardTag label={labels.hazardType.landslide} /> : null}
-        {item.hazards.earthquake ? <HazardTag label={labels.hazardType.earthquake} /> : null}
-        {item.hazards.other ? <HazardTag label={labels.hazardType.other} /> : null}
+        <HazardTags hazards={item.hazards} size="small" />
       </View>
     </Pressable>
   );
 });
-
-function HazardTag({ label }: { label: string }) {
-  return (
-    <View style={styles.tag}>
-      <AppText style={styles.tagText}>{label} ○</AppText>
-    </View>
-  );
-}
 
 const styles = StyleSheet.create({
   container: {
@@ -318,6 +341,12 @@ const styles = StyleSheet.create({
     color: AppColors.inkSub,
     marginTop: 2,
   },
+  distance: {
+    fontSize: 12,
+    color: AppColors.ink,
+    marginTop: 2,
+    fontVariant: ['tabular-nums'],
+  },
   stats: {
     fontSize: 12,
     color: AppColors.ink,
@@ -325,19 +354,6 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   tags: {
-    flexDirection: 'row',
-    gap: 6,
     marginTop: 6,
-  },
-  tag: {
-    backgroundColor: '#E9F2EE',
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  tagText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: AppColors.ok,
   },
 });

@@ -1,11 +1,12 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
+import { HazardTags } from '@/components/hazard-tags';
 import { StatusChip } from '@/components/status-chip';
 import { AppColors } from '@/constants/tokens';
 import type { Shelter } from '@/domain/models';
 import { SHELTER_OPENING_COLOR, isShelterOpen } from '@/domain/status';
-import { useCopy, useStatusLabels } from '@/state/plain-japanese';
+import { hazardNoteKeys, useCopy, useStatusLabels } from '@/state/plain-japanese';
 import { useEasyJapanese } from '@/state/settings';
 import { formatJst } from '@/utils/datetime';
 import { openRouteInMaps } from '@/utils/route-link';
@@ -15,18 +16,19 @@ type Props = {
   onClose: () => void;
 };
 
+/**
+ * 本文が画面高に占める上限。特大文字ややさしい日本語で本文が伸びても、
+ * 見出しの ✕ と経路のボタンが画面の外へ出ないようにする(本文だけスクロール)
+ */
+const BODY_HEIGHT_RATIO = 0.5;
+
 /** 地図の避難所ピンをタップしたときの詳細シート */
 export function ShelterDetailSheet({ shelter, onClose }: Props) {
   const labels = useStatusLabels();
   const copy = useCopy();
   const easy = useEasyJapanese();
+  const { height: windowHeight } = useWindowDimensions();
   const open = isShelterOpen(shelter.opening);
-  const hazards = [
-    { label: labels.hazardType.flood, ok: shelter.hazards.flood },
-    { label: labels.hazardType.landslide, ok: shelter.hazards.landslide },
-    { label: labels.hazardType.earthquake, ok: shelter.hazards.earthquake },
-    { label: labels.hazardType.other, ok: shelter.hazards.other },
-  ];
 
   const openRoute = () => openRouteInMaps(shelter.coord, shelter.name);
 
@@ -48,76 +50,76 @@ export function ShelterDetailSheet({ shelter, onClose }: Props) {
         </Pressable>
       </View>
 
-      <AppText style={styles.name}>{shelter.name}</AppText>
-      {shelter.address ? <AppText style={styles.address}>{shelter.address}</AppText> : null}
+      <ScrollView style={{ maxHeight: windowHeight * BODY_HEIGHT_RATIO }}>
+        <AppText style={styles.name}>{shelter.name}</AppText>
+        {shelter.address ? <AppText style={styles.address}>{shelter.address}</AppText> : null}
 
-      <View style={styles.stats}>
-        {shelter.capacity != null ? (
-          <Stat label={copy.statCapacity} value={`${shelter.capacity}`} unit={copy.unitPeople} />
+        <View style={styles.stats}>
+          {shelter.capacity != null ? (
+            <Stat label={copy.statCapacity} value={`${shelter.capacity}`} unit={copy.unitPeople} />
+          ) : null}
+          {shelter.floorAreaM2 != null ? (
+            <Stat
+              label={copy.statFloorArea}
+              value={`${shelter.floorAreaM2}`}
+              unit={copy.unitSquareMeters}
+            />
+          ) : null}
+          {open ? (
+            <Stat
+              label={copy.statEvacuating}
+              value={`${shelter.families ?? '—'}`}
+              unit={copy.unitHouseholds}
+              sub={`${shelter.refugees ?? '—'}${copy.unitPeople}`}
+            />
+          ) : null}
+        </View>
+        {shelter.updatedAt != null ? (
+          <AppText style={styles.updatedAt}>{formatJst(shelter.updatedAt, easy)}</AppText>
         ) : null}
-        {shelter.floorAreaM2 != null ? (
-          <Stat
-            label={copy.statFloorArea}
-            value={`${shelter.floorAreaM2}`}
-            unit={copy.unitSquareMeters}
-          />
-        ) : null}
-        {open ? (
-          <Stat
-            label={copy.statEvacuating}
-            value={`${shelter.families ?? '—'}`}
-            unit={copy.unitHouseholds}
-            sub={`${shelter.refugees ?? '—'}${copy.unitPeople}`}
-          />
-        ) : null}
-      </View>
-      {shelter.updatedAt != null ? (
-        <AppText style={styles.updatedAt}>{formatJst(shelter.updatedAt, easy)}</AppText>
-      ) : null}
 
-      <AppText style={styles.sectionLabel}>{copy.sectionSupportedHazards}</AppText>
-      <View style={styles.hazardRow}>
-        {hazards.map((h) => (
-          <View key={h.label} style={[styles.hazardTag, !h.ok && styles.hazardTagOff]}>
-            <AppText style={[styles.hazardText, !h.ok && styles.hazardTextOff]}>
-              {h.label} {h.ok ? '○' : '—'}
-            </AppText>
-          </View>
+        <AppText style={styles.sectionLabel}>{copy.sectionSupportedHazards}</AppText>
+        <HazardTags hazards={shelter.hazards} spoken />
+        {/* タグの「—」だけでは見落とされるため、使えない災害を文で言い切る */}
+        {hazardNoteKeys(shelter.hazards).map((key) => (
+          <AppText key={key} style={styles.unusable}>
+            {copy[key]}
+          </AppText>
         ))}
-      </View>
 
-      {/* 閉鎖中は内訳が全て0で意味を持たないため、開設中のみ出す */}
-      {open ? (
-        <>
-          <AppText style={styles.sectionLabel}>{copy.sectionEvacueeBreakdown}</AppText>
-          <View style={styles.breakdown}>
-            <View style={styles.breakdownRow}>
-              <AppText style={[styles.breakdownLabel, styles.breakdownHead]}>
-                {copy.breakdownAge}
-              </AppText>
-              <AppText style={[styles.breakdownValue, styles.breakdownHead]}>
-                {copy.breakdownMale}
-              </AppText>
-              <AppText style={[styles.breakdownValue, styles.breakdownHead]}>
-                {copy.breakdownFemale}
-              </AppText>
-            </View>
-            {shelter.evacuees.map((row) => (
-              <View key={row.bracket} style={styles.breakdownRow}>
-                <AppText style={styles.breakdownLabel}>{labels.ageBracket[row.bracket]}</AppText>
-                <AppText style={styles.breakdownValue}>{row.male ?? '—'}</AppText>
-                <AppText style={styles.breakdownValue}>{row.female ?? '—'}</AppText>
+        {/* 閉鎖中は内訳が全て0で意味を持たないため、開設中のみ出す */}
+        {open ? (
+          <>
+            <AppText style={styles.sectionLabel}>{copy.sectionEvacueeBreakdown}</AppText>
+            <View style={styles.breakdown}>
+              <View style={styles.breakdownRow}>
+                <AppText style={[styles.breakdownLabel, styles.breakdownHead]}>
+                  {copy.breakdownAge}
+                </AppText>
+                <AppText style={[styles.breakdownValue, styles.breakdownHead]}>
+                  {copy.breakdownMale}
+                </AppText>
+                <AppText style={[styles.breakdownValue, styles.breakdownHead]}>
+                  {copy.breakdownFemale}
+                </AppText>
               </View>
-            ))}
-          </View>
-        </>
-      ) : null}
+              {shelter.evacuees.map((row) => (
+                <View key={row.bracket} style={styles.breakdownRow}>
+                  <AppText style={styles.breakdownLabel}>{labels.ageBracket[row.bracket]}</AppText>
+                  <AppText style={styles.breakdownValue}>{row.male ?? '—'}</AppText>
+                  <AppText style={styles.breakdownValue}>{row.female ?? '—'}</AppText>
+                </View>
+              ))}
+            </View>
+          </>
+        ) : null}
 
-      {shelter.tel ? (
-        <AppText style={styles.tel}>
-          {copy.telLabel}: {shelter.tel}
-        </AppText>
-      ) : null}
+        {shelter.tel ? (
+          <AppText style={styles.tel}>
+            {copy.telLabel}: {shelter.tel}
+          </AppText>
+        ) : null}
+      </ScrollView>
 
       <Pressable
         style={styles.routeButton}
@@ -266,26 +268,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: AppColors.inkSub,
   },
-  hazardRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  hazardTag: {
-    backgroundColor: '#E9F2EE',
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  hazardTagOff: {
-    backgroundColor: AppColors.paper,
-  },
-  hazardText: {
-    fontSize: 11,
+  // この行は読ませたいので、目立たない灰と警戒の橙のどちらも使わず本文色にする
+  unusable: {
+    fontSize: 12,
     fontWeight: '600',
-    color: AppColors.ok,
-  },
-  hazardTextOff: {
-    color: AppColors.none,
+    color: AppColors.ink,
+    marginTop: 6,
   },
   tel: {
     fontSize: 12,

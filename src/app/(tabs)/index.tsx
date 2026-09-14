@@ -1,5 +1,14 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Fragment, memo, useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import {
+  Fragment,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 import { Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, {
   Marker,
@@ -58,6 +67,7 @@ import type {
   TrafficRegulation,
   WaterLevel,
 } from '@/domain/models';
+import { nearestSheltersForHome, type NearestEntry } from '@/domain/shelter-order';
 import {
   isShelterOpen,
   SHELTER_OPENING_COLOR,
@@ -69,6 +79,7 @@ import {
   type WaterStatus,
 } from '@/domain/status';
 import { useRemoteData } from '@/hooks/use-remote-data';
+import { distanceWithWalk } from '@/state/distance-text';
 import {
   AREA_KEYS,
   fillTileLayer,
@@ -77,12 +88,11 @@ import {
   overlayCount,
 } from '@/state/map-layers';
 import { legendBlocks } from '@/state/map-legend';
-import { useCopy } from '@/state/plain-japanese';
+import { NEAREST_SCOPE_COPY, useCopy } from '@/state/plain-japanese';
 import { quakeDetail } from '@/state/quake-detail';
 import { useEasyJapanese, useHomePin, useSettings } from '@/state/settings';
 import { getCurrentLocation } from '@/utils/current-location';
 import { formatJstMoment } from '@/utils/datetime';
-import { formatDistanceMeters, haversineMeters } from '@/utils/geo';
 import { meshCodeAt, meshPolygon } from '@/utils/mesh-code';
 
 /**
@@ -323,7 +333,7 @@ export default function HomeScreen() {
     setSheetMode('layers');
   }, []);
 
-  const summary = summarize(data ?? null, homePin);
+  const summary = useMemo(() => summarize(data ?? null, homePin), [data, homePin]);
   const showArLink = layers.fill === 'flood';
   const fillTile = fillTileLayer(layers.fill);
   const detail = selectedShelter ? (
@@ -709,7 +719,8 @@ type Summary = {
   openCount: number | null;
   damageReports: DamageReport[] | null;
   trafficRegulations: TrafficRegulation[] | null;
-  nearest: { shelter: Shelter; meters: number } | null;
+  /** 自宅ピン設定時の最寄り避難所。水害時と地震時で分け、同じなら1件。未設定は空 */
+  nearest: NearestEntry[];
   /** 自宅ピンの地点の地震ハザード。自宅が市域の外なら null */
   homeQuake: QuakeCell | null;
   loading: boolean;
@@ -742,20 +753,7 @@ function summarize(data: HomeData | null, homePin: LatLng | null): Summary {
   const shelters = data?.shelters ?? null;
   const openCount = shelters ? shelters.filter((s) => isShelterOpen(s.opening)).length : null;
 
-  // 自宅ピン設定時の最寄り避難所。開設有無は問わず平常時の備えとして出す
-  let nearest: Summary['nearest'] = null;
-  if (homePin && shelters && shelters.length > 0) {
-    let best: Shelter = shelters[0];
-    let bestMeters = haversineMeters(homePin, best.coord);
-    for (const s of shelters) {
-      const meters = haversineMeters(homePin, s.coord);
-      if (meters < bestMeters) {
-        best = s;
-        bestMeters = meters;
-      }
-    }
-    nearest = { shelter: best, meters: bestMeters };
-  }
+  const nearest = shelters ? nearestSheltersForHome(shelters, homePin) : [];
 
   const homeQuake = homePin
     ? (QUAKE_CELLS[meshCodeAt(homePin.latitude, homePin.longitude, QUAKE_META.mesh)] ?? null)
@@ -888,15 +886,19 @@ function SummaryRows({
         </View>
       ) : null}
 
-      {nearest ? (
-        <View style={styles.row}>
-          <Dot color={SHELTER_OPENING_COLOR[nearest.shelter.opening]} />
-          <AppText style={[styles.rowText, styles.rowTextShrink]} numberOfLines={1}>
-            {copy.summaryNearestShelter} {nearest.shelter.name}({copy.approxPrefix}{' '}
-            {formatDistanceMeters(nearest.meters)})
-          </AppText>
+      {nearest.map((entry) => (
+        // 施設名と距離・分数を省くと向かう先が分からないので折り返しを許し、点は1行目に合わせる。
+        // 距離は施設名の括弧(全角)や平易版の括弧と入れ子にならないよう、次の行に出す
+        <View key={entry.scope} style={[styles.row, styles.rowWrap]}>
+          <Dot color={SHELTER_OPENING_COLOR[entry.shelter.opening]} top />
+          <View style={styles.rowTextShrink}>
+            <AppText style={styles.rowText}>
+              {copy[NEAREST_SCOPE_COPY[entry.scope]]}: {entry.shelter.name}
+            </AppText>
+            <AppText style={styles.rowSubText}>{distanceWithWalk(entry.meters, copy)}</AppText>
+          </View>
         </View>
-      ) : null}
+      ))}
 
       {homeQuake ? <HomeQuakeRow cell={homeQuake} /> : null}
 
@@ -1041,6 +1043,11 @@ const styles = StyleSheet.create({
   // 長い文を行内に収める(省略するか折り返すかは numberOfLines で決める)
   rowTextShrink: {
     flexShrink: 1,
+  },
+  rowSubText: {
+    fontSize: 12,
+    color: AppColors.inkSub,
+    fontVariant: ['tabular-nums'],
   },
   rowWrap: {
     alignItems: 'flex-start',

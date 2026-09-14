@@ -146,6 +146,17 @@ export const HAZARD_TYPE_LABEL_EASY: Record<HazardType, string> = {
 /** 表示・絞り込みの並び順を固定するための一覧 */
 export const HAZARD_TYPES: readonly HazardType[] = ['flood', 'landslide', 'earthquake', 'other'];
 
+/** 避難所の対応災害を、表示順のまま対応する種別と対応しない種別に分ける */
+export function partitionHazards(hazards: Shelter['hazards']): {
+  supported: HazardType[];
+  unsupported: HazardType[];
+} {
+  return {
+    supported: HAZARD_TYPES.filter((h) => hazards[h]),
+    unsupported: HAZARD_TYPES.filter((h) => !hazards[h]),
+  };
+}
+
 /**
  * 選択された災害種別すべてに対応する避難所だけを残す(AND 条件)。
  * 「水害と土砂の両方に対応」で絞れるよう積集合にする。選択なしは全件。

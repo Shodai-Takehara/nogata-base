@@ -1,4 +1,22 @@
-import { formatDistanceMeters, haversineMeters } from '@/utils/geo';
+import { formatDistanceMeters, haversineMeters, walkingMinutes } from '@/utils/geo';
+
+describe('walkingMinutes', () => {
+  it('80m/分で切り上げる(79m でも 1 分、81m は 2 分)', () => {
+    expect(walkingMinutes(0)).toBe(0);
+    expect(walkingMinutes(1)).toBe(1);
+    expect(walkingMinutes(79)).toBe(1);
+    expect(walkingMinutes(80)).toBe(1);
+    expect(walkingMinutes(81)).toBe(2);
+    expect(walkingMinutes(800)).toBe(10);
+    expect(walkingMinutes(1240)).toBe(16);
+  });
+
+  it('負値・非数は null(距離の整形の「—」と同じ扱い)', () => {
+    expect(walkingMinutes(-5)).toBeNull();
+    expect(walkingMinutes(NaN)).toBeNull();
+    expect(walkingMinutes(Infinity)).toBeNull();
+  });
+});
 
 describe('haversineMeters', () => {
   it('同一地点は 0m', () => {

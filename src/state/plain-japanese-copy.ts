@@ -313,9 +313,26 @@ export const PLAIN_JAPANESE_COPY = {
     standard: '一部の情報を取得できません。タップして再試行',
     easy: 'とれて いない じょうほうが あります。タップすると もう いちど とります。',
   },
-  summaryNearestShelter: {
-    standard: '最寄りの避難所',
-    easy: 'いちばん 近(ちか)い にげる ところ',
+  // 最寄り避難所は水害時と地震時で分けて出す(地震に対応しない避難所が最寄りでも地震では使えない)
+  nearestForFlood: {
+    standard: '水害のとき',
+    easy: '水害(すいがい)の とき',
+  },
+  nearestForQuake: {
+    standard: '地震のとき',
+    easy: '地震(じしん)の とき',
+  },
+  nearestForBoth: {
+    standard: '水害・地震とも',
+    easy: '水害(すいがい)も 地震(じしん)も',
+  },
+  walkPrefix: {
+    standard: '徒歩',
+    easy: 'あるいて',
+  },
+  // 「分」の読みは数で変わる(3分は「ぷん」)ので、単位の「人」と同じく読みを添えない
+  unitMinutes: {
+    standard: '分',
   },
   summaryArLink: {
     standard: '現在地の浸水を AR で体感する ›',
@@ -425,6 +442,28 @@ export const PLAIN_JAPANESE_COPY = {
   sectionSupportedHazards: {
     standard: '対応する災害',
     easy: 'どの さいがいで つかえるか',
+  },
+  // 対応しない種別を種別ごとに1行で示す。タグの「—」だけでは見落とされるため
+  shelterUnusableFlood: {
+    standard: '水害のときは使えません',
+    easy: '水害(すいがい)の ときは つかえません',
+  },
+  shelterUnusableLandslide: {
+    standard: '土砂災害のときは使えません',
+    easy: '土砂(どしゃ)災害(さいがい)の ときは つかえません',
+  },
+  shelterUnusableQuake: {
+    standard: '地震のときは使えません',
+    easy: '地震(じしん)の ときは つかえません',
+  },
+  shelterUnusableOther: {
+    standard: 'その他の災害のときは使えません',
+    easy: 'そのほかの 災害(さいがい)の ときは つかえません',
+  },
+  // 元データの対応災害が空の施設(属性未入力)を「全部使えない」と言い切らないための1行
+  shelterHazardsUnknown: {
+    standard: '対応する災害の情報がありません',
+    easy: 'どの さいがいで つかえるか、じょうほうが ありません',
   },
   sectionEvacueeBreakdown: {
     standard: '避難中の内訳',
