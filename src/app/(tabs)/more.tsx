@@ -27,6 +27,12 @@ export default function MoreScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + TAB_BAR_SPACE }]}>
         <AppText style={styles.caption}>{copy.captionPrepare}</AppText>
         <View style={styles.card}>
+          {/* 災害時に最初に要る入口なので、カードの先頭に置く */}
+          <Pressable style={styles.rowBetween} onPress={() => router.push('/official-info')}>
+            <AppText style={styles.rowTitle}>{copy.rowOfficialInfo}</AppText>
+            <AppText style={styles.arrow}>›</AppText>
+          </Pressable>
+          <Separator />
           <Pressable style={styles.rowBetween} onPress={() => router.push('/ar')}>
             <AppText style={styles.rowTitle}>{copy.arTitle}</AppText>
             <AppText style={styles.arrow}>›</AppText>

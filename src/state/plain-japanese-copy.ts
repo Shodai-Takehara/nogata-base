@@ -546,6 +546,10 @@ export const PLAIN_JAPANESE_COPY = {
     standard: '設定済み',
     easy: 'せってい ずみ',
   },
+  rowOfficialInfo: {
+    standard: '公式の情報を見る',
+    easy: '公式(こうしき)の じょうほうを 見(み)る',
+  },
   rowDisasterWifi: {
     standard: '災害時の無料 Wi-Fi',
     // 「ただの Wi-Fi」は「単なる Wi-Fi」と読めるため、動詞にほどいて誤読を防ぐ
@@ -784,6 +788,106 @@ export const PLAIN_JAPANESE_COPY = {
     standard: '電波状況を確認して再度お試しください。',
     easy: 'でんぱの よい ところで、もう いちど ためして ください。',
   },
+  alertOpenFailedTitle: {
+    standard: 'リンクを開けませんでした',
+    easy: 'リンクを ひらけませんでした',
+  },
+  alertOpenFailedBody: {
+    standard: 'この端末では開けないか、アプリを起動できませんでした。',
+    easy: 'この iPhone では ひらけないか、アプリが うごきませんでした。',
+  },
+
+  // ---- 公式情報への導線 ----
+  officialInfoTitle: {
+    standard: '公式の情報',
+    easy: '公式(こうしき)の じょうほう',
+  },
+  officialInfoWarning: {
+    standard:
+      '災害のときは根拠のない情報が広まります。共有する前に、発信元が公式か確かめてください。',
+    easy: '災害(さいがい)の ときは、ほんとうか わからない じょうほうが ひろがります。ほかの 人(ひと)に 送(おく)る 前(まえ)に、公式(こうしき)の じょうほうか たしかめて ください。',
+  },
+  officialOpensExternal: {
+    standard: '外部のアプリで開きます',
+    easy: 'ほかの アプリで ひらきます',
+  },
+  officialSectionCity: {
+    standard: '直方市',
+    easy: '直方市(のおがたし)',
+  },
+  officialCityEmergency: {
+    standard: '直方市の緊急情報(市のホームページ)',
+    easy: '直方市(のおがたし)の 緊急(きんきゅう)の じょうほう(市(し)の ホームページ)',
+  },
+  officialCityEmergencyNote: {
+    standard: '市からの緊急のお知らせがページの先頭に出ます',
+    easy: '市(し)からの 急(いそ)ぎの お知(し)らせが ページの 上(うえ)に 出(で)ます',
+  },
+  officialCityLine: {
+    standard: '直方市 公式LINE',
+    easy: '直方市(のおがたし)の 公式(こうしき) LINE',
+  },
+  officialCityLineNote: {
+    standard: '友だち追加しておくと、災害のときに避難の情報が届きます',
+    easy: '「友(とも)だち」に 入(い)れて おくと、災害(さいがい)の ときに にげる じょうほうが とどきます',
+  },
+  officialSectionPref: {
+    standard: '福岡県',
+    easy: '福岡県(ふくおかけん)',
+  },
+  officialPrefEvacuation: {
+    standard: '直方市の避難情報(福岡県防災ホームページ)',
+    easy: '直方市(のおがたし)の にげる じょうほう(福岡県(ふくおかけん)の 防災(ぼうさい)ホームページ)',
+  },
+  officialPrefApp: {
+    standard: '防災アプリ「ふくおか防災ナビ・まもるくん」',
+    easy: '防災(ぼうさい)アプリ「ふくおか防災(ぼうさい)ナビ・まもるくん」',
+  },
+  officialPrefAppNote: {
+    standard: '警報や避難の情報が通知で届く県のアプリです。市が案内しています',
+    easy: '警報(けいほう)や にげる じょうほうが 通知(つうち)で とどく 県(けん)の アプリです。市(し)が すすめて います',
+  },
+  officialSectionJma: {
+    standard: '気象庁',
+    easy: '気象庁(きしょうちょう)',
+  },
+  officialJmaWarning: {
+    standard: '直方市の警報・注意報',
+    easy: '直方市(のおがたし)の 警報(けいほう)・注意報(ちゅういほう)',
+  },
+  officialSectionRiver: {
+    standard: '川の水位',
+    easy: '川(かわ)の 水(みず)の 高(たか)さ',
+  },
+  officialSectionSafety: {
+    standard: '安否確認',
+    easy: 'ぶじを つたえる、たしかめる',
+  },
+  officialDial171: {
+    standard: '災害用伝言ダイヤル 171 に電話する',
+    easy: '災害用伝言(さいがいようでんごん)ダイヤル 171 に 電話(でんわ)する',
+  },
+  officialDial171Note: {
+    standard: '災害のときと体験利用日(毎月1日、15日など)につながります。録音は 1、再生は 2',
+    easy: '災害(さいがい)の ときと、れんしゅうの 日(ひ)に つながります。れんしゅうの 日(ひ)は 毎月(まいつき) 1日(ついたち)と 15日(じゅうごにち)など です。録音(ろくおん)は 1、聞(き)くのは 2',
+  },
+  officialWeb171: {
+    standard: '災害用伝言板 web171',
+    easy: '災害用伝言板(さいがいようでんごんばん) web171',
+  },
+  officialWeb171Note: {
+    standard: '文字で安否を残せます。171 と同じ日に使えます',
+    easy: '文字(もじ)で ぶじかどうかを 書(か)いて のこせます。171 と 同(おな)じ 日(ひ)に つかえます',
+  },
+  officialSectionNetwork: {
+    standard: '通信',
+    easy: 'インターネット',
+  },
+  officialWifiNote: {
+    standard: '00000JAPAN のつなぎ方',
+    easy: '00000JAPAN の つなぎかた',
+  },
+
   alertMapsFailedTitle: {
     standard: '地図アプリを開けませんでした',
     easy: 'ちずアプリを ひらけませんでした',

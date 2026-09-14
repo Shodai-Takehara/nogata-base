@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { Linking, Pressable, RefreshControl, SectionList, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, SectionList, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/app-text';
@@ -14,6 +14,7 @@ import { useRemoteData } from '@/hooks/use-remote-data';
 import { useCopy, useStatusLabels } from '@/state/plain-japanese';
 import { useEasyJapanese } from '@/state/settings';
 import { formatJst, formatJstMoment } from '@/utils/datetime';
+import { openExternalUrl } from '@/utils/external-link';
 
 /** 危険度の高い地点が先に目に入るようにするための並び順 */
 const STATUS_ORDER: Record<WaterStatus, number> = {
@@ -113,12 +114,7 @@ export default function WaterScreen() {
           loading || error ? null : <AppText style={styles.empty}>{copy.listEmptyWater}</AppText>
         }
         ListFooterComponent={
-          <Pressable
-            style={styles.linkCard}
-            onPress={() => {
-              // 外部ブラウザ起動の失敗は致命ではないため握りつぶす(未処理 rejection の防止)
-              Linking.openURL(RIVER_INFO_URL).catch(() => {});
-            }}>
+          <Pressable style={styles.linkCard} onPress={() => openExternalUrl(RIVER_INFO_URL)}>
             <View>
               <AppText style={styles.linkTitle}>{copy.riverInfoLabel}</AppText>
               <AppText style={styles.linkSub}>{copy.riverInfoSub}</AppText>
