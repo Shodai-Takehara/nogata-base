@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { Linking, Pressable, RefreshControl, SectionList, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -7,7 +7,7 @@ import { DemoBanner } from '@/components/demo-banner';
 import { StatusChip } from '@/components/status-chip';
 import { RIVER_INFO_URL } from '@/constants/links';
 import { AppColors, TAB_BAR_SPACE } from '@/constants/tokens';
-import { useDataSource } from '@/data/data-source-context';
+import type { DataSource } from '@/data/types';
 import type { WaterLevel } from '@/domain/models';
 import { waterStatus, WATER_STATUS_COLOR, type WaterStatus } from '@/domain/status';
 import { useRemoteData } from '@/hooks/use-remote-data';
@@ -23,14 +23,14 @@ const STATUS_ORDER: Record<WaterStatus, number> = {
   unknown: 3,
 };
 
+const loadWaterLevels = (source: DataSource) => source.fetchWaterLevels();
+
 export default function WaterScreen() {
-  const dataSource = useDataSource();
   const insets = useSafeAreaInsets();
   const copy = useCopy();
   const labels = useStatusLabels();
   const easy = useEasyJapanese();
 
-  const loadWaterLevels = useCallback(() => dataSource.fetchWaterLevels(), [dataSource]);
   const { data, loading, error, refresh, fetchedAt } = useRemoteData(
     loadWaterLevels,
     'water-levels',

@@ -1,50 +1,30 @@
-import { SHELTER_MASTER, WATER_MASTER } from '@/data/demo-master';
+import {
+  minutesAgo,
+  sheltersWith,
+  waterLevelsWith,
+  type OpenShelterState,
+} from '@/data/demo-scenario';
 import type { DataSource } from '@/data/types';
-import type { EvacueeCount, Shelter, ShelterOpening } from '@/domain/models';
 
 /**
- * デモモード: 2023年7月豪雨を参考にした「大雨災害時の直方市」の模擬シナリオ。
- * 施設名・座標・警戒水位は実データの取り込み(demo-master.ts)で、開設状況・水位・
- * 被害・規制の「状態」だけをここで与える。通信を一切行わないため、会場が圏外でも
- * デモが成立する。
- *
+ * デモモードの大雨シナリオ: 2023年7月豪雨を参考にした「大雨災害時の直方市」。
  * 避難者数・被害内容・規制区間は架空。実在の被災事実を示すものではない。
  */
 
-/** 計測時刻が常に「数分前」に見えるよう、呼び出し時点から相対で作る */
-const minutesAgo = (min: number) => Date.now() - min * 60_000;
-
-/** 年齢内訳の合計が refugees と一致するように作る(デモの信憑性のため) */
-const evacuees = (
-  counts: [number, number, number, number, number, number, number, number],
-): EvacueeCount[] => [
-  { bracket: '0-3', male: counts[0], female: counts[1] },
-  { bracket: '3-18', male: counts[2], female: counts[3] },
-  { bracket: '18-65', male: counts[4], female: counts[5] },
-  { bracket: '65+', male: counts[6], female: counts[7] },
-];
-
 /**
- * 開設する避難所(マスタの OBJECTID で指定)。
+ * 開設する避難所。
  * 遠賀川・彦山川沿いの低地(下境・感田・中泉)を中心に開く 2023年7月の実際の
  * 開設パターンを参考にしつつ、混雑度3段階が一度に見えるよう構成している。
+ * 年齢内訳は 65 歳以上を 3 割前後にする(市の高齢化率に合わせる。地震シナリオと見比べたとき
+ * 理由のない差を作らない)
  */
-const OPEN_SHELTERS: Record<
-  number,
-  {
-    opening: Exclude<ShelterOpening, '0'>;
-    families: number;
-    refugees: number;
-    breakdown: [number, number, number, number, number, number, number, number];
-    updatedMinutesAgo: number;
-  }
-> = {
+const OPEN_SHELTERS: Record<number, OpenShelterState> = {
   // 直方市体育館: 大規模拠点。やや混雑
   4: {
     opening: '2',
     families: 96,
     refugees: 267,
-    breakdown: [6, 7, 28, 31, 86, 92, 8, 9],
+    breakdown: [5, 6, 22, 24, 64, 70, 36, 40],
     updatedMinutesAgo: 12,
   },
   // 直方市男女共同参画センター: 市街地中心(中央公民館はマスタ上の属性が空のため避ける)
@@ -52,7 +32,7 @@ const OPEN_SHELTERS: Record<
     opening: '1',
     families: 14,
     refugees: 38,
-    breakdown: [1, 1, 4, 5, 12, 11, 2, 2],
+    breakdown: [1, 1, 3, 4, 10, 9, 5, 5],
     updatedMinutesAgo: 25,
   },
   // 直方歳時館: 小規模施設が定員近くまで埋まる例
@@ -60,7 +40,7 @@ const OPEN_SHELTERS: Record<
     opening: '3',
     families: 21,
     refugees: 58,
-    breakdown: [1, 2, 5, 6, 18, 17, 4, 5],
+    breakdown: [1, 1, 4, 5, 15, 14, 9, 9],
     updatedMinutesAgo: 8,
   },
   // 感田小学校: 感田交差点の冠水を受けた北部の受け皿
@@ -68,7 +48,7 @@ const OPEN_SHELTERS: Record<
     opening: '1',
     families: 22,
     refugees: 61,
-    breakdown: [2, 2, 7, 8, 19, 17, 3, 3],
+    breakdown: [2, 2, 6, 6, 16, 15, 7, 7],
     updatedMinutesAgo: 31,
   },
   // 中泉小学校: 南部アンダーパス冠水地区
@@ -76,7 +56,7 @@ const OPEN_SHELTERS: Record<
     opening: '1',
     families: 9,
     refugees: 24,
-    breakdown: [0, 1, 3, 2, 8, 7, 1, 2],
+    breakdown: [0, 1, 2, 2, 6, 6, 3, 4],
     updatedMinutesAgo: 47,
   },
   // 下境小学校: 遠賀川沿い低地。やや混雑
@@ -84,7 +64,7 @@ const OPEN_SHELTERS: Record<
     opening: '2',
     families: 41,
     refugees: 118,
-    breakdown: [3, 4, 13, 14, 38, 36, 5, 5],
+    breakdown: [3, 3, 10, 11, 30, 29, 16, 16],
     updatedMinutesAgo: 18,
   },
   // 直方北小学校
@@ -92,15 +72,28 @@ const OPEN_SHELTERS: Record<
     opening: '1',
     families: 11,
     refugees: 30,
-    breakdown: [1, 1, 3, 3, 10, 9, 1, 2],
+    breakdown: [1, 1, 3, 3, 8, 7, 3, 4],
     updatedMinutesAgo: 39,
+  },
+  // 直方自動車学校(南部の赤地)と代行寺(北部の植木): 水害には対応するが地震には対応しない施設。
+  // 地震シナリオへ切り替えたとき、この2か所だけが閉じて「地震で使えない避難所」が比較で見える
+  9: {
+    opening: '1',
+    families: 8,
+    refugees: 21,
+    breakdown: [1, 1, 2, 2, 5, 4, 3, 3],
+    updatedMinutesAgo: 52,
+  },
+  42: {
+    opening: '1',
+    families: 6,
+    refugees: 15,
+    breakdown: [0, 1, 2, 1, 4, 3, 2, 2],
+    updatedMinutesAgo: 58,
   },
 };
 
-/**
- * 観測点ごとの「警戒水位に対する比率」。名指しした地点で危険・注意を作り、
- * 残りは平常域に散らす。知古・感田は 2023年7月に冠水が報じられた地区。
- */
+/** 危険・注意にする観測点。知古・感田は 2023年7月に冠水が報じられた地区 */
 const WATER_RATIO_BY_NAME: Record<string, number> = {
   知古: 1.2,
   感田マンホール: 1.16,
@@ -112,48 +105,16 @@ const WATER_RATIO_BY_NAME: Record<string, number> = {
   知古駐車場前: 0.78,
 };
 
-/** 平常域の比率。ID から決めて毎回同じ画面になるようにする(乱数は使わない) */
-const calmRatio = (id: string) => 0.2 + ((id.length + id.charCodeAt(id.length - 1)) % 5) * 0.07;
-
-export const demoDataSource: DataSource = {
+export const demoRainSource: DataSource = {
   async fetchShelters() {
-    return SHELTER_MASTER.map((master): Shelter => {
-      const state = OPEN_SHELTERS[master.id];
-      if (!state) {
-        return {
-          ...master,
-          opening: '0',
-          families: 0,
-          refugees: 0,
-          evacuees: evacuees([0, 0, 0, 0, 0, 0, 0, 0]),
-          updatedAt: minutesAgo(180),
-        };
-      }
-      return {
-        ...master,
-        opening: state.opening,
-        families: state.families,
-        refugees: state.refugees,
-        evacuees: evacuees(state.breakdown),
-        updatedAt: minutesAgo(state.updatedMinutesAgo),
-      };
-    });
+    return sheltersWith(OPEN_SHELTERS);
   },
 
   async fetchWaterLevels() {
-    return WATER_MASTER.map((master, i) => {
-      const ratio = WATER_RATIO_BY_NAME[master.name] ?? calmRatio(master.id);
-      return {
-        ...master,
-        levelCm:
-          master.alertLevelCm != null ? Math.max(0, Math.round(master.alertLevelCm * ratio)) : null,
-        measuredAt: minutesAgo(2 + (i % 5)),
-      };
-    });
+    return waterLevelsWith(WATER_RATIO_BY_NAME);
   },
 
   async fetchDamageReports() {
-    // 種別は実データのドメイン値(docs/api-spec.md §2.5 field_2)から使う
     return [
       {
         id: 1,
@@ -216,7 +177,6 @@ export const demoDataSource: DataSource = {
   },
 
   async fetchTrafficRegulations() {
-    // status は実データのドメイン値(全角括弧)に合わせる(docs/api-spec.md §2.4)
     return [
       {
         id: 1,

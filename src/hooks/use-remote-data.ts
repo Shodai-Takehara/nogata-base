@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
 import { readCache, writeCache } from '@/data/cache-store';
+import { useDataSource } from '@/data/data-source-context';
+import type { DataSource } from '@/data/types';
 import { useSettings } from '@/state/settings';
 
 type RemoteState<T> = {
@@ -14,14 +16,16 @@ type RemoteState<T> = {
 
 /**
  * データ取得の共通フック。
- * デモモード切替でデータソースが変わったときに自動で再取得されるよう、
- * 呼び出し側は loader を useCallback で dataSource に依存させること。
+ * デモモードやシナリオの切替でデータソースが入れ替わると、前のデータを捨てて取り直す。
+ * そのため loader は自分でデータソースを閉じ込めず、渡されたものから取る。
+ * loader が変わっても取り直すので、モジュールスコープか useCallback で同一性を保つこと
+ * (毎描画で変わると取得が止まらない)。
  *
  * `cacheKey` を渡すと成功結果を端末に保存し、次回起動時はまずそれを表示してから
  * 最新を取りに行く(圏外でも前回データを出す)。デモモード中は
  * 模擬データを本物の器に残さないよう、保存も復元もしない。
  */
-export function useRemoteData<T>(loader: () => Promise<T>, cacheKey?: string) {
+export function useRemoteData<T>(loader: (source: DataSource) => Promise<T>, cacheKey?: string) {
   const { settings } = useSettings();
   const persistKey = settings.demoMode ? undefined : cacheKey;
   const [state, setState] = useState<RemoteState<T>>({
@@ -33,21 +37,23 @@ export function useRemoteData<T>(loader: () => Promise<T>, cacheKey?: string) {
   // 古いリクエストの結果が新しい結果を上書きしないための世代カウンタ
   const generation = useRef(0);
 
-  // デモ⇄ライブの切替時は前のモードのデータを持ち越さない。
-  // 特にライブへ戻した直後に圏外だと、残ったデモデータが本物に見えてしまう
-  const prevDemoMode = useRef(settings.demoMode);
+  // データソースが入れ替わったら前のデータを持ち越さない。
+  // 特にライブへ戻した直後に圏外だと、残ったデモデータが本物に見えてしまう。
+  // デモ⇄ライブとシナリオの切替を個別に見ず、差し替わるデータソースそのものを見る
+  const dataSource = useDataSource();
+  const prevSource = useRef(dataSource);
   useEffect(() => {
-    if (prevDemoMode.current === settings.demoMode) return;
-    prevDemoMode.current = settings.demoMode;
+    if (prevSource.current === dataSource) return;
+    prevSource.current = dataSource;
     generation.current += 1;
     setState({ data: null, loading: true, error: null, fetchedAt: null });
-  }, [settings.demoMode]);
+  }, [dataSource]);
 
   const refresh = useCallback(async () => {
     const current = ++generation.current;
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
-      const data = await loader();
+      const data = await loader(dataSource);
       if (generation.current === current) {
         setState({ data, loading: false, error: null, fetchedAt: Date.now() });
         if (persistKey) writeCache(persistKey, data);
@@ -63,7 +69,7 @@ export function useRemoteData<T>(loader: () => Promise<T>, cacheKey?: string) {
         }));
       }
     }
-  }, [loader, persistKey]);
+  }, [loader, persistKey, dataSource]);
 
   useEffect(() => {
     refresh();

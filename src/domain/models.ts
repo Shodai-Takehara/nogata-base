@@ -59,7 +59,7 @@ export type WaterLevel = {
 
 export type DamageReport = {
   id: number;
-  /** 災害状況の種別。「その他」は自由記述で置き換え済み */
+  /** 災害状況の種別。値は実データのドメイン(docs/api-spec.md §2.5 field_2)で、「その他」は自由記述で置き換え済み */
   category: string;
   workResult: string | null;
   /** 災害対策本部からのコメント */
@@ -70,6 +70,7 @@ export type DamageReport = {
 
 export type TrafficRegulation = {
   id: number;
+  /** 規制の種別。実データは「通行止め（全面）」のような全角括弧表記(docs/api-spec.md §2.4) */
   status: string;
   note: string | null;
   startAt: number | null;

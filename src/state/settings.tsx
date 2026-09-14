@@ -24,9 +24,17 @@ const TEXT_SIZE_SCALE: Record<TextSize, number> = {
   xlarge: 1.6,
 };
 
+/** デモモードで再現する災害。避難所の開き方と水位の違いを見せるための2択 */
+export type DemoScenario = 'rain' | 'quake';
+
+/** 設定 UI の表示順を固定するための一覧。表示名は文言カタログ(demoScenario*)が持つ */
+export const DEMO_SCENARIOS: readonly DemoScenario[] = ['rain', 'quake'];
+
 /** じぶん設定と開発者向け設定。端末内にのみ保存し、外部送信しない */
 type Settings = {
   demoMode: boolean;
+  /** デモモードのときだけ意味を持つ。オフでも値は保持し、再度オンにしたとき同じシナリオに戻る */
+  demoScenario: DemoScenario;
   textSize: TextSize;
   /** やさしい日本語モード。固定 UI 文言を平易版へ切り替える */
   easyJapanese: boolean;
@@ -36,12 +44,29 @@ type Settings = {
 
 const DEFAULT_SETTINGS: Settings = {
   demoMode: false,
+  demoScenario: 'rain',
   textSize: 'standard',
   easyJapanese: false,
   homePin: null,
 };
 
 const STORAGE_KEY = 'nogata.settings.v1';
+
+/**
+ * 保存済みの値を今の設定に合わせる。項目が無ければ既定値で埋め、選択肢の値が
+ * 今の選択肢に無ければ(将来の改名や手で書き換えた保存)既定値へ戻す。
+ * 選択肢の名前を引く側(データ源、バナー、設定画面)に個別の逃げ道を持たせないため、ここで一度に直す
+ */
+export function normalizeSettings(saved: unknown): Settings {
+  const merged: Settings = { ...DEFAULT_SETTINGS, ...(saved as Partial<Settings>) };
+  return {
+    ...merged,
+    textSize: TEXT_SIZES.includes(merged.textSize) ? merged.textSize : DEFAULT_SETTINGS.textSize,
+    demoScenario: DEMO_SCENARIOS.includes(merged.demoScenario)
+      ? merged.demoScenario
+      : DEFAULT_SETTINGS.demoScenario,
+  };
+}
 
 type SettingsContextValue = {
   settings: Settings;
@@ -76,7 +101,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((raw) => {
         if (!cancelled && raw) {
-          setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(raw) });
+          setSettings(normalizeSettings(JSON.parse(raw)));
         }
       })
       .catch(() => {

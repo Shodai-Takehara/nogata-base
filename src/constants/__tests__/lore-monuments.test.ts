@@ -4,9 +4,7 @@ import {
   LORE_MONUMENTS,
   LORE_SOURCE,
 } from '@/constants/lore-monuments';
-
-/** 直方市の行政区域の外接矩形(国土数値情報 N03 2025: 緯度 33.700〜33.796、経度 130.680〜130.806) */
-const CITY_BOUNDS = { minLat: 33.7, maxLat: 33.796, minLng: 130.68, maxLng: 130.806 };
+import { expectInCity } from '@/test-utils/city-bounds';
 
 describe('自然災害伝承碑のデータ', () => {
   it('直方市の2基(植木の記念碑、殿町の遠賀川改修記念碑)を持つ', () => {
@@ -19,10 +17,7 @@ describe('自然災害伝承碑のデータ', () => {
   it('所在地が直方市で、座標が市域の中にある', () => {
     for (const m of LORE_MONUMENTS) {
       expect(m.address.startsWith('福岡県直方市')).toBe(true);
-      expect(m.coord.latitude).toBeGreaterThanOrEqual(CITY_BOUNDS.minLat);
-      expect(m.coord.latitude).toBeLessThanOrEqual(CITY_BOUNDS.maxLat);
-      expect(m.coord.longitude).toBeGreaterThanOrEqual(CITY_BOUNDS.minLng);
-      expect(m.coord.longitude).toBeLessThanOrEqual(CITY_BOUNDS.maxLng);
+      expectInCity(m.coord);
     }
   });
 

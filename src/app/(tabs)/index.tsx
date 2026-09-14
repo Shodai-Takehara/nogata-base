@@ -50,7 +50,7 @@ import {
   type QuakeCell,
 } from '@/constants/quake-map';
 import { AppColors, NOGATA_REGION } from '@/constants/tokens';
-import { useDataSource } from '@/data/data-source-context';
+import type { DataSource } from '@/data/types';
 import type {
   DamageReport,
   Shelter,
@@ -138,8 +138,29 @@ type MapSelection =
   /** 地震ハザードはセル単位の面を持たないので、タップ地点から求めたメッシュコードで持つ */
   | { kind: 'quake'; code: string };
 
+async function loadAll(source: DataSource) {
+  // 1レイヤーの失敗で地図全体を空にしないため、取れた分は表示する
+  const results = await Promise.allSettled([
+    source.fetchShelters(),
+    source.fetchWaterLevels(),
+    source.fetchDamageReports(),
+    source.fetchTrafficRegulations(),
+  ]);
+  if (results.every((r) => r.status === 'rejected')) {
+    throw (results[0] as PromiseRejectedResult).reason;
+  }
+  const [shelters, waterLevels, damageReports, trafficRegulations] = results;
+  return {
+    // 失敗したソースは「0件」と区別するため null にする(要約の誤表示防止)
+    shelters: shelters.status === 'fulfilled' ? shelters.value : null,
+    waterLevels: waterLevels.status === 'fulfilled' ? waterLevels.value : null,
+    damageReports: damageReports.status === 'fulfilled' ? damageReports.value : null,
+    trafficRegulations: trafficRegulations.status === 'fulfilled' ? trafficRegulations.value : null,
+    partialError: results.some((r) => r.status === 'rejected'),
+  };
+}
+
 export default function HomeScreen() {
-  const dataSource = useDataSource();
   const insets = useSafeAreaInsets();
   const copy = useCopy();
   const easy = useEasyJapanese();
@@ -177,29 +198,6 @@ export default function HomeScreen() {
     setLocationEnabled(true);
     mapRef.current?.animateToRegion({ ...coord, latitudeDelta: 0.01, longitudeDelta: 0.008 }, 600);
   }, []);
-
-  const loadAll = useCallback(async () => {
-    // 1レイヤーの失敗で地図全体を空にしないため、取れた分は表示する
-    const results = await Promise.allSettled([
-      dataSource.fetchShelters(),
-      dataSource.fetchWaterLevels(),
-      dataSource.fetchDamageReports(),
-      dataSource.fetchTrafficRegulations(),
-    ]);
-    if (results.every((r) => r.status === 'rejected')) {
-      throw (results[0] as PromiseRejectedResult).reason;
-    }
-    const [shelters, waterLevels, damageReports, trafficRegulations] = results;
-    return {
-      // 失敗したソースは「0件」と区別するため null にする(要約の誤表示防止)
-      shelters: shelters.status === 'fulfilled' ? shelters.value : null,
-      waterLevels: waterLevels.status === 'fulfilled' ? waterLevels.value : null,
-      damageReports: damageReports.status === 'fulfilled' ? damageReports.value : null,
-      trafficRegulations:
-        trafficRegulations.status === 'fulfilled' ? trafficRegulations.value : null,
-      partialError: results.some((r) => r.status === 'rejected'),
-    };
-  }, [dataSource]);
 
   const { data, error, refresh, fetchedAt } = useRemoteData(loadAll, 'home-map');
   const hasError = error != null || data?.partialError === true;
