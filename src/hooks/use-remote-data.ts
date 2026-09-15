@@ -99,14 +99,18 @@ export function useRemoteData<T>(loader: (source: DataSource) => Promise<T>, cac
     return () => sub.remove();
   }, [refresh]);
 
-  // 圏外から戻ったときの再取得。画面を開いたまま電波が戻る場面(移動中)で、
-  // 次のフォアグラウンド復帰や手動の更新を待たずに古い数字を差し替える
+  // 圏外から戻ったときの再取得。次のフォアグラウンド復帰や手動の更新を待たずに
+  // 古い数字を差し替える。圏外中に始まった要求が残っていればスロットル層がそれを
+  // 共有して返すので、必ず新しい要求になるわけではない(その場合は失敗表示から手動で更新)。
+  // refresh は ref 経由で読み、データソースの差し替えと同時に起きても二重に取りに行かない
   const offline = useOffline();
   const wasOffline = useRef(offline);
+  const refreshRef = useRef(refresh);
+  refreshRef.current = refresh;
   useEffect(() => {
-    if (wasOffline.current && !offline) refresh();
+    if (wasOffline.current && !offline) refreshRef.current();
     wasOffline.current = offline;
-  }, [offline, refresh]);
+  }, [offline]);
 
   return { ...state, refresh };
 }

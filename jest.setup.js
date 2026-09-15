@@ -7,4 +7,5 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 // expo-network のネイティブ実装も jest に無い。テストでは常にオンラインとして扱う
 jest.mock('expo-network', () => ({
   useNetworkState: () => ({ type: 'WIFI', isConnected: true, isInternetReachable: true }),
+  addNetworkStateListener: () => ({ remove: () => {} }),
 }));
