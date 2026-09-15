@@ -71,14 +71,6 @@ export default function MoreScreen() {
           </Pressable>
         </View>
 
-        <AppText style={styles.caption}>{copy.captionLife}</AppText>
-        <View style={styles.card}>
-          <Row title={copy.rowGarbage} badge={copy.badgePreparing} />
-          <Separator />
-          <Row title={copy.rowCityNews} badge={copy.badgePreparing} />
-        </View>
-        <AppText style={styles.note}>{copy.lifeNote}</AppText>
-
         <AppText style={styles.caption}>{copy.captionApp}</AppText>
         <View style={styles.card}>
           <View style={styles.segmentRow}>
@@ -189,20 +181,6 @@ function textSizeLabel(size: TextSize, copy: ReturnType<typeof useCopy>): string
   }
 }
 
-function Row({ title, badge }: { title: string; badge?: string }) {
-  const disabled = badge != null;
-  return (
-    <View style={styles.rowBetween}>
-      <AppText style={[styles.rowTitle, disabled && styles.rowDisabled]}>{title}</AppText>
-      {badge ? (
-        <View style={styles.badge}>
-          <AppText style={styles.badgeText}>{badge}</AppText>
-        </View>
-      ) : null}
-    </View>
-  );
-}
-
 function SegmentButton({
   label,
   accessibilityLabel,
@@ -270,15 +248,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: AppColors.ink,
   },
-  rowDisabled: {
-    color: AppColors.none,
-  },
-  badge: {
-    backgroundColor: AppColors.paper,
-    borderRadius: 999,
-    paddingHorizontal: 9,
-    paddingVertical: 2,
-  },
   rowLeft: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -292,11 +261,6 @@ const styles = StyleSheet.create({
   },
   rowState: {
     fontSize: 11,
-    color: AppColors.inkSub,
-  },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: '700',
     color: AppColors.inkSub,
   },
   separator: {
