@@ -65,7 +65,7 @@ function ScaleLegend({ block }: { block: LegendBlock }) {
       </AppText>
       <View style={styles.bar}>
         {block.entries.map((entry) => (
-          <View key={entry.color} style={[styles.barStep, { backgroundColor: entry.color }]} />
+          <View key={entry.label} style={[styles.barStep, { backgroundColor: entry.color }]} />
         ))}
       </View>
       <AppText maxScale={STRIP_MAX_SCALE} style={styles.label}>
@@ -89,7 +89,7 @@ function ClassLegend({ block }: { block: LegendBlock }) {
         {block.short}
       </AppText>
       {block.entries.map((entry) => (
-        <View key={entry.color} style={styles.classItem}>
+        <View key={entry.label} style={styles.classItem}>
           <LegendSwatch entry={entry} size={SWATCH_SIZE} />
           {block.compact ? null : (
             <AppText maxScale={STRIP_MAX_SCALE} style={styles.label}>

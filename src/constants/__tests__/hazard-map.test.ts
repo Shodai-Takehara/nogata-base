@@ -47,6 +47,10 @@ describe('ハザードマップタイル定義', () => {
         'houseCollapse',
         'https://disaportaldata.gsi.go.jp/raster/01_flood_l2_kaokutoukai_hanran_data/{z}/{x}/{y}.png',
       ],
+      [
+        'houseCollapseErosion',
+        'https://disaportaldata.gsi.go.jp/raster/01_flood_l2_kaokutoukai_kagan_data/{z}/{x}/{y}.png',
+      ],
       ['landform', 'https://cyberjapandata.gsi.go.jp/xyz/lcmfc2/{z}/{x}/{y}.png'],
     ]);
   });
@@ -154,9 +158,16 @@ describe('ハザードマップタイル定義', () => {
     }
   });
 
-  it('土砂災害の区域は土石流と急傾斜地の2タイルを出す(2026-09-12 の統合)', () => {
+  it('土砂災害の区域は土石流と急傾斜地、家屋倒壊は氾濫流と河岸侵食の2タイルずつを出す', () => {
     expect(AREA_LAYERS.landslide).toEqual(['debrisFlow', 'steepSlope']);
-    expect(AREA_LAYERS.houseCollapse).toEqual(['houseCollapse']);
+    expect(AREA_LAYERS.houseCollapse).toEqual(['houseCollapse', 'houseCollapseErosion']);
+  });
+
+  it('家屋倒壊の2タイルは区域名が同じで、区分名(氾濫流、河岸侵食)で見分ける', () => {
+    const [flow, erosion] = AREA_LAYERS.houseCollapse.map(hazardLayer);
+    expect(flow.title).toBe(erosion.title);
+    expect(flow.legend.map((e) => e.label)).toEqual(['氾濫流']);
+    expect(erosion.legend.map((e) => e.label)).toEqual(['河岸侵食']);
   });
 
   it('キーからレイヤー定義を引ける', () => {

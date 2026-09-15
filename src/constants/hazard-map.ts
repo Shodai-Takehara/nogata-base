@@ -146,7 +146,8 @@ export const LANDFORM_LEGEND: readonly HazardLegendEntry[] = [
   },
 ];
 
-export type HazardLayerKey = 'flood' | 'debrisFlow' | 'steepSlope' | 'houseCollapse' | 'landform';
+export type HazardLayerKey =
+  'flood' | 'debrisFlow' | 'steepSlope' | 'houseCollapse' | 'houseCollapseErosion' | 'landform';
 
 export type HazardLayer = {
   key: HazardLayerKey;
@@ -170,10 +171,12 @@ export type HazardLayer = {
 };
 
 /**
- * 地図に重ねられるタイルのレイヤー。市の Web 版ハザードマップと同じ構成
- * (洪水・土石流・急傾斜地・家屋倒壊)に、国土地理院の治水地形分類図を足したもの。
+ * 地図に重ねられるタイルのレイヤー。市のハザードマップ(直方市防災ブック p.35)と同じ構成
+ * (洪水、土石流、急傾斜地、家屋倒壊の氾濫流と河岸侵食)に、国土地理院の治水地形分類図を足したもの。
  * 地すべり警戒区域は直方市周辺にタイルが存在しない(市の指定なし)ため載せない。
- * 凡例色はいずれも直方市周辺の実タイルから抽出(ポータル分は 2026-07-15)。
+ * 市の地図にある内水氾濫警戒区域と高潮浸水想定は、ポータルのタイル(01_naisui_data、
+ * 02_takashio_data)が市域で 404 のため載せない(2026-09-15 確認)。
+ * 凡例色はいずれも直方市周辺の実タイルから抽出(ポータル分は 2026-07-15、河岸侵食は 2026-09-15)。
  */
 export const HAZARD_LAYERS: readonly HazardLayer[] = [
   {
@@ -209,14 +212,46 @@ export const HAZARD_LAYERS: readonly HazardLayer[] = [
     ],
     attribution: FLOOD_ATTRIBUTION,
   },
+  // 家屋倒壊等氾濫想定区域は氾濫流と河岸侵食でタイルが分かれるが、法令上は1つの区域名。
+  // 凡例は正式名称が同じものをまとめて1つにする(map-legend.ts)
   {
     key: 'houseCollapse',
     label: '家屋倒壊',
     labelEasy: '家屋倒壊(かおくとうかい)',
-    title: '家屋倒壊等氾濫想定区域(氾濫流)',
+    title: '家屋倒壊等氾濫想定区域',
     urlTemplate:
       'https://disaportaldata.gsi.go.jp/raster/01_flood_l2_kaokutoukai_hanran_data/{z}/{x}/{y}.png',
-    legend: [{ color: '#FF0000', label: '区域内' }],
+    legend: [
+      {
+        color: '#FF0000',
+        label: '氾濫流',
+        note: {
+          standard: '堤防の決壊や激しい流れで、木造の家が倒れたり流されたりするおそれがある区域',
+          easy: '堤防(ていぼう)が こわれて、強(つよ)い 流(なが)れで 木(き)の 家(いえ)が たおれたり 流(なが)されたり する おそれが ある ところ',
+        },
+      },
+    ],
+    attribution: FLOOD_ATTRIBUTION,
+  },
+  {
+    key: 'houseCollapseErosion',
+    label: '家屋倒壊',
+    labelEasy: '家屋倒壊(かおくとうかい)',
+    title: '家屋倒壊等氾濫想定区域',
+    urlTemplate:
+      'https://disaportaldata.gsi.go.jp/raster/01_flood_l2_kaokutoukai_kagan_data/{z}/{x}/{y}.png',
+    // タイルは赤の斜線(半透明の赤と不透明の赤の画素)。見本は薄い赤の地に赤の縞で近づける
+    legend: [
+      {
+        color: '#FFB3B3',
+        stripe: '#FF0000',
+        label: '河岸侵食',
+        note: {
+          standard: '川岸が削られて、家が崩れ落ちるおそれがある区域',
+          easy: '川(かわ)の 岸(きし)が けずられて、家(いえ)が くずれ落(お)ちる おそれが ある ところ',
+        },
+      },
+    ],
     attribution: FLOOD_ATTRIBUTION,
   },
   {
@@ -235,13 +270,14 @@ export const HAZARD_LAYERS: readonly HazardLayer[] = [
 
 /**
  * 「重ねる区域」の切替1つが出すタイルの組(2026-09-12 決定)。
- * 土石流と急傾斜地は市の Web 版では別の図だが、どちらも土砂災害警戒区域で
+ * 土石流と急傾斜地は市のハザードマップでは別の図だが、どちらも土砂災害警戒区域で
  * 色の意味(警戒、特別警戒)が同じなので、切替と凡例だけを1つにまとめる。
- * タイルの定義(HAZARD_LAYERS)は市の Web 版と同じ2件のまま残す
+ * タイルの定義(HAZARD_LAYERS)はポータルの配信単位のまま残す。
+ * 家屋倒壊は氾濫流だけだと川岸の河岸侵食の区域が抜け、市の地図より狭く見えるため両方出す
  */
 export const AREA_LAYERS = {
   landslide: ['debrisFlow', 'steepSlope'],
-  houseCollapse: ['houseCollapse'],
+  houseCollapse: ['houseCollapse', 'houseCollapseErosion'],
 } as const satisfies Record<string, readonly HazardLayerKey[]>;
 
 export type AreaLayerKey = keyof typeof AREA_LAYERS;
