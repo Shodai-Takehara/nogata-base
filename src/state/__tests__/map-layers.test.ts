@@ -75,7 +75,7 @@ describe('地図レイヤーの状態', () => {
     expect(mapLayersReducer(state, { type: 'togglePopulation' }).population).toBe(false);
   });
 
-  it('人口と地震のリスクは同時に出さない(半透明の面どうしで、重ねると両方読めない)', () => {
+  it('人口と地震ハザードは同時に出さない(半透明の面どうしで、重ねると両方読めない)', () => {
     let state = mapLayersReducer(INITIAL_MAP_LAYERS, { type: 'togglePopulation' });
     state = mapLayersReducer(state, { type: 'setFill', fill: 'quake' });
     expect(state).toMatchObject({ fill: 'quake', population: false });

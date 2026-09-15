@@ -171,6 +171,20 @@ export type HazardLayer = {
 };
 
 /**
+ * 土砂災害警戒区域の2区分の意味。区分名だけでは通称(イエローゾーン、レッドゾーン)と
+ * 結びつかないため、市のハザードマップ(直方市防災ブック p.35)の説明を短くして添える
+ */
+const LANDSLIDE_WARNING_NOTE = {
+  standard: '土砂災害が起きたとき、住民の生命や身体に危害が生じるおそれがある区域(イエローゾーン)',
+  easy: '土砂(どしゃ)災害(さいがい)が おきたとき、人(ひと)が けがを する おそれが ある ところ(イエローゾーン)',
+};
+const LANDSLIDE_SPECIAL_NOTE = {
+  standard:
+    '警戒区域のうち、建物が壊れて住民の生命や身体に著しい危害が生じるおそれがある区域(レッドゾーン)',
+  easy: '警戒区域(けいかいくいき)の 中(なか)で、家(いえ)が こわれて 人(ひと)が 大(おお)きな けがを する おそれが ある ところ(レッドゾーン)',
+};
+
+/**
  * 地図に重ねられるタイルのレイヤー。市のハザードマップ(直方市防災ブック p.35)と同じ構成
  * (洪水、土石流、急傾斜地、家屋倒壊の氾濫流と河岸侵食)に、国土地理院の治水地形分類図を足したもの。
  * 地すべり警戒区域は直方市周辺にタイルが存在しない(市の指定なし)ため載せない。
@@ -195,8 +209,8 @@ export const HAZARD_LAYERS: readonly HazardLayer[] = [
     title: '土砂災害警戒区域(土石流)',
     urlTemplate: 'https://disaportaldata.gsi.go.jp/raster/05_dosekiryukeikaikuiki/{z}/{x}/{y}.png',
     legend: [
-      { color: '#E6C832', label: '警戒区域' },
-      { color: '#A50021', label: '特別警戒区域' },
+      { color: '#E6C832', label: '警戒区域', note: LANDSLIDE_WARNING_NOTE },
+      { color: '#A50021', label: '特別警戒区域', note: LANDSLIDE_SPECIAL_NOTE },
     ],
     attribution: FLOOD_ATTRIBUTION,
   },
@@ -207,8 +221,8 @@ export const HAZARD_LAYERS: readonly HazardLayer[] = [
     title: '土砂災害警戒区域(急傾斜地)',
     urlTemplate: 'https://disaportaldata.gsi.go.jp/raster/05_kyukeishakeikaikuiki/{z}/{x}/{y}.png',
     legend: [
-      { color: '#FAE600', label: '警戒区域' },
-      { color: '#FA2800', label: '特別警戒区域' },
+      { color: '#FAE600', label: '警戒区域', note: LANDSLIDE_WARNING_NOTE },
+      { color: '#FA2800', label: '特別警戒区域', note: LANDSLIDE_SPECIAL_NOTE },
     ],
     attribution: FLOOD_ATTRIBUTION,
   },

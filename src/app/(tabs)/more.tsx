@@ -126,7 +126,7 @@ export default function MoreScreen() {
           </AppText>
           <Separator />
           <AppText style={styles.legal}>
-            浸水想定・土砂災害・家屋倒壊のハザードマップ: {FLOOD_SOURCE}
+            浸水想定・土砂災害・家屋倒壊の区域: 重ねるハザードマップ、{FLOOD_SOURCE}
           </AppText>
           <Separator />
           <AppText style={styles.legal}>

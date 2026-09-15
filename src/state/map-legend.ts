@@ -83,7 +83,7 @@ export function fillLegend(fill: FillKey, copy: Copy, easy: boolean): LegendBloc
         attribution: layer.attribution,
       };
       return fill === 'flood'
-        ? { ...block, scale: true }
+        ? { ...block, scale: true, note: copy.floodNote }
         : { ...block, scale: false, compact: true, note: copy.landformNote };
     }
     case 'quake':

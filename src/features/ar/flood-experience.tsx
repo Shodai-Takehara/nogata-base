@@ -165,7 +165,7 @@ export default function FloodExperience() {
             {!siteLookupDone
               ? copy.arSiteLookupInProgress
               : siteRank
-                ? `この場所の想定: ${siteRank.label}(想定最大規模)`
+                ? `${copy.arSiteRankLabel}: ${siteRank.label}${copy.arSiteRankScale}`
                 : copy.arSiteNoData}
           </AppText>
         </View>
