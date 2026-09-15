@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/app-text';
 import { DemoBanner } from '@/components/demo-banner';
 import { HazardTags } from '@/components/hazard-tags';
+import { OfflineBanner } from '@/components/offline-banner';
 import { ShelterDetailSheet } from '@/components/shelter-detail-sheet';
 import { StatusChip } from '@/components/status-chip';
 import { AppColors, TAB_BAR_SPACE } from '@/constants/tokens';
@@ -66,6 +67,7 @@ export default function SheltersScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <DemoBanner />
+      <OfflineBanner />
       <AppText style={styles.screenTitle}>{copy.sheltersScreenTitle}</AppText>
 
       {/* ラベルとチップを横並びにすると、特大×やさしい日本語で幅が足りず

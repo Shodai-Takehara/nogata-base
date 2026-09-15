@@ -4,6 +4,7 @@ import { AppState } from 'react-native';
 import { readCache, writeCache } from '@/data/cache-store';
 import { useDataSource } from '@/data/data-source-context';
 import type { DataSource } from '@/data/types';
+import { useOffline } from '@/state/network';
 import { useSettings } from '@/state/settings';
 
 type RemoteState<T> = {
@@ -97,6 +98,15 @@ export function useRemoteData<T>(loader: (source: DataSource) => Promise<T>, cac
     });
     return () => sub.remove();
   }, [refresh]);
+
+  // 圏外から戻ったときの再取得。画面を開いたまま電波が戻る場面(移動中)で、
+  // 次のフォアグラウンド復帰や手動の更新を待たずに古い数字を差し替える
+  const offline = useOffline();
+  const wasOffline = useRef(offline);
+  useEffect(() => {
+    if (wasOffline.current && !offline) refresh();
+    wasOffline.current = offline;
+  }, [offline, refresh]);
 
   return { ...state, refresh };
 }

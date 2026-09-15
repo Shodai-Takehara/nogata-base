@@ -29,6 +29,7 @@ import { LayersButton } from '@/components/layers-button';
 import { LegendStrip } from '@/components/legend-strip';
 import { LoreDetailSheet } from '@/components/lore-detail-sheet';
 import { MapBottomSheet, type SheetMode } from '@/components/map-bottom-sheet';
+import { OfflineBanner } from '@/components/offline-banner';
 import { PopulationDetailSheet } from '@/components/population-detail-sheet';
 import { QuakeDetailSheet } from '@/components/quake-detail-sheet';
 import { ShelterDetailSheet } from '@/components/shelter-detail-sheet';
@@ -348,6 +349,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={{ paddingTop: insets.top, backgroundColor: AppColors.surface }}>
         <DemoBanner />
+        <OfflineBanner />
         <View style={styles.header}>
           <AppText style={styles.title}>直方ベース</AppText>
         </View>
