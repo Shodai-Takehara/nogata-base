@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/app-text';
 import { DemoBanner } from '@/components/demo-banner';
 import { InfoTooltip } from '@/components/info-tooltip';
-import { FLOOD_SOURCE, LANDFORM_SOURCE } from '@/constants/hazard-map';
+import { LANDFORM_SOURCE } from '@/constants/hazard-map';
 import { LORE_SOURCE } from '@/constants/lore-monuments';
 import { AppColors, TAB_BAR_SPACE } from '@/constants/tokens';
 import { WALK_GRAPH_ATTRIBUTION } from '@/constants/walk-graph';
@@ -126,7 +126,8 @@ export default function MoreScreen() {
           </AppText>
           <Separator />
           <AppText style={styles.legal}>
-            浸水想定・土砂災害・家屋倒壊の区域: 重ねるハザードマップ、{FLOOD_SOURCE}
+            浸水想定・土砂災害・家屋倒壊の区域:
+            重ねるハザードマップ(ハザードマップポータルサイト、国土交通省)
           </AppText>
           <Separator />
           <AppText style={styles.legal}>
