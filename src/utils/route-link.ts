@@ -1,7 +1,6 @@
-import { Alert, Linking } from 'react-native';
-
 import type { LatLng } from '@/domain/models';
-import { copyText } from '@/state/plain-japanese';
+
+import { openExternalUrl } from './external-link';
 
 /** 経路案内はアプリ内に持たず、標準の地図アプリに委ねる(Google Maps API 不要) */
 export function openRouteInMaps(coord: LatLng, name: string) {
@@ -29,7 +28,5 @@ export function openRouteToAddress(address: string) {
 }
 
 function openUrl(url: string) {
-  Linking.openURL(url).catch(() => {
-    Alert.alert(copyText('alertMapsFailedTitle'), copyText('alertMapsFailedBody'));
-  });
+  openExternalUrl(url, { title: 'alertMapsFailedTitle', body: 'alertMapsFailedBody' });
 }

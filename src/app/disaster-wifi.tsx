@@ -1,8 +1,8 @@
-import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/app-text';
+import { ScreenHeader } from '@/components/screen-header';
 import { AppColors } from '@/constants/tokens';
 import { useCopy } from '@/state/plain-japanese';
 
@@ -16,24 +16,12 @@ import { useCopy } from '@/state/plain-japanese';
  * 設定画面だけで、そこへ送ると利用者が迷う(2026-08-09 に実機で確認)。
  */
 export default function DisasterWifiScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const copy = useCopy();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel={copy.a11yBackToPrev}>
-          <AppText style={styles.headerBack}>‹ {copy.back}</AppText>
-        </Pressable>
-        <AppText style={styles.headerTitle}>{copy.rowDisasterWifi}</AppText>
-        {/* タイトルを中央に保つための戻ると同幅のスペーサー */}
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title={copy.rowDisasterWifi} />
 
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
         {/* Wi-Fi 一覧で探す文字列そのものを見せるのが、この画面の主目的 */}
@@ -83,28 +71,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.paper,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: AppColors.paper,
-  },
-  headerBack: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: AppColors.primary,
-    width: 64,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: AppColors.ink,
-  },
-  headerSpacer: {
-    width: 64,
   },
   content: {
     paddingHorizontal: 14,

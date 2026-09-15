@@ -98,6 +98,7 @@ AR 非対応の環境では、AR 画面は案内表示にフォールバック�
 - 川の防災情報(river.go.jp)へはリンクで誘導するのみ。API 取得・スクレイピングはしない
 - 地震ハザード(`src/constants/quake-mesh.json`)は J-SHIS 地震ハザードステーション(防災科学技術研究所)2024年基準 NIED作成版を `scripts/quake-hazard.py` で直方市域ぶんに加工して同梱している。出典表記を外さないこと
 - 自然災害伝承碑(`src/constants/lore-monuments.json`)は国土地理院の自然災害伝承碑データ(GeoJSON)を `scripts/lore-monuments.py` で直方市の分に加工して同梱している。碑文の要約は市が登録した原文のまま。写真は扱わない。出典表記を外さないこと
+- 避難所までの道のり(`src/constants/walk-graph.json`)は OpenStreetMap の道路を `scripts/walk-graph.py` で直方市域ぶんに加工して同梱し、端末内で最短経路を引く。この JSON は OpenStreetMap の派生データベースで ODbL(<https://www.openstreetmap.org/copyright>)に従い、リポジトリの MIT ライセンスの対象外。出典表記「© OpenStreetMap contributors」を外さないこと
 - 本アプリは直方市の公式アプリではない。避難の判断は市の公式情報に従うこと
 
 ## ドキュメント

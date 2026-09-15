@@ -546,6 +546,10 @@ export const PLAIN_JAPANESE_COPY = {
     standard: '設定済み',
     easy: 'せってい ずみ',
   },
+  rowOfficialInfo: {
+    standard: '公式の情報を見る',
+    easy: '公式(こうしき)の じょうほうを 見(み)る',
+  },
   rowDisasterWifi: {
     standard: '災害時の無料 Wi-Fi',
     // 「ただの Wi-Fi」は「単なる Wi-Fi」と読めるため、動詞にほどいて誤読を防ぐ
@@ -784,6 +788,132 @@ export const PLAIN_JAPANESE_COPY = {
     standard: '電波状況を確認して再度お試しください。',
     easy: 'でんぱの よい ところで、もう いちど ためして ください。',
   },
+  alertOpenFailedTitle: {
+    standard: 'リンクを開けませんでした',
+    easy: 'リンクを ひらけませんでした',
+  },
+  alertOpenFailedBody: {
+    standard: 'この端末では開けないか、アプリを起動できませんでした。',
+    easy: 'この iPhone では ひらけないか、アプリが うごきませんでした。',
+  },
+
+  // ---- 公式情報への導線 ----
+  officialInfoTitle: {
+    standard: '公式の情報',
+    easy: '公式(こうしき)の じょうほう',
+  },
+  // 注意書きは iOS の設定画面と同じく、見出しの一文と説明の文に分けて地の文で置く(枠や色で囲わない)
+  officialInfoLead: {
+    standard: '共有する前に、発信元が公式か確かめてください',
+    easy: 'ほかの 人(ひと)に 送(おく)る 前(まえ)に、公式(こうしき)の じょうほうか たしかめて ください',
+  },
+  officialInfoWarning: {
+    standard:
+      '災害のときは根拠のない情報が広まります。ここに並ぶ入口は、市、県、国、事業者の公式のものです。',
+    easy: '災害(さいがい)の ときは、ほんとうか わからない じょうほうが ひろがります。ここに ある ものは、市(し)や 県(けん)や 国(くに)などの 公式(こうしき)の ページです。',
+  },
+  officialOpensExternal: {
+    standard: '外部のアプリで開きます',
+    easy: 'ほかの アプリで ひらきます',
+  },
+  officialSectionCity: {
+    standard: '直方市',
+    easy: '直方市(のおがたし)',
+  },
+  officialCityEmergency: {
+    standard: '直方市の緊急情報(市のホームページ)',
+    easy: '直方市(のおがたし)の 緊急(きんきゅう)の じょうほう(市(し)の ホームページ)',
+  },
+  officialCityEmergencyNote: {
+    standard: '市からの緊急のお知らせがページの先頭に出ます',
+    easy: '市(し)からの 急(いそ)ぎの お知(し)らせが ページの 上(うえ)に 出(で)ます',
+  },
+  officialCityLine: {
+    standard: '直方市 公式LINE',
+    easy: '直方市(のおがたし)の 公式(こうしき) LINE',
+  },
+  officialCityLineNote: {
+    standard: '友だち追加しておくと、災害のときに避難の情報が届きます',
+    easy: '「友(とも)だち」に 入(い)れて おくと、災害(さいがい)の ときに にげる じょうほうが とどきます',
+  },
+  officialSectionPref: {
+    standard: '福岡県',
+    easy: '福岡県(ふくおかけん)',
+  },
+  officialPrefEvacuation: {
+    standard: '直方市の避難情報(福岡県防災ホームページ)',
+    easy: '直方市(のおがたし)の にげる じょうほう(福岡県(ふくおかけん)の 防災(ぼうさい)ホームページ)',
+  },
+  officialPrefApp: {
+    standard: '防災アプリ「ふくおか防災ナビ・まもるくん」',
+    easy: '防災(ぼうさい)アプリ「ふくおか防災(ぼうさい)ナビ・まもるくん」',
+  },
+  officialPrefAppNote: {
+    standard: '警報や避難の情報が通知で届く県のアプリです。市が案内しています',
+    easy: '警報(けいほう)や にげる じょうほうが 通知(つうち)で とどく 県(けん)の アプリです。市(し)が すすめて います',
+  },
+  officialSectionJma: {
+    standard: '気象庁',
+    easy: '気象庁(きしょうちょう)',
+  },
+  officialJmaWarning: {
+    standard: '直方市の警報・注意報',
+    easy: '直方市(のおがたし)の 警報(けいほう)・注意報(ちゅういほう)',
+  },
+  officialSectionRiver: {
+    standard: '川の水位',
+    easy: '川(かわ)の 水(みず)の 高(たか)さ',
+  },
+  officialSectionPower: {
+    standard: '電気',
+    easy: '電気(でんき)',
+  },
+  officialPowerOutage: {
+    standard: '直方市の停電情報(九州電力送配電)',
+    easy: '直方市(のおがたし)の 停電(ていでん)の じょうほう(九州電力送配電(きゅうしゅうでんりょくそうはいでん))',
+  },
+  officialPowerOutageNote: {
+    standard:
+      '町ごとの停電の戸数と復旧の見込み(5分以上の停電が対象)。停電がないときは市の名前が出ず「停電情報はありません」とだけ出ます',
+    easy: '町(まち)ごとに、電気(でんき)が 止(と)まって いる 家(いえ)の 数(かず)と、なおる 見込(みこ)み(5分(ふん)より 長(なが)い 停電(ていでん)だけ)。停電(ていでん)が ない ときは、市(し)の 名前(なまえ)は 出(で)ず「停電情報はありません」とだけ 出(で)ます',
+  },
+  officialPowerApp: {
+    standard: '停電情報アプリ「九州停電情報提供アプリ」',
+    easy: '停電(ていでん)の アプリ「九州停電情報提供(きゅうしゅうていでんじょうほうていきょう)アプリ」',
+  },
+  officialPowerAppNote: {
+    standard: '住んでいる町を登録すると、停電と復旧が通知で届きます',
+    easy: '住(す)んで いる 町(まち)を 登録(とうろく)すると、停電(ていでん)と なおった ことが 通知(つうち)で とどきます',
+  },
+  officialSectionSafety: {
+    standard: '安否確認',
+    easy: 'ぶじを つたえる、たしかめる',
+  },
+  officialDial171: {
+    standard: '災害用伝言ダイヤル 171 に電話する',
+    easy: '災害用伝言(さいがいようでんごん)ダイヤル 171 に 電話(でんわ)する',
+  },
+  officialDial171Note: {
+    standard: '災害のときと体験利用日(毎月1日、15日など)につながります。録音は 1、再生は 2',
+    easy: '災害(さいがい)の ときと、れんしゅうの 日(ひ)に つながります。れんしゅうの 日(ひ)は 毎月(まいつき) 1日(ついたち)と 15日(じゅうごにち)など です。録音(ろくおん)は 1、聞(き)くのは 2',
+  },
+  officialWeb171: {
+    standard: '災害用伝言板 web171',
+    easy: '災害用伝言板(さいがいようでんごんばん) web171',
+  },
+  officialWeb171Note: {
+    standard: '文字で安否を残せます。171 と同じ日に使えます',
+    easy: '文字(もじ)で ぶじかどうかを 書(か)いて のこせます。171 と 同(おな)じ 日(ひ)に つかえます',
+  },
+  officialSectionNetwork: {
+    standard: '通信',
+    easy: 'インターネット',
+  },
+  officialWifiNote: {
+    standard: '00000JAPAN のつなぎ方',
+    easy: '00000JAPAN の つなぎかた',
+  },
+
   alertMapsFailedTitle: {
     standard: '地図アプリを開けませんでした',
     easy: 'ちずアプリを ひらけませんでした',

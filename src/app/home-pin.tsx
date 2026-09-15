@@ -5,6 +5,7 @@ import MapView, { Marker, type MapPressEvent } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/app-text';
+import { ScreenHeader } from '@/components/screen-header';
 import { AppColors, NOGATA_REGION } from '@/constants/tokens';
 import type { LatLng } from '@/domain/models';
 import { useCopy } from '@/state/plain-japanese';
@@ -56,18 +57,7 @@ export default function HomePinScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel={copy.a11yBackToPrev}>
-          <AppText style={styles.headerBack}>‹ {copy.back}</AppText>
-        </Pressable>
-        <AppText style={styles.headerTitle}>{copy.homePinTitle}</AppText>
-        {/* タイトルを中央に保つための戻ると同幅のスペーサー */}
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title={copy.homePinTitle} />
 
       <View style={styles.mapWrap}>
         <MapView
@@ -126,28 +116,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.paper,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: AppColors.paper,
-  },
-  headerBack: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: AppColors.primary,
-    width: 64,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: AppColors.ink,
-  },
-  headerSpacer: {
-    width: 64,
   },
   mapWrap: {
     flex: 1,

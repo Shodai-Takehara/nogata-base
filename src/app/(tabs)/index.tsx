@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, {
   Marker,
   Polygon,
@@ -93,6 +93,7 @@ import { quakeDetail } from '@/state/quake-detail';
 import { useEasyJapanese, useHomePin, useSettings } from '@/state/settings';
 import { getCurrentLocation } from '@/utils/current-location';
 import { formatJstMoment } from '@/utils/datetime';
+import { openExternalUrl } from '@/utils/external-link';
 import { meshCodeAt, meshPolygon } from '@/utils/mesh-code';
 
 /**
@@ -917,10 +918,7 @@ function SummaryRows({
 
       <Pressable
         style={[styles.row, styles.linkRow]}
-        onPress={() => {
-          // 外部ブラウザ起動の失敗は致命ではないため握りつぶす(未処理 rejection の防止)
-          Linking.openURL(RIVER_INFO_URL).catch(() => {});
-        }}>
+        onPress={() => openExternalUrl(RIVER_INFO_URL)}>
         <AppText style={styles.linkText}>{copy.riverInfoLabel}(川の防災情報) ↗</AppText>
       </Pressable>
     </View>
