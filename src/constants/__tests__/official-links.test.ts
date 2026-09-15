@@ -37,7 +37,7 @@ describe('公式情報への導線', () => {
     expect(new Set(keys).size).toBe(keys.length);
   });
 
-  it('要件の入口が揃っている: 市、県、気象庁、川、171、web171、00000JAPAN', () => {
+  it('要件の入口が揃っている: 市、県、気象庁、川、電気、171、web171、00000JAPAN', () => {
     expect(links.map((l) => l.key)).toEqual([
       'city-emergency',
       'city-line',
@@ -45,6 +45,8 @@ describe('公式情報への導線', () => {
       'pref-app',
       'jma-warning',
       'river-level',
+      'power-outage',
+      'power-app',
       'dial-171',
       'web171',
       'disaster-wifi',

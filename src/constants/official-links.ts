@@ -23,6 +23,10 @@ export type OfficialSection = {
 /** 直方市の気象庁の市町村コード(class20s)。area.json で確かめた値 */
 const JMA_NOGATA_AREA_CODE = '4020400';
 
+/** 九州電力送配電の停電情報の直方市(福岡県 40、筑豊地方の市区町村 204)。地方ごとの一覧で確かめた値 */
+const KYUDEN_PREF_ID = '40';
+const KYUDEN_NOGATA_CITY_ID = '204';
+
 /**
  * 公式情報の画面に並べる導線。すべてリンクアウトで、アプリからデータを取りに行かない。
  * URL は 2026-09-15 に開けることを確かめたもの(docs/api-spec.md §10)。確認できない先は載せない
@@ -90,6 +94,29 @@ export const OFFICIAL_SECTIONS: readonly OfficialSection[] = [
         label: 'riverInfoLabel',
         note: 'riverInfoSub',
         target: { kind: 'url', url: RIVER_INFO_URL },
+      },
+    ],
+  },
+  {
+    key: 'power',
+    title: 'officialSectionPower',
+    links: [
+      {
+        key: 'power-outage',
+        label: 'officialPowerOutage',
+        note: 'officialPowerOutageNote',
+        // 市区町村単位の詳細ページ。裏で引いている XML は利用規約で機械取得が禁じられているので、
+        // 川の防災情報と同じくリンクだけにする
+        target: {
+          kind: 'url',
+          url: `https://www.kyuden.co.jp/td_teiden/syousai.html?pIda=${KYUDEN_PREF_ID}&pIdb=${KYUDEN_NOGATA_CITY_ID}`,
+        },
+      },
+      {
+        key: 'power-app',
+        label: 'officialPowerApp',
+        note: 'officialPowerAppNote',
+        target: { kind: 'url', url: 'https://www.kyuden.co.jp/td/service/general/outage-app.html' },
       },
     ],
   },

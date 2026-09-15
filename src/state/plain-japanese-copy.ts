@@ -859,6 +859,26 @@ export const PLAIN_JAPANESE_COPY = {
     standard: '川の水位',
     easy: '川(かわ)の 水(みず)の 高(たか)さ',
   },
+  officialSectionPower: {
+    standard: '電気',
+    easy: '電気(でんき)',
+  },
+  officialPowerOutage: {
+    standard: '直方市の停電情報(九州電力送配電)',
+    easy: '直方市(のおがたし)の 停電(ていでん)の じょうほう(九州電力送配電(きゅうしゅうでんりょくそうはいでん))',
+  },
+  officialPowerOutageNote: {
+    standard: '町ごとの停電の戸数と復旧の見込み。5分以上の停電が対象です',
+    easy: '町(まち)ごとに、電気(でんき)が 止(と)まって いる 家(いえ)の 数(かず)と、なおる 見込(みこ)み。5分(ふん)より 長(なが)い 停電(ていでん)だけです',
+  },
+  officialPowerApp: {
+    standard: '停電情報アプリ「九州停電情報提供アプリ」',
+    easy: '停電(ていでん)の アプリ「九州停電情報提供(きゅうしゅうていでんじょうほうていきょう)アプリ」',
+  },
+  officialPowerAppNote: {
+    standard: '住んでいる町を登録すると、停電と復旧が通知で届きます',
+    easy: '住(す)んで いる 町(まち)を 登録(とうろく)すると、停電(ていでん)と なおった ことが 通知(つうち)で とどきます',
+  },
   officialSectionSafety: {
     standard: '安否確認',
     easy: 'ぶじを つたえる、たしかめる',
