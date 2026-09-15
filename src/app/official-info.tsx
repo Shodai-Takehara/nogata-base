@@ -38,9 +38,11 @@ export default function OfficialInfoScreen() {
       <ScreenHeader title={copy.officialInfoTitle} />
 
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
-        {/* 注意書きを先頭に置く。リンクより先に「確かめてから共有」を読ませるため */}
-        <View style={styles.cautionBox}>
-          <AppText style={styles.cautionText}>{copy.officialInfoWarning}</AppText>
+        {/* 注意書きを先頭に置く。リンクより先に「確かめてから共有」を読ませるため。
+            枠や色で囲わず、見出しの一文と説明で読ませる(設定画面の説明文と同じ置き方) */}
+        <View style={styles.intro}>
+          <AppText style={styles.introLead}>{copy.officialInfoLead}</AppText>
+          <AppText style={styles.introBody}>{copy.officialInfoWarning}</AppText>
         </View>
 
         {OFFICIAL_SECTIONS.map((section) => (
@@ -80,8 +82,10 @@ function LinkRow({ link, onPress }: { link: OfficialLink; onPress: () => void })
         <AppText style={styles.rowTitle}>{copy[link.label]}</AppText>
         {link.note ? <AppText style={styles.rowNote}>{copy[link.note]}</AppText> : null}
       </View>
-      {/* 外へ出るリンクと、アプリ内の画面(›)を印で区別する */}
-      <AppText style={styles.arrow}>{external ? '↗' : '›'}</AppText>
+      {/* 外へ出るリンクと、アプリ内の画面(›)を印で区別する。色は他の画面の › と同じ薄い灰 */}
+      <AppText style={external ? styles.arrowExternal : styles.arrow}>
+        {external ? '↗' : '›'}
+      </AppText>
     </Pressable>
   );
 }
@@ -95,24 +99,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 6,
   },
-  cautionBox: {
-    backgroundColor: '#FDF4EC',
-    borderRadius: 12,
-    borderLeftWidth: 3,
-    borderLeftColor: AppColors.caution,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
+  intro: {
+    paddingHorizontal: 4,
+    paddingTop: 4,
+    gap: 4,
   },
-  cautionText: {
-    fontSize: 13,
-    lineHeight: 20,
+  introLead: {
+    fontSize: 17,
+    fontWeight: '600',
+    lineHeight: 24,
     color: AppColors.ink,
+  },
+  introBody: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: AppColors.inkSub,
   },
   caption: {
     fontSize: 11,
     color: AppColors.inkSub,
     letterSpacing: 1,
-    marginTop: 18,
+    marginTop: 22,
     marginBottom: 6,
     marginLeft: 4,
   },
@@ -143,8 +150,12 @@ const styles = StyleSheet.create({
     color: AppColors.inkSub,
   },
   arrow: {
-    fontSize: 16,
-    color: AppColors.primary,
+    fontSize: 18,
+    color: '#C4C9CD',
+  },
+  arrowExternal: {
+    fontSize: 15,
+    color: '#C4C9CD',
   },
   separator: {
     height: StyleSheet.hairlineWidth,
