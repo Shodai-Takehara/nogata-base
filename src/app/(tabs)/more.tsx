@@ -133,11 +133,12 @@ export default function MoreScreen() {
           </AppText>
           <Separator />
           <AppText style={styles.legal}>
-            人口データ: 国土数値情報 500mメッシュ別将来推計人口(国土交通省)を加工して作成
+            人口データ: 国土数値情報
+            500mメッシュ別将来推計人口(国土交通省。2020年国勢調査をもとにした推計)を加工して作成
           </AppText>
           <Separator />
           <AppText style={styles.legal}>
-            地域名: 国勢調査 小地域境界データ(政府統計の総合窓口(e-Stat))を加工して作成
+            地域名: 令和2年国勢調査 小地域境界データ(政府統計の総合窓口(e-Stat))を加工して作成
           </AppText>
           <Separator />
           <AppText style={styles.legal}>
