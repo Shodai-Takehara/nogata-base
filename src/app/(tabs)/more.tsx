@@ -38,16 +38,6 @@ export default function MoreScreen() {
             <AppText style={styles.arrow}>›</AppText>
           </Pressable>
           <Separator />
-          <Pressable
-            style={styles.rowBetween}
-            // ホームの地図に切り替えてハザードレイヤーを有効化する。
-            // タブ画面のパラメータは残り続けるため、毎回変わる値にして
-            // 2回目以降の遷移もホーム側が検知できるようにする
-            onPress={() => router.push({ pathname: '/', params: { hazard: String(Date.now()) } })}>
-            <AppText style={styles.rowTitle}>{copy.rowHazardMap}</AppText>
-            <AppText style={styles.arrow}>›</AppText>
-          </Pressable>
-          <Separator />
           <Pressable style={styles.rowBetween} onPress={() => router.push('/home-pin')}>
             <AppText style={styles.rowTitle}>{copy.rowHomePin}</AppText>
             <View style={styles.rowRight}>

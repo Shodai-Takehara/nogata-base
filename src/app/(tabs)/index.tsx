@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import {
   Fragment,
   memo,
@@ -190,17 +190,6 @@ export default function HomeScreen() {
   useEffect(() => {
     if (demoMode) mapRef.current?.animateToRegion(NOGATA_REGION, 500);
   }, [demoMode]);
-
-  // その他タブの「ハザードマップを重ねる」からの遷移で塗りを洪水にする。
-  // 値は遷移のたびに変わる(more.tsx 側で発行)ため、変化=遷移として扱える。
-  // useEffect で拾うと React Compiler の set-state-in-effect ルールに反するため、
-  // 前回レンダーの値を記録してレンダー中に検知する
-  const { hazard } = useLocalSearchParams<{ hazard?: string }>();
-  const [handledHazardParam, setHandledHazardParam] = useState<string | undefined>(undefined);
-  if (hazard !== handledHazardParam) {
-    setHandledHazardParam(hazard);
-    if (hazard != null) dispatchLayers({ type: 'applyDeepLink', link: 'hazard' });
-  }
 
   // 現在地表示は許可が要るため、勝手に出さずボタンを導線にする(押されたときだけ要求)
   const locateMe = useCallback(async () => {

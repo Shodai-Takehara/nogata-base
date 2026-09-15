@@ -530,10 +530,6 @@ export const PLAIN_JAPANESE_COPY = {
     standard: '出典・免責',
     easy: 'じょうほうの もとと おことわり',
   },
-  rowHazardMap: {
-    standard: 'ハザードマップを重ねる',
-    easy: 'きけんな ばしょを 地図(ちず)に 出(だ)す',
-  },
   rowHomePin: {
     standard: 'じぶん設定(自宅ピン)',
     easy: 'じぶんの せってい(いえの ばしょ)',
