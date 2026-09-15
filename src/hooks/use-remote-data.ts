@@ -4,6 +4,7 @@ import { AppState } from 'react-native';
 import { readCache, writeCache } from '@/data/cache-store';
 import { useDataSource } from '@/data/data-source-context';
 import type { DataSource } from '@/data/types';
+import { useOffline } from '@/state/network';
 import { useSettings } from '@/state/settings';
 
 type RemoteState<T> = {
@@ -97,6 +98,19 @@ export function useRemoteData<T>(loader: (source: DataSource) => Promise<T>, cac
     });
     return () => sub.remove();
   }, [refresh]);
+
+  // 圏外から戻ったときの再取得。次のフォアグラウンド復帰や手動の更新を待たずに
+  // 古い数字を差し替える。圏外中に始まった要求が残っていればスロットル層がそれを
+  // 共有して返すので、必ず新しい要求になるわけではない(その場合は失敗表示から手動で更新)。
+  // refresh は ref 経由で読み、データソースの差し替えと同時に起きても二重に取りに行かない
+  const offline = useOffline();
+  const wasOffline = useRef(offline);
+  const refreshRef = useRef(refresh);
+  refreshRef.current = refresh;
+  useEffect(() => {
+    if (wasOffline.current && !offline) refreshRef.current();
+    wasOffline.current = offline;
+  }, [offline]);
 
   return { ...state, refresh };
 }

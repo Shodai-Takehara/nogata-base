@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/app-text';
 import { DemoBanner } from '@/components/demo-banner';
 import { InfoTooltip } from '@/components/info-tooltip';
+import { OfflineBanner } from '@/components/offline-banner';
 import { LANDFORM_SOURCE } from '@/constants/hazard-map';
 import { LORE_SOURCE } from '@/constants/lore-monuments';
 import { AppColors, TAB_BAR_SPACE } from '@/constants/tokens';
@@ -21,6 +22,7 @@ export default function MoreScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <DemoBanner />
+      <OfflineBanner />
       <AppText style={styles.screenTitle}>{copy.moreScreenTitle}</AppText>
 
       <ScrollView

@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/app-text';
 import { DemoBanner } from '@/components/demo-banner';
+import { OfflineBanner } from '@/components/offline-banner';
 import { StatusChip } from '@/components/status-chip';
 import { RIVER_INFO_URL } from '@/constants/links';
 import { AppColors, TAB_BAR_SPACE } from '@/constants/tokens';
@@ -74,6 +75,7 @@ export default function WaterScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <DemoBanner />
+      <OfflineBanner />
       <AppText style={styles.screenTitle}>{copy.waterScreenTitle}</AppText>
 
       <SectionList
