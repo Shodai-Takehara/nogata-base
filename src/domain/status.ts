@@ -110,7 +110,7 @@ export type TrafficSeverity = 'full' | 'partial' | 'unknown';
 
 /**
  * 規制種別の文字列から程度を判定する。実データは「通行止め（全面）」のような
- * 全角括弧表記(docs/api-spec.md §2.4)だが、表記ゆれに備えて部分一致で見る。
+ * 全角括弧表記(データソース仕様書 §2.4)だが、表記ゆれに備えて部分一致で見る。
  */
 export function trafficSeverity(status: string): TrafficSeverity {
   if (status.includes('全面')) return 'full';

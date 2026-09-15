@@ -3,7 +3,7 @@ export type LatLng = {
   longitude: number;
 };
 
-/** 開設状況コード。データソースのコード値ドメイン(docs/api-spec.md §2.1)に一致させる */
+/** 開設状況コード。データソースのコード値ドメイン(データソース仕様書 §2.1)に一致させる */
 export type ShelterOpening = '0' | '1' | '2' | '3';
 
 /** 避難者内訳の年齢区分。データソースの8フィールド(男女×4区分)に合わせる */
@@ -59,7 +59,7 @@ export type WaterLevel = {
 
 export type DamageReport = {
   id: number;
-  /** 災害状況の種別。値は実データのドメイン(docs/api-spec.md §2.5 field_2)で、「その他」は自由記述で置き換え済み */
+  /** 災害状況の種別。値は実データのドメイン(データソース仕様書 §2.5 field_2)で、「その他」は自由記述で置き換え済み */
   category: string;
   workResult: string | null;
   /** 災害対策本部からのコメント */
@@ -70,7 +70,7 @@ export type DamageReport = {
 
 export type TrafficRegulation = {
   id: number;
-  /** 規制の種別。実データは「通行止め（全面）」のような全角括弧表記(docs/api-spec.md §2.4) */
+  /** 規制の種別。実データは「通行止め（全面）」のような全角括弧表記(データソース仕様書 §2.4) */
   status: string;
   note: string | null;
   startAt: number | null;

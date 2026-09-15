@@ -33,7 +33,7 @@ const KYUDEN_NOGATA_CITY_ID = '204';
 
 /**
  * 公式情報の画面に並べる導線。すべてリンクアウトで、アプリからデータを取りに行かない。
- * URL は 2026-09-15 に開けることを確かめたもの(docs/api-spec.md §10)。確認できない先は載せない
+ * URL は 2026-09-15 に開けることを確かめたもの(データソース仕様書 §10)。確認できない先は載せない
  */
 export const OFFICIAL_SECTIONS: readonly OfficialSection[] = [
   {

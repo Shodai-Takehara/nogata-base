@@ -1,7 +1,7 @@
 """浸水想定区域内の推計人口と、人口レイヤーのバンドルデータを生成するスクリプト。
 
   python3 scripts/flood-population.py
-  出力: docs/data/flood-population.json(数値は docs/flood-population.md に転記)
+  出力: .cache/flood-population/out/flood-population.json(集計値。数値は Obsidian「直方ベース 調査 浸水想定区域内の人口推計」に転記し、JSON も同じ Vault に置く)
         src/constants/population-mesh.json(人口レイヤーが表示するメッシュ)
 
 GDAL 系を避け、GeoJSON + shapely(+ 小地域境界のシェープファイル読みに pyshp)で完結させている。
@@ -45,7 +45,8 @@ DATASETS = [
 ]
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), '..', '.cache', 'flood-population')
-OUT_PATH = os.path.join(os.path.dirname(__file__), '..', 'docs', 'data', 'flood-population.json')
+# 集計値は repo に置かない(docs は UI カンプ以外を公開リポジトリに持たない方針)。取得キャッシュと同じ .cache 配下に出す
+OUT_PATH = os.path.join(DATA_DIR, 'out', 'flood-population.json')
 MESH_OUT_PATH = os.path.join(
     os.path.dirname(__file__), '..', 'src', 'constants', 'population-mesh.json'
 )

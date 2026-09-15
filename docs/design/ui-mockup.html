@@ -362,8 +362,6 @@
   .set-row .arw { margin-left: auto; color: #c4c9cd; }
   .set-row .state { margin-left: auto; font-size: 9.5px; font-weight: 400; color: var(--app-sub); }
   .set-row .state + .arw { margin-left: 6px; }
-  .set-row .soon { margin-left: auto; font-size: 9px; font-weight: 700; color: var(--app-sub); background: #eeece6; border-radius: 999px; padding: 2px 9px; }
-  .set-row.off { color: #a6adb3; }
   .segment { margin-left: auto; display: flex; background: var(--paper); border-radius: 999px; padding: 2px; }
   .seg { border-radius: 999px; padding: 2px 9px; font-size: 9.5px; font-weight: 600; color: var(--app-sub); }
   .seg.on { background: var(--ai); color: #fff; }
@@ -399,6 +397,10 @@
     display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 700;
   }
 
+  /* v1.6 で足した画面の説明表(絵は凍結後のスクリーンショットで置き換える) */
+  .tbl { border-collapse: collapse; font-size: 13px; margin: 0 0 28px; max-width: 60em; }
+  .tbl th, .tbl td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  .tbl th { background: var(--paper); color: var(--sub); font-weight: 600; white-space: nowrap; }
   .foot { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--sub); font-size: 12px; }
   .foot p { margin: 4px 0; }
   @media (max-width: 640px) {
@@ -409,7 +411,7 @@
 
 <div class="wrap">
   <header>
-    <p class="eyebrow">UI Design Comp v2.0 / 2026-07-19 / 実装反映版(e-ZUKA スマートアプリコンテスト2026)</p>
+    <p class="eyebrow">UI Design Comp v2.1 / 2026-09-15 / 実装反映版(e-ZUKA スマートアプリコンテスト2026)。絵は v1.5、注記は v1.7</p>
     <h1>直方ベース</h1>
     <p class="tagline">遠賀川のまちの、ふだんの入口。</p>
     <p class="lede">防災アプリの「非常時の赤」で塗らない。ふだん開きたくなる生活アプリの顔で作り、危険は水の言葉(平常・注意・危険)で静かに、しかしはっきり語る。本版は実装済みの機能構成(F-01〜F-13)を反映したカンプで、画面の要素・文言は実アプリと対応する。</p>
@@ -443,7 +445,8 @@
   </div>
 
   <h2>S-01 ホーム地図(平常時とデモモード)</h2>
-  <p class="sec-note">同じ画面がトグルひとつで災害時の姿になる。これがデモブースの主役(要件 F-09)。レイヤーは6種(避難所・車中泊・水位・被害・規制・ハザード)を意味で2段に分け、要約カード「いまの状況」はたためる。デモモード中は紫のバナーを常時表示し、有効化と同時に地図が直方市中心(直方駅付近)へ戻る。</p>
+  <p class="sec-note">同じ画面がトグルひとつで災害時の姿になる。これがデモブースの主役(要件 F-09)。要約カード「いまの状況」はたためる。デモモード中は紫のバナーを常時表示し、有効化と同時に地図が直方市中心(直方駅付近)へ戻る。圏外のときは墨色の「オフライン — 情報を更新できません」の帯を同じ位置に出す(NF-04)。</p>
+  <p class="sec-note"><b>v1.6 以降の変更(この絵には未反映。凍結後に実機のスクリーンショットで置き換える)</b>: レイヤーの切替はチップの並びをやめ、地図上の1つの「レイヤー」ボタンから開くシート(S-09)に集めた。シートは「いまの状況(ピン: 避難所・車中泊避難所・水位・被害報告・交通規制)」「塗り(1つ選ぶ: なし・洪水の浸水想定・地震ハザード・地形の分類)」「重ねる区域(土砂災害警戒区域・家屋倒壊等氾濫想定区域・人口)」「記憶(自然災害伝承碑)」の4区分。地図の上には表示中の塗りと区域の凡例を1行の帯にまとめ、ⓘ で全文と出典を読める。要約カードの AR 導線は「現在地の想定浸水深を AR で見る ›」で、自宅ピンがあれば水害時と地震時の最寄り避難所が「道のり 約◯m・徒歩 ◯分以上」つきで出る。</p>
 
   <div class="pair">
     <!-- S-01 平常時 -->
@@ -537,7 +540,7 @@
         </div>
         <div class="sumcard">
           <div class="sumhead"><span class="cap">いまの状況</span><span class="chev">▸</span></div>
-          <div class="sumrow link" style="border-top:0;margin-top:0;padding-top:4px">現在地の浸水を AR で体感する ›</div>
+          <div class="sumrow link" style="border-top:0;margin-top:0;padding-top:4px">現在地の想定浸水を AR で見る ›</div>
           <div class="sumrow link">直方市の川の水位(川の防災情報) ↗</div>
         </div>
         <div class="tabbar">
@@ -548,12 +551,12 @@
         </div>
       </div></div>
       <figcaption><span class="sid">S-01 / F-05, F-06, F-07, F-09</span><span class="tt">ホーム(デモモード=災害時)</span>
-      <p>ハザード4レイヤー(洪水・土石流・急傾斜地・家屋倒壊)の選択と凡例をひとつのパネルにまとめ、避難所ピンが開設状況の3色に点灯。被害ピン(橙のひし形)と規制線(赤)が加わる。要約をたたむと AR への導線と川の水位リンクだけが残る。AR 導線は洪水レイヤー表示中のみ出す。</p></figcaption>
+      <p>避難所ピンが開設状況の3色に点灯し、被害ピン(橙のひし形)と規制線(赤)が加わる。要約をたたむと AR への導線と川の水位リンクだけが残る。絵のハザードパネル(4レイヤーのチップ)は v1.5 のもので、いまは S-09 のシートと凡例の帯に置き換わっている(上の注記)。デモのシナリオは大雨と地震の2つで、地震では地震に対応しない避難所が閉鎖になる(F-09)。</p></figcaption>
     </figure>
   </div>
 
   <h2>S-02 / S-03 水位と避難所の一覧</h2>
-  <p class="sec-note">水位一覧は「本物のデータが数分おきに動いている」ことの実証点(要件 F-03)。避難所一覧は対応災害でしぼれて、自宅ピンを置くと近い順に並ぶ(距離の数値はあえて出さない)。どちらも圏外ではキャッシュを表示し「◯月◯日 ◯:◯ 時点の情報」と古さを明示する(NF-04)。</p>
+  <p class="sec-note">水位一覧は「本物のデータが動いている」ことの実証点(要件 F-03。観測時刻を各行に出す)。避難所一覧は対応災害でしぼれて、自宅ピンを置くと道のり順に並び、行に「道のり 約◯m・徒歩 ◯分以上」が出る(v1.6。直線距離では対岸の避難所が最寄りになるため道のりにし、分数は下限として示す)。どちらも圏外ではキャッシュを表示し「◯月◯日 ◯:◯ 時点の情報」と古さを明示する(NF-04)。</p>
 
   <div class="screens">
     <!-- S-02 水位一覧 -->
@@ -561,7 +564,7 @@
       <div class="phone"><div class="screen">
         <div class="sbar"><span>9:41</span><span class="batt"></span></div>
         <div class="ph-head"><span class="ttl">水位</span></div>
-        <div class="wl-sum"><div class="big">全22地点 平常</div><div class="sub">市内の水位センサー・転倒ゲート(数分おきに更新)</div></div>
+        <div class="wl-sum"><div class="big">全22地点 平常</div><div class="sub">市内の水位センサー・転倒ゲート(観測時刻は各行に表示)</div></div>
         <div class="wl-cap">水位センサー(20)</div>
         <div class="wl-list">
           <div class="wl-row">
@@ -631,7 +634,7 @@
         </div>
       </div></div>
       <figcaption><span class="sid">S-03 / F-02, F-12</span><span class="tt">避難所一覧</span>
-      <p>閉鎖中も収容目安と対応災害タグを出し、平常時の「避難所選びの下調べ」に使える一覧にする。自宅ピンを置くと近い順に並ぶが、距離の数値は出さない(近さの順序だけが要る情報だから)。行タップで S-05 の詳細シートを開く。</p></figcaption>
+      <p>閉鎖中も収容目安と対応災害タグを出し、平常時の「避難所選びの下調べ」に使える一覧にする。自宅ピンを置くと道のり順に並び、距離と徒歩分数(下限)を行に出す(v1.6 で「距離は出さない」の方針を改めた。避難場所までの移動時間を知る人が34%しかいない調査結果による)。対応しない災害のタグは灰色で、詳細には「地震のときは使えません」の1行が出る。行タップで S-05 の詳細シートを開く。</p></figcaption>
     </figure>
   </div>
 
@@ -666,12 +669,12 @@
         </div>
       </div></div>
       <figcaption><span class="sid">S-04 / F-08</span><span class="tt">AR 浸水体験</span>
-      <p>見慣れた景色の腰の高さに濁った水面が張り付き、目盛り付きの量水標が実寸を語る。スライダーは2本: 想定浸水深(燈)と、2階や高台にいる場合の「今いる場所の高さ」(川藍)。差し引いた足元の水位が0になると「この高さなら浸水しません」に変わり、垂直避難の意味が体でわかる。</p></figcaption>
+      <p>見慣れた景色の腰の高さに濁った水面が張り付き、目盛り付きの量水標が実寸を語る。スライダーは2本: 想定浸水深(燈)と、2階や高台にいる場合の「今いる場所の高さ」(川藍)。差し引いた足元の水位が0になると「この設定では足元まで水は来ません」に変わり、垂直避難の意味が体でわかる(「浸水しません」は安全の保証に読めるため 2026-09-15 に改めた。水面は上限 5m で切り詰めるので、公式の想定でなく設定値に対する結果として言う)。現在地の想定浸水深をタイルの色から読んで初期値にし、「この場所の想定: 3〜5m(想定最大規模)」と示す。</p></figcaption>
     </figure>
   </div>
 
   <h2>S-05 / S-06 / S-07 詳細シート、設定、じぶん設定</h2>
-  <p class="sec-note">詳細シートは地図の文脈を保ったまま画面下に重ね、要約カードと入れ替わる。その他画面は「備え / 暮らし / アプリ / 出典・免責」の4群。じぶん設定は住所を入力させず、地図をタップするか現在地ボタンでピンを置くだけにする(要件 F-12 / NF-07)。</p>
+  <p class="sec-note">詳細シートは地図の文脈を保ったまま画面下に重ね、要約カードと入れ替わる。同型のシートが地震メッシュ(確率3値、地盤、増幅率)、人口メッシュ(地域名、目安の人数、65歳以上)、伝承碑(碑名、災害名、建立年、伝承内容)にもある。その他画面は「備え / アプリ / 出典・免責」の3群。じぶん設定は住所を入力させず、地図をタップするか現在地ボタンでピンを置くだけにする(要件 F-12 / NF-07)。</p>
 
   <div class="screens">
     <!-- S-05 避難所詳細 -->
@@ -727,18 +730,11 @@
           <div class="set-group">
             <div class="set-cap">備え</div>
             <div class="set-card">
+              <div class="set-row">公式の情報を見る<span class="arw">›</span></div>
               <div class="set-row">AR 浸水体験<span class="arw">›</span></div>
-              <div class="set-row">ハザードマップを重ねる<span class="arw">›</span></div>
               <div class="set-row">じぶん設定(自宅ピン)<span class="state">設定済み</span><span class="arw">›</span></div>
+              <div class="set-row">災害時の無料 Wi-Fi<span class="state">00000JAPAN</span><span class="arw">›</span></div>
             </div>
-          </div>
-          <div class="set-group">
-            <div class="set-cap">暮らし</div>
-            <div class="set-card">
-              <div class="set-row off">ごみ収集日<span class="soon">準備中</span></div>
-              <div class="set-row off">市のお知らせ<span class="soon">準備中</span></div>
-            </div>
-            <div class="set-note">防災のつぎは、毎日の暮らしへ。</div>
           </div>
           <div class="set-group">
             <div class="set-cap">アプリ</div>
@@ -746,13 +742,17 @@
               <div class="set-row">文字サイズ<span class="segment"><span class="seg on">標準</span><span class="seg">大きめ</span><span class="seg">特大</span></span></div>
               <div class="set-row">やさしい日本語<span class="toggle"></span></div>
               <div class="set-row">デモモード<span class="toggle on"></span></div>
+              <div class="set-row">シナリオ<span class="segment"><span class="seg on">大雨</span><span class="seg">地震</span></span></div>
             </div>
-            <div class="set-note">大雨災害の再現シナリオを表示します。通信は行いません。</div>
+            <div class="set-note">災害時の直方市を想定したデータを表示します。通信は行いません。</div>
           </div>
           <div class="set-group">
             <div class="set-cap">出典・免責</div>
             <div class="set-card">
               <div class="legal">避難所・水位・被害・交通規制のデータ: 直方市 災害時情報共有PF(公開用)</div>
+              <div class="legal">浸水想定・土砂災害・家屋倒壊の区域: 重ねるハザードマップ(ハザードマップポータルサイト、国土交通省)</div>
+              <div class="legal">人口データ: 国土数値情報 500mメッシュ別将来推計人口(国土交通省。2020年国勢調査をもとにした推計)を加工して作成</div>
+              <div class="legal">…(地域名、地震ハザード、断層帯、地形の分類、自然災害伝承碑、© OpenStreetMap contributors)</div>
               <div class="legal">本アプリは直方市の公式アプリではありません。避難の判断は、市の発表する公式の情報に従ってください。</div>
             </div>
           </div>
@@ -765,7 +765,7 @@
         </div>
       </div></div>
       <figcaption><span class="sid">S-06 / F-09, F-11, F-12, F-13, NF-06</span><span class="tt">その他(設定)</span>
-      <p>「備え / 暮らし / アプリ / 出典・免責」の4群。見出しは標準モードでは漢字、やさしい日本語モードでは「そなえ・くらし」に切り替わる。文字サイズは特大まで3段階。準備中の暮らし機能を灰色で見せ、防災だけのアプリではない未来を画面自体に語らせる。</p></figcaption>
+      <p>「備え / アプリ / 出典・免責」の3群。見出しは標準モードでは漢字、やさしい日本語モードでは「そなえ」に切り替わる。文字サイズは特大まで3段階。暮らしの機能は画面に出さず、防災の入口だけを並べる(2026-09-15 に「準備中」の群を外した。将来の暮らしの機能はアプリ名から開くサイドメニューに置く)。</p></figcaption>
     </figure>
 
     <!-- S-07 じぶん設定 -->
@@ -795,9 +795,18 @@
     </figure>
   </div>
 
+  <h2>S-08 / S-09 / S-10 公式情報、レイヤー選択、災害時 Wi-Fi(v1.6 で追加。絵は凍結後に実機のスクリーンショットで置き換える)</h2>
+  <table class="tbl">
+    <tr><th>画面</th><th>入口</th><th>中身</th></tr>
+    <tr><td>S-08 公式情報(F-18)</td><td>その他 › 公式の情報を見る</td><td>見出し「共有する前に、発信元が公式か確かめてください」と説明「災害のときは根拠のない情報が広まります。ここに並ぶ入口は、市、県、国、事業者の公式のものです」。区分ごとのカード(直方市: 公式ホームページ、公式 LINE / 福岡県: 直方市の避難情報、防災アプリ「ふくおか防災ナビ・まもるくん」/ 気象庁: 警報・注意報 / 川: 川の防災情報 / 電気: 停電情報、停電情報アプリ / 安否確認: 171、web171 / 通信: 災害時の無料 Wi-Fi)。外へ出るリンクは「↗」、アプリ内の画面は「›」。色付きの注意枠は使わず、見出しと地の文で書く</td></tr>
+    <tr><td>S-09 レイヤー選択(F-01 拡張)</td><td>ホームの「レイヤー」ボタン</td><td>「地図に出すもの」の題で、4区分の切替行(見本の色つき)。塗りは1つ選ぶ(選ぶと凡例の全文、区分名の ⓘ の一言、注意書き、出典が行の下に開く)。区域と人口は切替。塗りの面(地震ハザード、地形の分類)と人口は同時に出せない。シート外の地図タップで閉じる</td></tr>
+    <tr><td>S-10 災害時 Wi-Fi</td><td>その他 › 災害時の無料 Wi-Fi、S-08 の「通信」</td><td>00000JAPAN の説明、つなぎ方、暗号化されない注意、「いま開放されているかはこのアプリでは確認できない」の注記</td></tr>
+  </table>
+
   <div class="foot">
-    <p>S-xx / F-xx は <code>docs/requirements.md</code> の画面・機能 ID に対応。地図は抽象表現、画面内の数値・住所はダミー(観測点名・避難所名は実データより)。デモモードの件数はデモシナリオのフィクスチャに準拠。</p>
-    <p>ハザード凡例色はハザードマップポータルサイト(国土交通省)の配信タイルに準拠。実装は react-native-maps + UrlTile で洪水・土石流・急傾斜地・家屋倒壊の4レイヤーを重ねる。</p>
+    <p>S-xx / F-xx は要件定義書(Obsidian「直方ベース 要件定義書」)の画面・機能 ID に対応。地図は抽象表現、画面内の数値・住所はダミー(観測点名・避難所名は実データより)。デモモードの件数はデモシナリオのフィクスチャに準拠。</p>
+    <p>ハザード凡例色はハザードマップポータルサイト(国土交通省)の配信タイルに準拠。実装は react-native-maps + UrlTile で洪水・土石流・急傾斜地・家屋倒壊(氾濫流、河岸侵食)の5タイルと、地理院タイルの治水地形分類図を重ねる。地震ハザードと人口は同梱した静的データを面で描く(データソース仕様書 §6、§11、§12)。</p>
+    <p>本カンプの絵は v1.5 時点(2026-08)のもので、v1.6 以降の変更(S-01 のレイヤー選択シートと凡例の帯、S-03 の道のり表示、S-06 のシナリオ行、S-08〜S-10)は本文の注記と要件定義書を正とする。凍結(2026-09-27)後に実機のスクリーンショットで差し替える。</p>
     <p>すべての文言は標準とやさしい日本語(F-13。ふりがな付き・分かち書き)の2系統を持つ。本カンプは標準表記のみ示す。</p>
   </div>
 </div>

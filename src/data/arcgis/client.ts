@@ -104,7 +104,7 @@ async function fetchPage(
       throw new ArcgisError(`HTTP ${res.status}: ${layer.path}`);
     }
     const body = (await res.json()) as GeoJsonResponse;
-    // ArcGIS はエラー時も HTTP 200 でボディにエラーを入れて返す(docs/api-spec.md §1)
+    // ArcGIS はエラー時も HTTP 200 でボディにエラーを入れて返す(データソース仕様書 §1)
     if (body.error) {
       throw new ArcgisError(`ArcGIS error ${body.error.code}: ${body.error.message}`);
     }
