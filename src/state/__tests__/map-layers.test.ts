@@ -115,22 +115,6 @@ describe('地図レイヤーの状態', () => {
     expect(twice).toEqual(INITIAL_MAP_LAYERS);
   });
 
-  it('その他タブからの遷移で塗りが洪水になり、他は変わらない', () => {
-    const withArea = mapLayersReducer(INITIAL_MAP_LAYERS, { type: 'toggleArea', key: 'landslide' });
-    const linked = mapLayersReducer(withArea, { type: 'applyDeepLink', link: 'hazard' });
-    expect(linked.fill).toBe('flood');
-    expect(linked.areas).toEqual(withArea.areas);
-    expect(linked.pins).toEqual(withArea.pins);
-  });
-
-  it('地震を見ている最中の遷移でも塗りは洪水に置き換わり、人口を見ていればそのまま', () => {
-    const quake = mapLayersReducer(INITIAL_MAP_LAYERS, { type: 'setFill', fill: 'quake' });
-    expect(mapLayersReducer(quake, { type: 'applyDeepLink', link: 'hazard' }).fill).toBe('flood');
-    const population = mapLayersReducer(INITIAL_MAP_LAYERS, { type: 'togglePopulation' });
-    const linked = mapLayersReducer(population, { type: 'applyDeepLink', link: 'hazard' });
-    expect(linked).toMatchObject({ fill: 'flood', population: true });
-  });
-
   it('バッジの数は塗り(最大1)、区域、人口の数で、ピンは数えない', () => {
     expect(overlayCount(INITIAL_MAP_LAYERS)).toBe(0);
     let state = mapLayersReducer(INITIAL_MAP_LAYERS, { type: 'setFill', fill: 'flood' });

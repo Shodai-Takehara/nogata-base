@@ -38,16 +38,6 @@ export default function MoreScreen() {
             <AppText style={styles.arrow}>›</AppText>
           </Pressable>
           <Separator />
-          <Pressable
-            style={styles.rowBetween}
-            // ホームの地図に切り替えてハザードレイヤーを有効化する。
-            // タブ画面のパラメータは残り続けるため、毎回変わる値にして
-            // 2回目以降の遷移もホーム側が検知できるようにする
-            onPress={() => router.push({ pathname: '/', params: { hazard: String(Date.now()) } })}>
-            <AppText style={styles.rowTitle}>{copy.rowHazardMap}</AppText>
-            <AppText style={styles.arrow}>›</AppText>
-          </Pressable>
-          <Separator />
           <Pressable style={styles.rowBetween} onPress={() => router.push('/home-pin')}>
             <AppText style={styles.rowTitle}>{copy.rowHomePin}</AppText>
             <View style={styles.rowRight}>
@@ -70,14 +60,6 @@ export default function MoreScreen() {
             </View>
           </Pressable>
         </View>
-
-        <AppText style={styles.caption}>{copy.captionLife}</AppText>
-        <View style={styles.card}>
-          <Row title={copy.rowGarbage} badge={copy.badgePreparing} />
-          <Separator />
-          <Row title={copy.rowCityNews} badge={copy.badgePreparing} />
-        </View>
-        <AppText style={styles.note}>{copy.lifeNote}</AppText>
 
         <AppText style={styles.caption}>{copy.captionApp}</AppText>
         <View style={styles.card}>
@@ -189,20 +171,6 @@ function textSizeLabel(size: TextSize, copy: ReturnType<typeof useCopy>): string
   }
 }
 
-function Row({ title, badge }: { title: string; badge?: string }) {
-  const disabled = badge != null;
-  return (
-    <View style={styles.rowBetween}>
-      <AppText style={[styles.rowTitle, disabled && styles.rowDisabled]}>{title}</AppText>
-      {badge ? (
-        <View style={styles.badge}>
-          <AppText style={styles.badgeText}>{badge}</AppText>
-        </View>
-      ) : null}
-    </View>
-  );
-}
-
 function SegmentButton({
   label,
   accessibilityLabel,
@@ -270,15 +238,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: AppColors.ink,
   },
-  rowDisabled: {
-    color: AppColors.none,
-  },
-  badge: {
-    backgroundColor: AppColors.paper,
-    borderRadius: 999,
-    paddingHorizontal: 9,
-    paddingVertical: 2,
-  },
   rowLeft: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -292,11 +251,6 @@ const styles = StyleSheet.create({
   },
   rowState: {
     fontSize: 11,
-    color: AppColors.inkSub,
-  },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: '700',
     color: AppColors.inkSub,
   },
   separator: {

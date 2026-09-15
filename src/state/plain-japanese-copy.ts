@@ -523,20 +523,12 @@ export const PLAIN_JAPANESE_COPY = {
     standard: '備え',
     easy: 'そなえ',
   },
-  captionLife: {
-    standard: '暮らし',
-    easy: 'くらし',
-  },
   captionApp: {
     standard: 'アプリ',
   },
   captionCredits: {
     standard: '出典・免責',
     easy: 'じょうほうの もとと おことわり',
-  },
-  rowHazardMap: {
-    standard: 'ハザードマップを重ねる',
-    easy: 'きけんな ばしょを 地図(ちず)に 出(だ)す',
   },
   rowHomePin: {
     standard: 'じぶん設定(自宅ピン)',
@@ -597,18 +589,6 @@ export const PLAIN_JAPANESE_COPY = {
       'いま開放されているかどうかは、このアプリでは確認できません。Wi-Fi の一覧に「00000JAPAN」があるかで確かめてください。',
     easy: 'いま つかえるか どうかは、この アプリでは わかりません。スマホの Wi-Fi の ところに「00000JAPAN」が あるか 見(み)て ください。',
   },
-  rowGarbage: {
-    standard: 'ごみ収集日',
-    easy: 'ごみの 日(ひ)',
-  },
-  rowCityNews: {
-    standard: '市のお知らせ',
-    easy: '市(し)からの おしらせ',
-  },
-  badgePreparing: {
-    standard: '準備中',
-    easy: 'じゅんびちゅう',
-  },
   rowTextSize: {
     standard: '文字サイズ',
     easy: '文字(もじ)の 大(おお)きさ',
@@ -642,10 +622,6 @@ export const PLAIN_JAPANESE_COPY = {
   demoScenarioQuake: {
     standard: '地震',
     easy: '地震(じしん)',
-  },
-  lifeNote: {
-    standard: '防災のつぎは、毎日の暮らしへ。',
-    easy: 'ぼうさいの つぎは、まいにちの くらしへ。',
   },
   demoNote: {
     standard: '災害時の直方市を想定したデータを表示します。通信は行いません。',

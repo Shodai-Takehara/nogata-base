@@ -55,9 +55,7 @@ export type MapLayerAction =
   | { type: 'setFill'; fill: FillKey }
   | { type: 'toggleArea'; key: AreaKey }
   | { type: 'togglePopulation' }
-  | { type: 'toggleLore' }
-  /** その他タブの「ハザードマップを重ねる」からの遷移 */
-  | { type: 'applyDeepLink'; link: 'hazard' };
+  | { type: 'toggleLore' };
 
 /**
  * 既定値。ピンは平常時の主目的(避難所と水位の確認)なのですべて表示し、
@@ -95,8 +93,6 @@ export function mapLayersReducer(state: MapLayerState, action: MapLayerAction): 
       };
     case 'toggleLore':
       return { ...state, lore: !state.lore };
-    case 'applyDeepLink':
-      return mapLayersReducer(state, { type: 'setFill', fill: 'flood' });
   }
 }
 
