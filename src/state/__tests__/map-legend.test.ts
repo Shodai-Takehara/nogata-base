@@ -7,6 +7,7 @@ import {
 import { POPULATION_ATTRIBUTION } from '@/constants/population-map';
 import { FUKUCHIYAMA_FAULT, QUAKE_ATTRIBUTION, QUAKE_BUCKETS } from '@/constants/quake-map';
 import {
+  AREA_KEYS,
   FILL_KEYS,
   INITIAL_MAP_LAYERS,
   mapLayersReducer,
@@ -78,9 +79,19 @@ describe('凡例のまとまり', () => {
       expect(entry.note).toBe(LANDFORM_LEGEND[i].note?.standard);
       expect(easy.entries[i].note).toBe(LANDFORM_LEGEND[i].note?.easy);
     });
-    // 洪水と区域の凡例は区分名で足りる(浸水深や警戒区域は名前が意味を持つ)
+    // 浸水深は数値で意味が通るので、洪水の凡例に一言は付けない
     for (const block of legendBlocks(withFill('flood'), copy, false)) {
       for (const entry of block.entries) expect(entry.note).toBeUndefined();
+    }
+  });
+
+  it('1つの凡例の中で区分名は重複しない(家屋倒壊の2区分は同じ赤なので名前で見分ける)', () => {
+    let state = withFill('landform');
+    for (const area of AREA_KEYS)
+      state = mapLayersReducer(state, { type: 'toggleArea', key: area });
+    for (const block of legendBlocks(state, copy, false)) {
+      const labels = block.entries.map((e) => e.label);
+      expect(new Set(labels).size).toBe(labels.length);
     }
   });
 
@@ -99,17 +110,30 @@ describe('凡例のまとまり', () => {
     }
   });
 
-  it('断層線の見本と注意書きは地震の塗りにだけ付く', () => {
+  it('断層線の見本は地震の塗りにだけ付き、注意書きは洪水にもある(人口には無い)', () => {
     const [flood] = legendBlocks(withFill('flood'), copy, false);
     const [population] = legendBlocks(
       mapLayersReducer(INITIAL_MAP_LAYERS, { type: 'togglePopulation' }),
       copy,
       false,
     );
-    for (const block of [flood, population]) {
-      expect(block.line).toBeUndefined();
-      expect(block.note).toBeUndefined();
-    }
+    expect(flood.line).toBeUndefined();
+    expect(flood.note).toBe(copy.floodNote);
+    expect(population.line).toBeUndefined();
+    expect(population.note).toBeUndefined();
+  });
+
+  it('家屋倒壊の区域は氾濫流と河岸侵食のタイルを1つの凡例にまとめ、帯に短い名前が2度並ばない', () => {
+    const state = mapLayersReducer(INITIAL_MAP_LAYERS, {
+      type: 'toggleArea',
+      key: 'houseCollapse',
+    });
+    const blocks = legendBlocks(state, copy, false);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].title).toBe('家屋倒壊等氾濫想定区域');
+    expect(blocks[0].entries.map((e) => e.label)).toEqual(['氾濫流', '河岸侵食']);
+    // 河岸侵食は縞の見本で、同じ赤の氾濫流と見分けられる
+    expect(blocks[0].entries[1].stripe).toBeDefined();
   });
 
   it('土砂災害の区域は土石流と急傾斜地の2つに分かれ、それぞれ警戒と特別警戒を持つ', () => {

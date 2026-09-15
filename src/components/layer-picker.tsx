@@ -208,8 +208,9 @@ function ToggleRow({
 function Swatches({ entries, round }: { entries: readonly SwatchEntry[]; round?: boolean }) {
   return (
     <View style={styles.swatches}>
-      {entries.map((entry) => (
-        <LegendSwatch key={entry.color} entry={entry} round={round} />
+      {entries.map((entry, index) => (
+        // 見本は色だけの項目(ピン)もあって名前が無く、並びは固定なので添字で足りる
+        <LegendSwatch key={index} entry={entry} round={round} />
       ))}
     </View>
   );
@@ -225,8 +226,8 @@ function LegendDetail({ block }: { block: LegendBlock }) {
     <View style={styles.legend}>
       <AppText style={styles.legendTitle}>{block.title}</AppText>
       <View style={styles.legendRows}>
-        {block.entries.map((entry) => (
-          <View key={entry.color} style={styles.legendRow}>
+        {block.entries.map((entry, index) => (
+          <View key={index} style={styles.legendRow}>
             <LegendSwatch entry={entry} />
             <AppText style={styles.legendLabel}>{entry.label}</AppText>
             {entry.note ? <InfoTooltip text={entry.note} /> : null}

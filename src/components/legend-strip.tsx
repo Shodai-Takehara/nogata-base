@@ -64,8 +64,8 @@ function ScaleLegend({ block }: { block: LegendBlock }) {
         {first.label}
       </AppText>
       <View style={styles.bar}>
-        {block.entries.map((entry) => (
-          <View key={entry.color} style={[styles.barStep, { backgroundColor: entry.color }]} />
+        {block.entries.map((entry, index) => (
+          <View key={index} style={[styles.barStep, { backgroundColor: entry.color }]} />
         ))}
       </View>
       <AppText maxScale={STRIP_MAX_SCALE} style={styles.label}>
@@ -88,8 +88,9 @@ function ClassLegend({ block }: { block: LegendBlock }) {
       <AppText maxScale={STRIP_MAX_SCALE} style={styles.short}>
         {block.short}
       </AppText>
-      {block.entries.map((entry) => (
-        <View key={entry.color} style={styles.classItem}>
+      {/* 凡例の並びは固定で、色も区分名も一意とは限らない(家屋倒壊の2区分は同じ赤)ため添字で足りる */}
+      {block.entries.map((entry, index) => (
+        <View key={index} style={styles.classItem}>
           <LegendSwatch entry={entry} size={SWATCH_SIZE} />
           {block.compact ? null : (
             <AppText maxScale={STRIP_MAX_SCALE} style={styles.label}>

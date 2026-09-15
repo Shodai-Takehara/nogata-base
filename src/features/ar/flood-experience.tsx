@@ -23,7 +23,7 @@ import {
   formatDepth,
 } from '@/features/ar/water-plane';
 import { fetchFloodDepthAt, type FloodDepthRank } from '@/features/hazard/flood-depth';
-import { useCopy } from '@/state/plain-japanese';
+import { spokenCopy, useCopy } from '@/state/plain-japanese';
 
 /**
  * AR 浸水体験の本体。ViroKit は実機専用のため、このモジュールを
@@ -131,15 +131,19 @@ export default function FloodExperience() {
               styles.resultText,
               effectiveDepthM > 0 ? styles.resultDanger : styles.resultSafe,
             ]}>
-            {effectiveDepthM > 0 ? `足元の浸水 ${formatDepth(effectiveDepthM)}` : copy.arNoFlood}
+            {effectiveDepthM > 0
+              ? `${copy.arEffectiveDepthLabel} ${formatDepth(effectiveDepthM)}`
+              : copy.arNoFlood}
           </AppText>
           <View style={styles.kindRow}>
             <KindChip
+              kindLabel={spokenCopy('a11yArWaterKind')}
               label={copy.arWaterMuddy}
               active={waterKind === 'muddy'}
               onPress={() => setWaterKind('muddy')}
             />
             <KindChip
+              kindLabel={spokenCopy('a11yArWaterKind')}
               label={copy.arWaterClear}
               active={waterKind === 'clear'}
               onPress={() => setWaterKind('clear')}
@@ -165,7 +169,7 @@ export default function FloodExperience() {
             {!siteLookupDone
               ? copy.arSiteLookupInProgress
               : siteRank
-                ? `この場所の想定: ${siteRank.label}(想定最大規模)`
+                ? `${copy.arSiteRankLabel}: ${siteRank.label}${copy.arSiteRankScale}`
                 : copy.arSiteNoData}
           </AppText>
         </View>
@@ -192,10 +196,13 @@ export default function FloodExperience() {
 
 function KindChip({
   label,
+  kindLabel,
   active,
   onPress,
 }: {
   label: string;
+  /** 読み上げ用の「水の種類」。表示モードに合わせるため呼び出し側の文言カタログから渡す */
+  kindLabel: string;
   active: boolean;
   onPress: () => void;
 }) {
@@ -203,7 +210,7 @@ function KindChip({
     <Pressable
       style={[styles.kindChip, active && styles.kindChipActive]}
       onPress={onPress}
-      accessibilityLabel={`水の種類: ${label}`}>
+      accessibilityLabel={`${kindLabel}: ${label}`}>
       <AppText style={[styles.kindChipText, active && styles.kindChipTextActive]}>{label}</AppText>
     </Pressable>
   );
@@ -306,14 +313,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
   },
+  // 平易版や特大文字で結果の文が伸びると水の種類のチップが画面外へ押し出されるため、
+  // 文を縮めて折り返し、それでも収まらなければチップを次の行に落とす
   resultRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 8,
     marginBottom: 6,
   },
   resultText: {
+    flexShrink: 1,
     fontSize: 16,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],

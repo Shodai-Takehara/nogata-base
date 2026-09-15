@@ -83,7 +83,7 @@ export function fillLegend(fill: FillKey, copy: Copy, easy: boolean): LegendBloc
         attribution: layer.attribution,
       };
       return fill === 'flood'
-        ? { ...block, scale: true }
+        ? { ...block, scale: true, note: copy.floodNote }
         : { ...block, scale: false, compact: true, note: copy.landformNote };
     }
     case 'quake':
@@ -119,19 +119,34 @@ export function populationLegend(copy: Copy): LegendBlock {
   };
 }
 
-/** 区域はタイルごとに凡例を分ける(土砂災害は土石流と急傾斜地で色が違うため) */
+/**
+ * 区域の凡例はタイルごとに分ける(土砂災害は土石流と急傾斜地で色が違うため)。
+ * ただし正式名称が同じタイル(家屋倒壊等氾濫想定区域の氾濫流と河岸侵食)は、
+ * 帯に同じ短い名前が2度並ばないよう1つの凡例にまとめる。出典が違うタイルはまとめない
+ * (まとめると片方の出典表記が落ちる)
+ */
 export function areaLegend(area: AreaKey, easy: boolean): LegendBlock[] {
-  return AREA_LAYERS[area].map((key) => {
+  const blocks: LegendBlock[] = [];
+  for (const key of AREA_LAYERS[area]) {
     const layer = hazardLayer(key);
-    return {
+    const entries = legendEntries(layer.legend, easy);
+    const same = blocks.findIndex(
+      (b) => b.title === layer.title && b.attribution === layer.attribution,
+    );
+    if (same >= 0) {
+      blocks[same] = { ...blocks[same], entries: [...blocks[same].entries, ...entries] };
+      continue;
+    }
+    blocks.push({
       key,
       title: layer.title,
       short: easy ? layer.labelEasy : layer.label,
-      entries: legendEntries(layer.legend, easy),
+      entries,
       attribution: layer.attribution,
       scale: false,
-    };
-  });
+    });
+  }
+  return blocks;
 }
 
 /** 地図に出ている人口、塗り、区域の凡例を、描画順(下から上)に並べる */
