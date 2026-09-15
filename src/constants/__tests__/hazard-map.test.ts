@@ -119,11 +119,12 @@ describe('ハザードマップタイル定義', () => {
     expect(noteOf('氾濫平野')?.standard).toContain('内水氾濫');
   });
 
-  it('各レイヤーの凡例は色・ラベルがそろっている', () => {
+  it('各レイヤーの凡例は色・ラベルがそろっている(縞の色も同じ形式)', () => {
     for (const layer of HAZARD_LAYERS) {
       expect(layer.legend.length).toBeGreaterThan(0);
-      for (const { color, label } of layer.legend) {
+      for (const { color, stripe, label } of layer.legend) {
         expect(color).toMatch(/^#[0-9A-F]{6}$/);
+        if (stripe != null) expect(stripe).toMatch(/^#[0-9A-F]{6}$/);
         expect(label.length).toBeGreaterThan(0);
       }
     }

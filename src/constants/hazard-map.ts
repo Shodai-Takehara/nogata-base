@@ -190,7 +190,8 @@ const LANDSLIDE_SPECIAL_NOTE = {
  * 地すべり警戒区域は直方市周辺にタイルが存在しない(市の指定なし)ため載せない。
  * 市の地図にある内水氾濫警戒区域と高潮浸水想定は、ポータルのタイル(01_naisui_data、
  * 02_takashio_data)が市域で 404 のため載せない(2026-09-15 確認)。
- * 凡例色はいずれも直方市周辺の実タイルから抽出(ポータル分は 2026-07-15、河岸侵食は 2026-09-15)。
+ * 凡例色は直方市周辺の実タイルから抽出(ポータル分は 2026-07-15)。河岸侵食だけは例外で、
+ * タイルが赤(#FF0000)の不透明と半透明の画素による斜線なので、見本は半透明の赤の見え方に近づけた薄い赤に赤の縞とする(2026-09-15)
  */
 export const HAZARD_LAYERS: readonly HazardLayer[] = [
   {
@@ -254,7 +255,6 @@ export const HAZARD_LAYERS: readonly HazardLayer[] = [
     title: '家屋倒壊等氾濫想定区域',
     urlTemplate:
       'https://disaportaldata.gsi.go.jp/raster/01_flood_l2_kaokutoukai_kagan_data/{z}/{x}/{y}.png',
-    // タイルは赤の斜線(半透明の赤と不透明の赤の画素)。見本は薄い赤の地に赤の縞で近づける
     legend: [
       {
         color: '#FFB3B3',

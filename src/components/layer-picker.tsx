@@ -226,8 +226,8 @@ function LegendDetail({ block }: { block: LegendBlock }) {
     <View style={styles.legend}>
       <AppText style={styles.legendTitle}>{block.title}</AppText>
       <View style={styles.legendRows}>
-        {block.entries.map((entry) => (
-          <View key={entry.label} style={styles.legendRow}>
+        {block.entries.map((entry, index) => (
+          <View key={index} style={styles.legendRow}>
             <LegendSwatch entry={entry} />
             <AppText style={styles.legendLabel}>{entry.label}</AppText>
             {entry.note ? <InfoTooltip text={entry.note} /> : null}

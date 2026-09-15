@@ -7,6 +7,7 @@ import {
 import { POPULATION_ATTRIBUTION } from '@/constants/population-map';
 import { FUKUCHIYAMA_FAULT, QUAKE_ATTRIBUTION, QUAKE_BUCKETS } from '@/constants/quake-map';
 import {
+  AREA_KEYS,
   FILL_KEYS,
   INITIAL_MAP_LAYERS,
   mapLayersReducer,
@@ -78,9 +79,19 @@ describe('凡例のまとまり', () => {
       expect(entry.note).toBe(LANDFORM_LEGEND[i].note?.standard);
       expect(easy.entries[i].note).toBe(LANDFORM_LEGEND[i].note?.easy);
     });
-    // 洪水と区域の凡例は区分名で足りる(浸水深や警戒区域は名前が意味を持つ)
+    // 浸水深は数値で意味が通るので、洪水の凡例に一言は付けない
     for (const block of legendBlocks(withFill('flood'), copy, false)) {
       for (const entry of block.entries) expect(entry.note).toBeUndefined();
+    }
+  });
+
+  it('1つの凡例の中で区分名は重複しない(家屋倒壊の2区分は同じ赤なので名前で見分ける)', () => {
+    let state = withFill('landform');
+    for (const area of AREA_KEYS)
+      state = mapLayersReducer(state, { type: 'toggleArea', key: area });
+    for (const block of legendBlocks(state, copy, false)) {
+      const labels = block.entries.map((e) => e.label);
+      expect(new Set(labels).size).toBe(labels.length);
     }
   });
 

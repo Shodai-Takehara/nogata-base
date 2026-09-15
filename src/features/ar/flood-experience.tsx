@@ -131,15 +131,19 @@ export default function FloodExperience() {
               styles.resultText,
               effectiveDepthM > 0 ? styles.resultDanger : styles.resultSafe,
             ]}>
-            {effectiveDepthM > 0 ? `足元の浸水 ${formatDepth(effectiveDepthM)}` : copy.arNoFlood}
+            {effectiveDepthM > 0
+              ? `${copy.arEffectiveDepthLabel} ${formatDepth(effectiveDepthM)}`
+              : copy.arNoFlood}
           </AppText>
           <View style={styles.kindRow}>
             <KindChip
+              kindLabel={copy.a11yArWaterKind}
               label={copy.arWaterMuddy}
               active={waterKind === 'muddy'}
               onPress={() => setWaterKind('muddy')}
             />
             <KindChip
+              kindLabel={copy.a11yArWaterKind}
               label={copy.arWaterClear}
               active={waterKind === 'clear'}
               onPress={() => setWaterKind('clear')}
@@ -192,10 +196,13 @@ export default function FloodExperience() {
 
 function KindChip({
   label,
+  kindLabel,
   active,
   onPress,
 }: {
   label: string;
+  /** 読み上げ用の「水の種類」。表示モードに合わせるため呼び出し側の文言カタログから渡す */
+  kindLabel: string;
   active: boolean;
   onPress: () => void;
 }) {
@@ -203,7 +210,7 @@ function KindChip({
     <Pressable
       style={[styles.kindChip, active && styles.kindChipActive]}
       onPress={onPress}
-      accessibilityLabel={`水の種類: ${label}`}>
+      accessibilityLabel={`${kindLabel}: ${label}`}>
       <AppText style={[styles.kindChipText, active && styles.kindChipTextActive]}>{label}</AppText>
     </Pressable>
   );

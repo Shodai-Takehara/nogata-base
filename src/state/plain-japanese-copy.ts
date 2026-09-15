@@ -170,7 +170,7 @@ export const PLAIN_JAPANESE_COPY = {
     easy: '土砂(どしゃ)災害(さいがい)の ところ',
   },
   areaHouseCollapse: {
-    standard: '家屋倒壊の区域',
+    standard: '家屋倒壊等氾濫想定区域',
     // 「想定区域」なので、必ず壊れると読まれないよう「かもしれない」を入れる
     easy: '家(いえ)が こわれる かもしれない ところ',
   },
@@ -720,6 +720,15 @@ export const PLAIN_JAPANESE_COPY = {
   arNoFlood: {
     standard: 'この高さまで水は来ない想定です',
     easy: 'この 高(たか)さまで 水(みず)は 来(こ)ない よそうです',
+  },
+  /** 後ろに深さ(「1.2m」)が付く */
+  arEffectiveDepthLabel: {
+    standard: '足元の浸水',
+    easy: '足元(あしもと)の 水(みず)',
+  },
+  a11yArWaterKind: {
+    standard: '水の種類',
+    easy: '水(みず)の しゅるい',
   },
   arWaterMuddy: {
     standard: '泥水',

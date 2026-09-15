@@ -122,16 +122,19 @@ export function populationLegend(copy: Copy): LegendBlock {
 /**
  * 区域の凡例はタイルごとに分ける(土砂災害は土石流と急傾斜地で色が違うため)。
  * ただし正式名称が同じタイル(家屋倒壊等氾濫想定区域の氾濫流と河岸侵食)は、
- * 帯に同じ短い名前が2度並ばないよう1つの凡例にまとめる
+ * 帯に同じ短い名前が2度並ばないよう1つの凡例にまとめる。出典が違うタイルはまとめない
+ * (まとめると片方の出典表記が落ちる)
  */
 export function areaLegend(area: AreaKey, easy: boolean): LegendBlock[] {
   const blocks: LegendBlock[] = [];
   for (const key of AREA_LAYERS[area]) {
     const layer = hazardLayer(key);
     const entries = legendEntries(layer.legend, easy);
-    const last = blocks[blocks.length - 1];
-    if (last && last.title === layer.title) {
-      blocks[blocks.length - 1] = { ...last, entries: [...last.entries, ...entries] };
+    const same = blocks.findIndex(
+      (b) => b.title === layer.title && b.attribution === layer.attribution,
+    );
+    if (same >= 0) {
+      blocks[same] = { ...blocks[same], entries: [...blocks[same].entries, ...entries] };
       continue;
     }
     blocks.push({
