@@ -43,7 +43,7 @@ Release 構成でビルドすると JS がアプリに埋め込まれ、イン�
 このプロファイルは作成から 7 日で失効し、失効するとアプリが起動しなくなる(端末内の設定は消えない)。
 アプリの有効期限はビルド時に使ったプロファイルの期限で決まるため、デモ前の入れ直しは次の手順で新しいプロファイルから作る。
 
-1. このアプリの古いプロファイルを消す(無ければ何も起きない)。プロファイルのファイル名は UUID なので、中身の bundle ID で選ぶ。他のプロジェクトのプロファイルは残る
+1. このアプリの古いプロファイルを消す。失効したプロファイルは Xcode が自動で削除するため、ディレクトリが空でも何も起きない。プロファイルのファイル名は UUID なので、中身の bundle ID で選ぶ。他のプロジェクトのプロファイルは残る
 
    ```bash
    find ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles -name '*.mobileprovision' \
@@ -58,7 +58,7 @@ Release 構成でビルドすると JS がアプリに埋め込まれ、イン�
    ```
 
    `appleTeamId` を設定済みのプロジェクトでは Expo CLI がこの許可を Xcode に渡さない(Expo SDK 57 で確認)ため、プロファイルが無いまま手順 3 を実行すると `No profiles for 'com.anonymous.nogata-app' were found` で止まる。
-   プロファイルが有効なうちは、この手順を飛ばして手順 3 だけでよい
+   手順 1 でプロファイルを消しているので、この手順は毎回実行する
 
 3. Release 構成でビルドしてインストールする。手順 2 とビルド成果物を共有するので差分ビルドで済む(1〜2 分程度)
 
@@ -70,6 +70,14 @@ Release 構成でビルドすると JS がアプリに埋め込まれ、イン�
    付けないと開発サーバが立ち上がったままコマンドが終わらず、ポート 8081 が塞がっていれば確認も求められる
 
 4. 起動が `profile has not been explicitly trusted by the user` で拒否されたら、iPhone の 設定 → 一般 → VPN とデバイス管理 で開発者を信頼してから開く。初回に限らず、入れ直しで再度求められることがある
+
+生成されたプロファイルの期限は次のコマンドで確認できる。
+この日付を過ぎるとアプリが起動しなくなるので、デモや審査の当日が期限より後なら、当日の朝に手順 1 から回し直す。
+
+```bash
+find ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles -name '*.mobileprovision' \
+  -exec sh -c 'security cms -D -i "$1" | plutil -extract ExpirationDate raw -' _ {} \;
+```
 
 補足:
 
